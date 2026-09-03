@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../api.js'
+import { API_BASE } from '../apiBase.js'
 import GameHeader from '../components/GameHeader.jsx'
 import MapView from '../components/MapView.jsx'
 import DetailPopup from '../components/DetailPopup.jsx'
@@ -72,7 +73,7 @@ export default function HomePage() {
               if (t.type === 'solved') {
                 return (
                   <button key={t.seq} className="landmark-tile" onClick={() => openLandmark(t.seq)}>
-                    <img src={`/content-photos/${t.imagePath}`} alt="" />
+                    <img src={`${API_BASE}/content-photos/${t.imagePath}`} alt="" />
                     <span className="tile-number">{numberLabel}</span>
                     <div className="tile-scrim">
                       <span className="tile-name">{t.title}</span>
@@ -91,7 +92,7 @@ export default function HomePage() {
               if (t.type === 'current-revealed') {
                 return (
                   <button key={t.seq} className="landmark-tile landmark-tile-current" onClick={() => navigate('/play')}>
-                    <img src={`/content-photos/${t.imagePath}`} alt="" />
+                    <img src={`${API_BASE}/content-photos/${t.imagePath}`} alt="" />
                     <span className="tile-number">{numberLabel}</span>
                     <div className="tile-scrim tile-scrim-current">
                       <span className="tile-name">{t.title}</span>

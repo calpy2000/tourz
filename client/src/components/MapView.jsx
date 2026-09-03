@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { APIProvider, Map, AdvancedMarker, Polyline, useMap, useMapsLibrary, useAdvancedMarkerRef } from '@vis.gl/react-google-maps'
 import { Utensils, Coffee, Martini, Toilet, Plus } from 'lucide-react'
 import { api } from '../api.js'
+import { API_BASE } from '../apiBase.js'
 import AnchoredPopup from './AnchoredPopup.jsx'
 import DetailPopup from './DetailPopup.jsx'
 import { isStartLandmark, landmarkDisplayNumber } from '../landmarkNumber.js'
@@ -335,7 +336,7 @@ export default function MapView() {
                     onClick={() => openLandmark(l.sequenceOrder)}
                     zIndex={999999}
                   >
-                    <div className="map-pin-landmark" style={{ backgroundImage: `url(/content-photos/${l.imagePath})` }}>
+                    <div className="map-pin-landmark" style={{ backgroundImage: `url(${API_BASE}/content-photos/${l.imagePath})` }}>
                       {!isStartLandmark(l.sequenceOrder) && <div className="map-pin-badge">{landmarkDisplayNumber(l.sequenceOrder)}</div>}
                     </div>
                   </AdvancedMarker>
@@ -350,7 +351,7 @@ export default function MapView() {
                     onClick={() => navigate('/play')}
                     zIndex={999999}
                   >
-                    <div className="map-pin-landmark map-pin-landmark-current" style={{ backgroundImage: `url(/content-photos/${currentRevealed.imagePath})` }}>
+                    <div className="map-pin-landmark map-pin-landmark-current" style={{ backgroundImage: `url(${API_BASE}/content-photos/${currentRevealed.imagePath})` }}>
                       {!isStartLandmark(currentRevealed.sequenceOrder) && (
                         <div className="map-pin-badge map-pin-badge-current">{landmarkDisplayNumber(currentRevealed.sequenceOrder)}</div>
                       )}

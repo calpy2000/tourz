@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { DEV_MODE } from '../devMode.js'
+import { API_BASE } from '../apiBase.js'
 import { rectFromEvent } from '../rect.js'
 import { saveGpsCorrection } from '../gpsCorrections.js'
 import SetGpsPanel from './SetGpsPanel.jsx'
@@ -33,7 +34,7 @@ export default function DetailPopup({ eyebrow, title, address, imagePath, sectio
         </button>
 
         {imagePath && (
-          <img className="detail-popup-image" src={`/content-photos/${imagePath}`} alt={title} />
+          <img className="detail-popup-image" src={`${API_BASE}/content-photos/${imagePath}`} alt={title} />
         )}
 
         <div className={imagePath ? 'detail-popup-body' : 'detail-popup-body detail-popup-body-no-image'}>

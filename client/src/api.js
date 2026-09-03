@@ -1,6 +1,7 @@
 import { getSession } from './localSession.js';
+import { API_BASE } from './apiBase.js';
 
-const BASE = '/api/game';
+const BASE = `${API_BASE}/api/game`;
 
 function authHeaders() {
   const session = getSession();
@@ -22,7 +23,7 @@ async function post(path, body) {
 }
 
 export const api = {
-  register: (payload) => post('/api/register', payload),
+  register: (payload) => post(`${API_BASE}/api/register`, payload),
   getSession: () => get(`${BASE}/session`),
   setTeamName: (name) => post(`${BASE}/team/name`, { name }),
   getHome: () => get(`${BASE}/home`),
@@ -46,9 +47,9 @@ export const api = {
   getSiteDetail: (id) => get(`${BASE}/site/${id}`),
   getMap: () => get(`${BASE}/map`),
   getRoute: () => get(`${BASE}/route`),
-  getNearbyPlaces: (category) => get(`/api/places/nearby?category=${category}`),
-  devLogin: () => post('/api/dev/login'),
-  devReset: () => post('/api/dev/reset'),
-  devComplete: (count) => post(`/api/dev/complete/${count}`),
-  getPoiDrafts: () => fetch('/api/dev/poi-drafts').then((r) => r.json()),
+  getNearbyPlaces: (category) => get(`${API_BASE}/api/places/nearby?category=${category}`),
+  devLogin: () => post(`${API_BASE}/api/dev/login`),
+  devReset: () => post(`${API_BASE}/api/dev/reset`),
+  devComplete: (count) => post(`${API_BASE}/api/dev/complete/${count}`),
+  getPoiDrafts: () => fetch(`${API_BASE}/api/dev/poi-drafts`).then((r) => r.json()),
 };
