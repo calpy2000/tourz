@@ -5,6 +5,7 @@ import { Utensils, Coffee, Martini, Toilet, Plus } from 'lucide-react'
 import { api } from '../api.js'
 import { API_BASE } from '../apiBase.js'
 import { useGeolocation } from '../useGeolocation.js'
+import { saveGpsCorrection } from '../gpsCorrections.js'
 import AnchoredPopup from './AnchoredPopup.jsx'
 import DetailPopup from './DetailPopup.jsx'
 import { isStartLandmark, landmarkDisplayNumber } from '../landmarkNumber.js'
@@ -167,10 +168,23 @@ const BUSINESS_STATUS_LABELS = {
 // real game content yet. Deliberately styled off the game's palette (dashed brick outline, plain
 // white fill), same "not game content" language already used for the Dev-tools menu, so it can't
 // be mistaken for a curated Interest or a live Amenity while scattered on the map for review.
-function DraftMarker({ poi, onOpen, showDots }) {
+// `dragging` is only ever true for the one POI whose "Set GPS" button was just tapped (see
+// gpsDragTarget in MapView) — every other draft pin stays fixed. onDragEnd hands back the raw
+// google.maps 'dragend' MapMouseEvent, which is the only place the corrected lat/lng comes from
+// (AdvancedMarkerElement doesn't sync its `position` prop while draggable, so this is the one
+// moment the new coordinates are observable).
+function DraftMarker({ poi, onOpen, showDots, dragging, onDragEnd }) {
   return (
-    <AdvancedMarker position={{ lat: poi.latitude, lng: poi.longitude }} onClick={() => onOpen(poi)}>
-      {showDots ? <div className="map-dot map-dot-draft" /> : <div className="map-pin-draft">{poi.interestRating}</div>}
+    <AdvancedMarker
+      position={{ lat: poi.latitude, lng: poi.longitude }}
+      draggable={dragging}
+      onDragEnd={dragging ? (e) => onDragEnd(poi, e) : undefined}
+      onClick={() => onOpen(poi)}
+      zIndex={dragging ? 999999 : undefined}
+    >
+      {showDots
+        ? <div className={dragging ? 'map-dot map-dot-draft map-pin-draft-dragging' : 'map-dot map-dot-draft'} />
+        : <div className={dragging ? 'map-pin-draft map-pin-draft-dragging' : 'map-pin-draft'}>{poi.interestRating}</div>}
     </AdvancedMarker>
   )
 }
@@ -222,6 +236,13 @@ export default function MapView() {
   const [poiPopup, setPoiPopup] = useState(null)
   const [poiDrafts, setPoiDrafts] = useState(null)
   const [draftPopup, setDraftPopup] = useState(null)
+  // Set by DetailPopup's "Set GPS" button (POI drafts and Interests/sites) — identifies the one
+  // marker currently draggable on the map. `{ kind: 'poiDraft', ref }` compares by object
+  // reference (poiDrafts have no id); `{ kind: 'site', id }` compares by id (sitePopup is a
+  // separately-fetched object, never the same reference as its entry in mapData.sites). Cleared
+  // on drop or Cancel.
+  const [gpsDragTarget, setGpsDragTarget] = useState(null)
+  const [gpsDragSavedName, setGpsDragSavedName] = useState(null)
   const [landmarkPopup, setLandmarkPopup] = useState(null)
   const [sitePopup, setSitePopup] = useState(null)
   // Tracks camera zoom so Interests/Amenities/POI Drafts can simplify to dots below
@@ -238,6 +259,33 @@ export default function MapView() {
     // id isn't echoed back by the API response — stashed alongside it here since the dev-only
     // Set GPS button needs it as the site's reference key.
     api.getSiteDetail(id).then((data) => { if (!data.error) setSitePopup({ ...data, id }) })
+  }
+
+  function finishGpsDrag(name) {
+    setGpsDragTarget(null)
+    setGpsDragSavedName(name)
+    setTimeout(() => setGpsDragSavedName(null), 1500)
+  }
+
+  // Both fire once, on drop. `event` is the raw google.maps 'dragend' MapMouseEvent — event.latLng
+  // is the only place the corrected position is observable (see DraftMarker). Each saves the
+  // correction through the same pipeline the paste-text Set GPS flow uses, then optimistically
+  // moves the pin to where it was dropped so the map reflects the fix for the rest of this
+  // session, rather than snapping back to the old (wrong) position it would otherwise re-render at.
+  function handleDraftGpsDragEnd(poi, event) {
+    const lat = event.latLng.lat()
+    const lng = event.latLng.lng()
+    saveGpsCorrection({ type: 'poiDraft', leg: poi.leg, name: poi.name, enteredGps: `${lat}, ${lng}`, capturedAt: new Date().toISOString() })
+    setPoiDrafts((prev) => prev.map((p) => (p === poi ? { ...p, latitude: lat, longitude: lng } : p)))
+    finishGpsDrag(poi.name)
+  }
+
+  function handleSiteGpsDragEnd(site, event) {
+    const lat = event.latLng.lat()
+    const lng = event.latLng.lng()
+    saveGpsCorrection({ type: 'site', id: site.id, name: site.title, enteredGps: `${lat}, ${lng}`, capturedAt: new Date().toISOString() })
+    setMapData((prev) => ({ ...prev, sites: prev.sites.map((s) => (s.id === site.id ? { ...s, latitude: lat, longitude: lng } : s)) }))
+    finishGpsDrag(site.title)
   }
 
   useEffect(() => {
@@ -366,29 +414,52 @@ export default function MapView() {
               </>
             )}
 
-            {filters.interests && sites.map((s) => (
-              <AdvancedMarker
-                key={s.id}
-                position={{ lat: s.latitude, lng: s.longitude }}
-                onClick={() => openSite(s.id)}
-              >
-                {showDots ? <div className="map-dot map-dot-site" /> : (
-                  <div className="map-pin-site">
-                    <StarIcon />
-                  </div>
-                )}
-              </AdvancedMarker>
-            ))}
+            {filters.interests && sites.map((s) => {
+              const dragging = gpsDragTarget?.kind === 'site' && gpsDragTarget.id === s.id
+              return (
+                <AdvancedMarker
+                  key={s.id}
+                  position={{ lat: s.latitude, lng: s.longitude }}
+                  draggable={dragging}
+                  onDragEnd={dragging ? (e) => handleSiteGpsDragEnd(s, e) : undefined}
+                  onClick={() => openSite(s.id)}
+                  zIndex={dragging ? 999999 : undefined}
+                >
+                  {showDots ? <div className={dragging ? 'map-dot map-dot-site map-pin-site-dragging' : 'map-dot map-dot-site'} /> : (
+                    <div className={dragging ? 'map-pin-site map-pin-site-dragging' : 'map-pin-site'}>
+                      <StarIcon />
+                    </div>
+                  )}
+                </AdvancedMarker>
+              )
+            })}
 
             {filters.amenities && places && places.map((p) => (
               <AmenityMarker key={p.id} place={p} onOpen={setPoiPopup} showDots={showDots} />
             ))}
 
             {filters.poiDrafts && poiDrafts && poiDrafts.map((poi, i) => (
-              <DraftMarker key={i} poi={poi} onOpen={setDraftPopup} showDots={showDots} />
+              <DraftMarker
+                key={i}
+                poi={poi}
+                onOpen={setDraftPopup}
+                showDots={showDots}
+                dragging={gpsDragTarget?.kind === 'poiDraft' && gpsDragTarget.ref === poi}
+                onDragEnd={handleDraftGpsDragEnd}
+              />
             ))}
           </Map>
         </APIProvider>
+
+        {gpsDragTarget && (
+          <div className="gps-drag-banner">
+            Drag the pin to its correct position
+            <button type="button" className="ghost" onClick={() => setGpsDragTarget(null)}>Cancel</button>
+          </div>
+        )}
+        {gpsDragSavedName && (
+          <div className="gps-drag-banner">Saved: {gpsDragSavedName} ✓</div>
+        )}
       </div>
 
       {poiPopup && (
@@ -417,6 +488,7 @@ export default function MapView() {
           warning={draftPopup.geocodeConfidence !== 'confirmed' ? `Approximate pin: ${draftPopup.geocodeConfidence}` : null}
           externalLink={draftPopup.externalLink}
           gpsRef={{ type: 'poiDraft', leg: draftPopup.leg }}
+          onDragToSetGps={() => setGpsDragTarget({ kind: 'poiDraft', ref: draftPopup })}
           onClose={() => setDraftPopup(null)}
         />
       )}
@@ -451,6 +523,7 @@ export default function MapView() {
           interestingFact={sitePopup.interestingFact}
           externalLink={sitePopup.externalLink}
           gpsRef={{ type: 'site', id: sitePopup.id }}
+          onDragToSetGps={() => setGpsDragTarget({ kind: 'site', id: sitePopup.id })}
           onClose={() => setSitePopup(null)}
         />
       )}

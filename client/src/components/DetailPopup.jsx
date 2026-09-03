@@ -15,7 +15,12 @@ import SetGpsPanel from './SetGpsPanel.jsx'
 // `gpsRef` (dev mode only) identifies which record a GPS correction captured here belongs to —
 // e.g. { type: 'landmark', sequenceOrder } — since landmarks/sites/POI drafts have no shared id
 // shape. Omit it for anything the Set GPS button shouldn't appear on.
-export default function DetailPopup({ eyebrow, title, address, imagePath, sections, interestingFact, warning, externalLink, gpsRef, onClose }) {
+//
+// `onDragToSetGps` (POI drafts only, passed by MapView) swaps the button's behavior from the
+// paste-a-coordinate panel below to closing this popup and making the POI's own map pin
+// draggable — dragging the pin to its correct spot is far more precise than typing what you read
+// off a phone's Maps app. Landmarks/sites (no callback passed) keep the paste-text flow.
+export default function DetailPopup({ eyebrow, title, address, imagePath, sections, interestingFact, warning, externalLink, gpsRef, onDragToSetGps, onClose }) {
   const [gpsPanelAnchor, setGpsPanelAnchor] = useState(null)
   const [gpsSaved, setGpsSaved] = useState(false)
 
@@ -24,6 +29,15 @@ export default function DetailPopup({ eyebrow, title, address, imagePath, sectio
     setGpsPanelAnchor(null)
     setGpsSaved(true)
     setTimeout(() => setGpsSaved(false), 1500)
+  }
+
+  function handleSetGpsClick(e) {
+    if (onDragToSetGps) {
+      onDragToSetGps()
+      onClose()
+    } else {
+      setGpsPanelAnchor(rectFromEvent(e))
+    }
   }
 
   return (
@@ -72,7 +86,7 @@ export default function DetailPopup({ eyebrow, title, address, imagePath, sectio
               <button
                 type="button"
                 className="primary detail-popup-setgps"
-                onClick={(e) => setGpsPanelAnchor(rectFromEvent(e))}
+                onClick={handleSetGpsClick}
               >
                 {gpsSaved ? 'Saved ✓' : 'Set GPS'}
               </button>
