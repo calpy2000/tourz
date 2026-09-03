@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <!-- maximum-scale/user-scalable=no lock out pinch-zoom entirely — this is an app-like single-
+         screen game, not a document meant to be zoomed, and once a phone is zoomed in even
+         slightly it can pan the enlarged page around in any direction, which no CSS overflow
+         rule on the page content can prevent (that's a browser-viewport behavior, not a layout
+         one). Settled 2026-08-24 after real-device testing on iPhone showed exactly this. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>TOURZ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Powers the confetti celebration on solving a puzzle with no hints — see src/confetti.js -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js" defer></script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

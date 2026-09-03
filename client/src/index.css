@@ -1,0 +1,1840 @@
+:root {
+  --stone: #f2ede1;
+  --stone-raised: #fffdf8;
+  --stone-line: #ddd2bd;
+  --ink: #23201b;
+  --ink-soft: #6b5f4f;
+  --brass: #b8823a;
+  --brass-deep: #93662a;
+  --brass-tint: #f1e0bf;
+  --forest: #2f6b4f;
+  --forest-tint: #dcece2;
+  --brick: #b33f2e;
+  --brick-tint: #f6dcd7;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+/* Locks the outer page itself so it can never be panned/rubber-banded on mobile Safari — the app
+   is a fixed single-screen shell (.home-shell); only .landmark-body/.home-body scroll internally.
+   position:fixed on body is the standard iOS fix for outer-page bounce; overflow:hidden backs it
+   up everywhere else. Settled 2026-08-24 after real-device testing showed the whole page could be
+   dragged off-screen in every direction. */
+html {
+  overflow: hidden;
+}
+
+body {
+  position: fixed;
+  inset: 0;
+  margin: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+  background: var(--stone);
+  background-image: radial-gradient(circle at 1px 1px, var(--stone-line) 1px, transparent 0);
+  background-size: 22px 22px;
+  color: var(--ink);
+  font-family: 'Quicksand', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.screen {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 16px 13px 19px;
+  min-height: 100%;
+}
+
+.screen.center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px;
+}
+
+.eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--brass-deep);
+  margin: 0 0 10px;
+}
+
+h1 {
+  font-weight: 700;
+  font-size: 30px;
+  line-height: 1.15;
+  margin: 0 0 14px;
+  text-wrap: balance;
+}
+
+.subtitle {
+  color: var(--ink-soft);
+  font-size: 15px;
+  line-height: 1.55;
+  max-width: 38ch;
+}
+
+/* Blueprint for every primary-action button in the game (Start walking, Continue, Take the
+   quiz, both submit buttons) — settled 2026-08-24. Pastel-blue puffy-bevel pill, borrowed from
+   6 GAME HUB's shared .shell-btn ("Play Now"). Deliberately NOT applied to back/reset links.
+   a.primary added 2026-08-24 for the landmark detail page's external link, which is semantically
+   an <a>, not a <button>, but needs the identical pill style. */
+button.primary, a.primary {
+  font-size: 14px;
+  font-weight: 500;
+  color: #000;
+  background: #cfe6f5;
+  border: none;
+  border-radius: 999px;
+  display: block;
+  width: auto;
+  padding: 6px 10px;
+  margin: 20px auto 0;
+  text-decoration: none;
+  box-shadow:
+    0 3px 8px rgba(20, 20, 20, 0.22),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.6),
+    inset -2px -3px 5px rgba(0, 0, 0, 0.25);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+button.primary:active, a.primary:active {
+  transform: scale(0.96) translateY(1px);
+  box-shadow:
+    0 1px 3px rgba(20, 20, 20, 0.24),
+    inset 1.5px 1.5px 3px rgba(255, 255, 255, 0.35),
+    inset -1.5px -2px 3.5px rgba(0, 0, 0, 0.25);
+}
+
+/* --- Game screen --- */
+
+.game-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 4px 18px;
+}
+
+.landmark-header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  padding: 12px 4px;
+  border-bottom: 1px solid var(--stone-line);
+  background: var(--stone-raised);
+}
+
+.landmark-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 8px 13px 8px; /* top reduced to 0.5x of the previous 16px — gap to the first card */
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden; /* without this, setting only overflow-y computes overflow-x to auto too
+                          (per spec) — any content even 1px too wide becomes sideways-draggable */
+}
+
+.landmark-header-title {
+  flex: 1;
+  text-align: center;
+  font-weight: 700;
+  font-size: 14px;
+  margin-right: 44px;
+}
+
+.landmark-name {
+  color: var(--forest);
+}
+
+.landmark-unsolved {
+  font-weight: 500;
+  color: #b0a48f;
+}
+
+.progress-pill {
+  font-weight: 700;
+  font-size: 13px;
+  background: var(--stone-raised);
+  border: 1px solid var(--stone-line);
+  border-radius: 999px;
+  padding: 7px 14px;
+}
+
+.score-pill {
+  font-weight: 700;
+  font-size: 13px;
+  background: var(--brass-tint);
+  color: var(--brass-deep);
+  border-radius: 999px;
+  padding: 7px 14px;
+  flex: 1;
+  text-align: center;
+}
+
+.back-link {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 8px 6px 4px;
+  color: var(--ink-soft);
+  border: none;
+  background: transparent;
+}
+
+.dev-reset {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 6px 10px;
+  color: var(--brick);
+  background: transparent;
+  border: 1px solid var(--brick);
+  border-radius: 999px;
+}
+
+.card {
+  background: var(--stone-raised);
+  border: 1px solid var(--stone-line);
+  border-radius: 16px;
+  padding: 11.2px 18px; /* top/bottom reduced to 0.7x of the previous 16px */
+  margin-bottom: 8px;
+  box-shadow: 0 1px 0 rgba(35, 32, 27, 0.04);
+  font-size: 14px;
+}
+
+.stage-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--brass-deep);
+  margin: 0 0 10px;
+}
+
+.stage-label::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--brass);
+}
+
+.stage-label.solved {
+  color: var(--forest);
+}
+
+.stage-label.solved::before {
+  background: var(--forest);
+}
+
+.card h2 {
+  font-weight: 700;
+  font-size: inherit;
+  margin: 0 0 8px;
+}
+
+.card p {
+  margin: 0 0 10px;
+  font-size: inherit;
+  line-height: 1.24;
+}
+
+.hint {
+  background: var(--brass-tint);
+  color: var(--brass-deep);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.hint.reveal {
+  background: #e4e9f2;
+  color: #33465e;
+}
+
+.hint.solved {
+  background: var(--forest-tint);
+  color: var(--forest);
+  font-weight: 700;
+}
+
+/* Puzzle-solved / quiz-complete result — a centered popup instead of an inline banner, settled
+   2026-08-24 to save vertical space on both the solve and quiz pages. Deliberately has no
+   blocking backdrop (no full-screen overlay div) — the rest of the page, including the why?
+   link underneath, stays reachable while this is open; only the card itself catches clicks. */
+.result-popup {
+  position: fixed;
+  bottom: 16px; /* near the bottom edge, deliberately overlapping the chat panel below it */
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 48px);
+  max-width: 420px; /* slightly narrower than .home-shell's 480px game canvas */
+  background: #000;
+  border-radius: 16px;
+  padding: 24px 20px;
+  text-align: center;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+  z-index: 60;
+}
+
+.result-popup-title {
+  color: #fff;
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1.3;
+  margin: 0 0 6px;
+}
+
+.result-popup-text {
+  color: #fff;
+  font-weight: 400;
+  font-size: 15px;
+  line-height: 1.45;
+  margin: 0 0 18px;
+}
+
+.result-popup-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.result-popup button.primary {
+  display: block;
+  width: 100%;
+  margin: 0;
+}
+
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+button {
+  font: inherit;
+  font-family: 'Quicksand', sans-serif;
+  font-weight: 500;
+  border-radius: 10px;
+  border: 1px solid var(--stone-line);
+  background: var(--stone-raised);
+  color: var(--ink);
+  padding: 11px 15px;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+button.ghost {
+  background: transparent;
+  color: var(--ink-soft);
+}
+
+.answer-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.answer-form input {
+  flex: 1;
+  font: inherit;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--stone-line);
+  background: var(--stone);
+}
+
+.answer-form input:focus {
+  outline: 2px solid var(--brass);
+  outline-offset: 1px;
+}
+
+.answer-form button.primary {
+  width: auto;
+  margin: 0;
+}
+
+.button-row button.primary {
+  display: inline-block;
+  margin: 0;
+}
+
+button.primary.btn-reveal {
+  background: var(--brick-tint);
+}
+
+button.primary.btn-hint {
+  background: var(--brass-tint);
+}
+
+/* No background dim on any popup (why?, hint/reveal confirms) — settled 2026-08-24, the user
+   didn't want the rest of the screen greyed out. Just a full-screen click-catcher now; each
+   popup's own card is positioned individually by AnchoredPopup, not centered by this container.
+   z-index above .result-popup's 60 — why? can be opened while the result popup is showing
+   (2026-08-24) and needs to sit on top of it, not behind it. */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+}
+
+/* Light pastel green for every popup (why?, hint/reveal confirms) — settled 2026-08-24.
+   Cancel buttons intentionally use plain button.primary (no override) so they read as the
+   same "safe" blue as every submit button — only the confirm action gets a distinct color. */
+.modal-card {
+  background: var(--forest-tint);
+  border: 1px solid var(--stone-line);
+  border-radius: 16px;
+  padding: 20px;
+  max-width: 320px;
+  width: 100%;
+  box-shadow: 0 12px 32px rgba(20, 20, 20, 0.28);
+}
+
+.modal-card h3 {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0 0 8px;
+}
+
+.modal-card p {
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--ink-soft);
+  margin: 0 0 16px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.modal-actions button.primary {
+  display: inline-block;
+  margin: 0;
+}
+
+.modal-card.why-card {
+  padding: 10px; /* 0.5x of the base .modal-card's 20px */
+}
+
+/* Dev-tools menu — deliberately styled off the game's palette (brick outline, plain white) so it
+   reads as "not game content" at a glance. */
+.modal-card.dev-menu {
+  background: var(--stone-raised);
+  border: 1px solid var(--brick);
+  padding: 8px;
+  min-width: 210px;
+  max-width: 260px;
+}
+
+.dev-menu-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--brick);
+  padding: 4px 8px 8px;
+}
+
+.dev-menu-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 10px 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.dev-menu-item:active {
+  background: var(--brick-tint);
+}
+
+/* .modal-card prefix needed on both — a bare .why-popup-text/-hint class loses specificity to the
+   more general `.modal-card p` rule above, same trap as the button.primary overrides elsewhere. */
+.modal-card .why-popup-text {
+  font-size: 14px;
+  line-height: 1.45;
+  margin: 0 0 14px;
+  color: var(--ink);
+}
+
+.modal-card .why-popup-hint {
+  font-size: 11px;
+  color: var(--ink-soft);
+  text-align: center;
+  margin: 0;
+}
+
+.feedback {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.feedback.ok {
+  color: var(--forest);
+}
+
+.feedback.bad {
+  color: var(--brick);
+}
+
+.quiz-question {
+  border-top: 1px solid var(--stone-line);
+  padding-top: 7px; /* half of the previous 14px */
+  margin-top: 8px; /* was 14px — 6px of this moved to the submit/answer line's own margin-top below,
+                       so the line sits lower in the same total gap without changing it */
+}
+
+.quiz-question:first-child {
+  border-top: none;
+  padding-top: 0;
+  margin-top: 0;
+}
+
+.quiz-question > p:first-child {
+  margin-bottom: 0; /* .card p's default 10px would otherwise collapse with .opt-row's margin-top below and swallow it */
+}
+
+.opt-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 2px; /* half of the previous 4px */
+}
+
+.quiz-opt {
+  flex: 1;
+  text-align: center;
+  padding: 6px 8px; /* vertical (top/bottom) reduced to 0.8x of the previous flat 8px; horizontal unchanged */
+  border-radius: 999px;
+}
+
+.quiz-opt-selected {
+  background: var(--brass-tint);
+  border-color: var(--brass);
+  color: var(--brass-deep);
+  font-weight: 700;
+}
+
+.quiz-opt-correct {
+  background: var(--forest);
+  border-color: var(--forest);
+  color: #fff;
+  font-weight: 700;
+}
+
+.quiz-opt-wrong {
+  background: var(--brick-tint);
+  border-color: var(--brick);
+  color: var(--brick);
+  font-weight: 700;
+}
+
+/* button.primary.quiz-submit (not .quiz-submit alone) — needs to out-specificity button.primary's
+   own `margin: 20px auto 0`, otherwise that 20px top margin silently wins and this override is dead. */
+button.primary.quiz-submit {
+  width: auto;
+  margin-top: 10px; /* was 4px — the extra 6px was taken from .quiz-question's margin-top below,
+                        so the gap above the options grows and the gap below the line shrinks by
+                        the same amount, keeping the options-to-separator distance unchanged */
+}
+
+/* Occupies exactly the same box as .quiz-submit (same margin-top, same vertical padding, same
+   font-size) so swapping the submit button for this result row doesn't shift anything below it.
+   Width isn't matched — that doesn't affect vertical position, only height/margin do. */
+.quiz-result {
+  margin-top: 10px;
+  padding: 6px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.quiz-result p {
+  margin: 0; /* .card p's default 10px bottom margin would otherwise throw off align-items: center */
+}
+
+.why-link {
+  flex-shrink: 0;
+  margin-left: auto; /* stays right-aligned even with no feedback text alongside it (e.g. a correct puzzle answer) */
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--brass-deep);
+  text-decoration: underline;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+/* --- Home screen --- */
+
+.home-shell {
+  max-width: 480px;
+  margin: 0 auto;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.home-header {
+  flex: 0 0 auto;
+  padding: 8px 13px 10px;
+  border-bottom: 1px solid var(--stone-line);
+  background: var(--stone-raised);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.home-header-line1 {
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.team-name {
+  font-weight: 700;
+}
+
+.sep {
+  color: #b0a48f;
+}
+
+.tour-name {
+  font-weight: 500;
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+
+.home-pills {
+  display: flex;
+  gap: 8px;
+}
+
+.home-pill {
+  flex: 1;
+  border-radius: 8px;
+  padding: 6px 4px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  background: var(--stone-raised);
+  border: 1px solid var(--stone-line);
+}
+
+.home-pill-brass {
+  background: var(--brass-tint);
+  color: var(--brass-deep);
+  border: none;
+}
+
+.stat-line {
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.home-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 13px 6px;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.view-switch {
+  display: flex;
+  background: #e9e2d2;
+  border-radius: 8px;
+  padding: 2px;
+  margin-bottom: 12px;
+  flex: 0 0 auto;
+}
+
+.view-seg {
+  flex: 1;
+  text-align: center;
+  padding: 5px 0;
+  font: inherit;
+  font-weight: 500;
+  font-size: 11.5px;
+  color: var(--ink-soft);
+  background: none;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.view-seg-active {
+  background: var(--stone-raised);
+  color: var(--ink);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(35, 32, 27, 0.08);
+}
+
+.tile-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.landmark-tile {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #dbe4dc;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer; /* every tile is a button now — solved ones open the landmark detail page */
+}
+
+.landmark-tile img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.tile-scrim {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 8px 8px 7px;
+  background: linear-gradient(to top, rgba(35, 32, 27, 0.85), rgba(35, 32, 27, 0));
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  text-align: left;
+}
+
+.tile-name {
+  color: #fff8ec;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.tile-stats {
+  color: var(--brass-tint);
+  font-size: 9.5px;
+}
+
+.landmark-tile-current {
+  background-color: var(--brass-tint);
+  border: 2px solid var(--brass);
+  cursor: pointer;
+}
+
+.tile-scrim-current {
+  background: linear-gradient(to top, rgba(147, 102, 42, 0.55), rgba(147, 102, 42, 0));
+}
+
+/* Future/unknown landmark — a distinct muted grey (not the brass "in progress" color, not a
+   photo) so the three tile states read apart from each other at a glance. */
+.landmark-tile-future {
+  background-color: #d7d0c2;
+  border: 1px dashed var(--stone-line);
+  cursor: default;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tile-unknown {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.tile-number {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 1;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: rgba(35, 32, 27, 0.68);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.landmark-tile-future .tile-number {
+  background: rgba(35, 32, 27, 0.32);
+}
+
+.stub-view {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-soft);
+  font-size: 14px;
+  background: var(--stone-raised);
+  border: 1px dashed var(--stone-line);
+  border-radius: 10px;
+}
+
+/* Full-bleed like Google Maps itself — cancels .home-body's left/right padding so the map
+   canvas runs to the edges of the game shell, with the filter chips floating on top of it as an
+   overlay (not a separate row above it) rather than the map living inside a bordered card. */
+.map-shell {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  position: relative;
+  margin: 0 -13px;
+}
+
+.filter-chips {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.filter-chip {
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--stone-line);
+  background: var(--stone-raised);
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(35, 32, 27, 0.22);
+}
+
+.filter-chip-active {
+  background: var(--brass-tint);
+  border-color: var(--brass);
+  color: var(--brass-deep);
+}
+
+.filter-chip-tick {
+  color: var(--brass);
+  font-weight: 700;
+  margin-right: 4px;
+}
+
+.map-container {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Three-tier pin hierarchy — solved landmark (photo + forest ring), curated site (brass + star),
+   live third-party POI (small muted dot). "Here" marker is the one deliberate off-palette color. */
+.map-pin-landmark {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 3px solid var(--forest);
+  background-color: var(--stone-raised);
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 2px 6px rgba(35, 32, 27, 0.35);
+  cursor: pointer;
+}
+
+/* Landmark number badge — state-colored (forest = solved, brass = in progress) to match the
+   pin's own ring rather than a neutral label, settled from the pin-numbering design comparison.
+   Sized/positioned for the map's real 40px pin (mockup validated this at 2.5x for legibility
+   first). The start landmark never gets one — it has no display number (see landmarkNumber.js). */
+.map-pin-badge {
+  position: absolute;
+  bottom: -2px;
+  left: -2px;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: var(--forest);
+  color: #fff;
+  font-size: 8px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--stone-raised);
+  z-index: 2;
+}
+
+.map-pin-badge.map-pin-badge-current {
+  background: var(--brass);
+}
+
+/* Revealed but not yet fully complete (puzzle solved, quiz pending) — brass ring instead of
+   forest, matching the same "in progress" color already used for .landmark-tile-current on Home.
+   Compound selector deliberately, not a bare modifier class — see feedback-css-specificity-traps. */
+.map-pin-landmark.map-pin-landmark-current {
+  border-color: var(--brass);
+}
+
+.map-pin-site {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #4169e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(35, 32, 27, 0.3);
+  cursor: pointer;
+}
+
+.map-pin-site svg {
+  width: 18px;
+  height: 18px;
+  fill: #fff;
+}
+
+.map-pin-poi {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--brick);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 3px rgba(35, 32, 27, 0.35);
+  cursor: pointer;
+}
+
+.map-pin-poi svg {
+  width: 16px;
+  height: 16px;
+  fill: #fff;
+}
+
+.map-pin-poi-pharmacy {
+  background: var(--forest);
+}
+
+/* Toilets deliberately break from the circle pins — a rounded square in the one off-palette
+   blue already used for the "here" marker (same "strong real-world convention" justification:
+   blue restroom signage is a near-universal wayfinding color). */
+.map-pin-poi-toilet {
+  border-radius: 7px;
+  background: #3d6b8c;
+}
+
+/* Zoomed-out simplification — see ICON_ZOOM_THRESHOLD in MapView.jsx. Same colors as each type's
+   full icon pin, just a small plain dot so a dense cluster (St Andrew Square especially) doesn't
+   turn into a wall of overlapping icons at low zoom. */
+.map-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1.5px solid var(--stone-raised);
+  box-shadow: 0 1px 2px rgba(35, 32, 27, 0.3);
+  cursor: pointer;
+}
+
+.map-dot-site {
+  background: #4169e1;
+}
+
+.map-dot-amenity {
+  background: var(--brick);
+}
+
+.map-dot-amenity-pharmacy {
+  background: var(--forest);
+}
+
+.map-dot-amenity-toilet {
+  background: #3d6b8c;
+}
+
+/* Dashed border (vs. amenities' solid) keeps the "not real content yet" language even at dot
+   size, same distinction the full .map-pin-draft pin already makes with its dashed outline. */
+.map-dot-draft {
+  background: var(--stone-raised);
+  border: 1.5px dashed var(--brick);
+}
+
+.modal-card.poi-popup {
+  max-width: 240px;
+}
+
+.poi-popup-type {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 4px;
+}
+
+.poi-popup-address {
+  margin-top: -8px;
+}
+
+.poi-popup-status {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--brick);
+  margin: 0 0 14px;
+}
+
+.poi-popup-status-open {
+  color: var(--forest);
+}
+
+/* Draft POI pin — deliberately off the game's palette (dashed brick outline, plain white fill,
+   same "not game content" language as the Dev-tools menu) so it can't be mistaken for a curated
+   Interest or a live Amenity while this content-sourcing review layer is still unreviewed. The
+   number is the draft's 1-5 interest rating, for at-a-glance triage before opening any one pin. */
+.map-pin-draft {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--stone-raised);
+  border: 2px dashed var(--brick);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--brick);
+  box-shadow: 0 1px 3px rgba(35, 32, 27, 0.35);
+  cursor: pointer;
+}
+
+/* --- Detail popup: shared format for landmarks, sites ("Interests"), and POI drafts --- */
+/* Deliberately not anchored to whatever was tapped — at this size (image + long body text) it
+   reads as a modal regardless, so it gets a plain fixed inset instead of chasing a tap position.
+   Stops 108px short of the bottom (96px .home-chat height + 12px margin) so the chat panel stays
+   visible underneath rather than being covered. */
+.modal-card.detail-popup {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  bottom: 108px;
+  width: auto;
+  max-width: none;
+  max-height: none;
+  overflow: hidden;
+  /* Zero, not just padding-top:0 — the base .modal-card's own 20px padding was doubling up with
+     .detail-popup-body's padding below, pushing the scrollbar a visible ~20px in from the card's
+     real edge instead of sitting flush against it (a real bug spotted by comparing against the
+     scrollbar-options mockup, which had no such outer padding to begin with). All spacing now
+     lives on .detail-popup-body/.detail-popup-image directly instead. */
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-popup-back {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(255, 253, 248, 0.92);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(20, 20, 20, 0.2);
+}
+
+.detail-popup-image {
+  flex: 0 0 auto;
+  display: block;
+  width: 100%;
+  margin: 0 0 14px;
+  max-height: 200px;
+  object-fit: cover;
+}
+
+.detail-popup-body {
+  flex: 1;
+  min-height: 0; /* required for a flex child to actually respect overflow-y instead of growing */
+  overflow-y: auto;
+  padding: 16px 20px 44px; /* bottom keeps the last line clear of the floating "Read more" button */
+  /* Thin brass scrollbar, settled from the scrollbar-options mockup comparison. Deliberately NOT
+     using the standard scrollbar-width/scrollbar-color properties here — on this Chromium build,
+     scrollbar-width:thin appears to switch Chrome into an auto-hiding "overlay" rendering mode
+     under touch/device emulation (the plain default scrollbar never faded; it started only after
+     that property was added), which the ::-webkit-scrollbar-* rules below don't need anyway —
+     they fully control Chrome/Edge/Safari on their own. scrollbar-width only matters for Firefox,
+     which ignores the webkit rules entirely and would just fall back to its own default without it —
+     an accepted gap, not worth the auto-hide regression on the browser this is actually tested in. */
+}
+
+.detail-popup-body::-webkit-scrollbar {
+  width: 8px; /* widened from 5px so the arrow buttons below have room to actually read as arrows */
+}
+
+.detail-popup-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.detail-popup-body::-webkit-scrollbar-thumb {
+  background: var(--brass);
+  border-radius: 999px;
+}
+
+/* Arrow-head buttons at each end — Chrome only draws its own default ones for scrollbars it
+   hasn't had ::-webkit-scrollbar-thumb/track customized on; once those are styled (as above),
+   the defaults stop appearing, so these have to be drawn explicitly to get them back. */
+.detail-popup-body::-webkit-scrollbar-button {
+  display: block;
+  width: 8px;
+  height: 16px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-color: transparent;
+}
+
+/* :single-button is required here, not just :vertical:start/:end — without it Chrome renders
+   both a decrement AND increment button variant at the same end (the "double arrow" bug just
+   spotted: two triangles stacked at each end instead of one). :single-button pins it to exactly
+   one button per end, matching the standard fix for this in custom WebKit scrollbar CSS. */
+.detail-popup-body::-webkit-scrollbar-button:single-button:vertical:decrement {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpolygon points='5,1 9,8 1,8' fill='%23b8823a'/%3E%3C/svg%3E");
+  background-size: 8px 8px;
+}
+
+.detail-popup-body::-webkit-scrollbar-button:single-button:vertical:increment {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpolygon points='5,9 9,2 1,2' fill='%23b8823a'/%3E%3C/svg%3E");
+  background-size: 8px 8px;
+}
+
+/* Compound selector, not a bare modifier class — same equal-specificity tie risk as elsewhere
+   in this file, no reason to rely on source order when co-applied with .detail-popup-body. */
+.detail-popup-body.detail-popup-body-no-image {
+  padding-top: 34px; /* clears the back button when there's no image for it to sit over instead */
+}
+
+.detail-popup-eyebrow {
+  font-size: 13.5px; /* matches body text size, not the shared .eyebrow's smaller 12px */
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--brass-deep);
+  margin: 0 0 2px;
+}
+
+/* Compound selector deliberately, not a bare ".field-label" — ".detail-popup-body p" (class+
+   element) has higher specificity than a bare class and would silently win the tie on color/size,
+   which is exactly the bug that shipped in the first pass of this component's design mockup. */
+.detail-popup-body p.field-label {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--brass-deep);
+  margin: 0 0 2px; /* sits close under its own heading, not spaced like a separate paragraph */
+}
+
+.detail-popup-warning {
+  color: var(--brick);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+/* Wraps Read more (+ the dev-only Set GPS button beside it) so the pair centers as one unit —
+   was just .detail-popup-link's own absolute positioning before Set GPS needed to sit next to it. */
+.detail-popup-footer {
+  position: absolute;
+  left: 50%;
+  bottom: 14px; /* the card itself already stops clear of the chat panel, just needs a small internal gap */
+  transform: translateX(-50%);
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Compound selector — a.primary's own margin: 20px auto 0 would otherwise throw off vertical
+   centering against .detail-popup-setgps (margin: 0) now that both share a flex row instead of
+   this being independently absolutely-positioned. */
+a.primary.detail-popup-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  padding: 10px 18px;
+  margin: 0;
+}
+
+/* Compound selector, not a bare class — button.primary (element+class) otherwise wins the tie on
+   background/padding/box-shadow, same trap as elsewhere in this file (see
+   feedback-css-specificity-traps memory). Deliberately smaller than Read more — a dev-only aside,
+   not a primary action competing for attention next to it. Off-palette brick outline, same
+   "not game content" language already used for the Dev-tools menu/POI-draft markers. */
+button.primary.detail-popup-setgps {
+  padding: 7px 12px;
+  margin: 0;
+  font-size: 12px;
+  background: var(--stone-raised);
+  border: 1px solid var(--brick);
+  color: var(--brick);
+  box-shadow: none;
+}
+
+.map-pin-here {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #3d6b8c;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 8px rgba(61, 107, 140, 0.22);
+}
+
+.home-chat {
+  flex: 0 0 96px;
+  border-top: 1px solid var(--stone-line);
+  background: var(--stone-raised);
+  padding: 10px 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.home-chat-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.home-chat-msg {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.home-chat-msg .avatar {
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--stone);
+  border: 1px solid var(--stone-line);
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.msg-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.msg-text.muted {
+  color: var(--ink-soft);
+}
+
+/* --- Chat: compose controls shared by the collapsed bar and the expanded sheet --- */
+
+.chat-icon-btn {
+  border: none;
+  background: none;
+  padding: 4px;
+  margin: -4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-soft);
+}
+
+.chat-compose-btn {
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--stone-line);
+  background: var(--stone);
+  color: var(--ink-soft);
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chat-send-btn {
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  padding: 0;
+  background: #cfe6f5;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 3px 8px rgba(20, 20, 20, 0.22),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.6),
+    inset -2px -3px 5px rgba(0, 0, 0, 0.25);
+}
+
+.chat-send-btn:disabled {
+  opacity: 0.5;
+}
+
+.home-chat-compose {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.home-chat-compose input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 32px;
+  border-radius: 999px;
+  border: 1px solid var(--stone-line);
+  background: var(--stone);
+  padding: 0 14px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--ink);
+}
+
+/* --- Chat: expanded sheet (80% viewport height, newest message at the bottom) --- */
+
+.chat-sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 80vh;
+  z-index: 55;
+  background: var(--stone-raised);
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -6px 20px rgba(35, 32, 27, 0.18);
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-sheet-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px 12px;
+  border-bottom: 1px solid var(--stone-line);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.chat-sheet-msgs {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 14px 14px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.chat-empty {
+  text-align: center;
+  color: var(--ink-soft);
+  font-size: 13px;
+  margin-top: 20px;
+}
+
+.chat-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.chat-row-mine {
+  justify-content: flex-start;
+}
+
+.chat-row-theirs {
+  justify-content: flex-end;
+}
+
+.chat-av {
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--stone);
+  border: 1px solid var(--stone-line);
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chat-bubble {
+  max-width: 230px;
+  padding: 8px 12px;
+  font-size: 13.5px;
+  line-height: 1.35;
+  color: var(--ink);
+}
+
+.chat-row-mine .chat-bubble {
+  background: var(--stone-raised);
+  border: 1px solid var(--stone-line);
+  border-radius: 4px 16px 16px 16px;
+}
+
+.chat-row-theirs .chat-bubble {
+  background: var(--forest-tint);
+  border-radius: 16px 4px 16px 16px;
+}
+
+.chat-sys {
+  text-align: center;
+  margin: 2px 0;
+}
+
+.chat-sys span {
+  display: inline-block;
+  background: var(--brass-tint);
+  color: var(--brass-deep);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 14px;
+  border-radius: 999px;
+}
+
+.chat-sheet-compose {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px 16px;
+  border-top: 1px solid var(--stone-line);
+}
+
+.chat-sheet-compose input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 38px;
+  border-radius: 999px;
+  border: 1px solid var(--stone-line);
+  background: var(--stone);
+  padding: 0 16px;
+  font-size: 13.5px;
+  font-family: inherit;
+  color: var(--ink);
+}
+
+.chat-sheet-compose .chat-send-btn {
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+}
+
+.icon-clock {
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b5f4f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='8.5'/%3E%3Cpath d='M12 7.5 V12 L15 14'/%3E%3C/svg%3E");
+}
+
+.icon-chevron {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b5f4f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 15 L12 9 L18 15'/%3E%3C/svg%3E");
+}
+
+/* --- Registration (StartPage/WelcomePage) and Instructions --- */
+
+/* StartPage-only heading/subtitle sizing — compound selector (not a bare class) since
+   .form-shell-body h1 is shared with WelcomePage's h1, and needs to stay at the base h1 size. */
+.form-shell-body h1.start-heading {
+  font-size: 21px; /* 30px base * 0.7 */
+  margin-bottom: 7px; /* 14px base * 0.5 */
+}
+
+.form-shell-body .subtitle {
+  line-height: 1.09; /* 1.55 base * 0.7 */
+}
+
+/* Same fixed single-screen shell as .home-shell, for pages that need a scrollable body plus a
+   footer bar pinned at the bottom (a form's submit, or a "Start the tour" CTA) without any of
+   the game-header/tile-grid specific pieces .home-shell's siblings carry. */
+.form-shell {
+  max-width: 480px;
+  margin: 0 auto;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.form-shell-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 16px 13px 24px;
+}
+
+.form-shell-footer {
+  flex: 0 0 auto;
+  padding: 12px 13px;
+  border-top: 1px solid var(--stone-line);
+  background: var(--stone-raised);
+  display: flex;
+  justify-content: center;
+}
+
+.form-shell-footer button.primary {
+  width: 100%;
+  max-width: 280px;
+  margin: 0;
+  padding: 12px 10px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.field-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin: 16px 0 6px;
+}
+
+.field-input {
+  width: 100%;
+  font: inherit;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--stone-line);
+  background: var(--stone);
+}
+
+.field-input:focus {
+  outline: 2px solid var(--brass);
+  outline-offset: 1px;
+}
+
+/* Compact "Label: field" row — Name/Pick an avatar/Your role/Game code on StartPage, to fit the
+   whole registration form without scrolling. */
+.field-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0;
+}
+
+.field-row-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  flex-shrink: 0;
+}
+
+.field-row-input {
+  width: auto;
+  flex: 1;
+  padding: 8px 12px;
+}
+
+.avatar-picker {
+  margin: 10px 0;
+}
+
+.avatar-picker-preview-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--brass-tint);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  font-size: 27px;
+  flex-shrink: 0;
+}
+
+.avatar-picker-preview-text {
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.avatar-picker-row-label {
+  font-size: 11px;
+  color: var(--ink-soft);
+  font-weight: 600;
+  margin: 8px 0 2px;
+}
+
+.avatar-picker-row-label:first-child {
+  margin-top: 0;
+}
+
+.skin-tone-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 6px;
+}
+
+.skin-tone-label {
+  font-size: 12px;
+  color: var(--ink-soft);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.skin-tone-swatches {
+  display: flex;
+  gap: 8px;
+}
+
+.skin-tone-swatch {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  padding: 0;
+  cursor: pointer;
+}
+
+.skin-tone-swatch-selected {
+  border-color: var(--brass);
+  box-shadow: 0 0 0 1px var(--stone-raised);
+}
+
+.avatar-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 0;
+}
+
+.avatar-btn {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  min-width: 0;
+  padding: 0;
+  font-size: 27px;
+  line-height: 1;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+}
+
+.avatar-btn:hover {
+  background: var(--stone-raised);
+}
+
+.avatar-btn-selected {
+  border-color: var(--brass);
+  background: var(--brass-tint);
+}
+
+.avatar-picker-expand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  margin-top: 10px;
+  padding: 8px;
+  background: none;
+  border: 1px dashed var(--stone-line);
+  border-radius: 10px;
+  color: var(--ink-soft);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.avatar-picker-chevron {
+  transition: transform 0.2s ease;
+}
+
+.avatar-picker-chevron-open {
+  transform: rotate(180deg);
+}
+
+.avatar-picker-full {
+  display: none;
+  margin-top: 10px;
+}
+
+.avatar-picker-full-visible {
+  display: block;
+}
+
+.avatar-picker-people-panel {
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--stone-line);
+}
+
+.avatar-picker-people-panel .avatar-picker-row-label {
+  margin-top: 0;
+}
+
+.avatar-picker-full em-emoji-picker {
+  width: 100% !important;
+  max-width: 100% !important;
+  --category-icon-size: 20px;
+}
+
+.radio-row {
+  display: flex;
+  gap: 10px;
+  min-width: 0;
+}
+
+.radio-option {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px; /* 11px * 1.1 */
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.radio-option input {
+  accent-color: var(--brass);
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.form-error {
+  color: var(--brick);
+  font-size: 13px;
+  font-weight: 600;
+  margin: 12px 0 0;
+}
+
+.welcome-avatar {
+  font-size: 25.6px; /* 32px base * 0.8 */
+  line-height: 1;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+/* WelcomePage-only heading size — compound selector since .form-shell-body h1 is shared with
+   StartPage's h1 (see .start-heading), which stays at its own separately-scoped size. */
+.form-shell-body h1.welcome-heading {
+  font-size: 24px; /* 30px base * 0.8 */
+}
+
+/* Captain-only controls a non-captain can see but not use — small greyed note next to the
+   disabled button rather than hiding the control entirely, since members should still be able
+   to follow along with what stage the team is at. */
+.captain-only-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-style: normal;
+  color: #004225;
+  margin: 14px 0 0;
+}
+
+/* Every .captain-only-note instance lives inside a .card — .card p (class+element, see
+   feedback-css-specificity-traps memory) otherwise silently wins the margin over the bare class
+   above. This compound selector outranks it deliberately. */
+.card .captain-only-note {
+  margin: 22px 0 0;
+}
+
+.captain-only-note::before {
+  content: '';
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23004225' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='8.5'/%3E%3Cline x1='12' y1='11' x2='12' y2='16'/%3E%3Ccircle cx='12' cy='7.5' r='0.6' fill='%23004225'/%3E%3C/svg%3E");
+}
+
+/* .result-popup has a dark background — the base racing-green would be near-invisible on it, so
+   this context gets a lighter mint tint instead (icon included), keeping the same green identity. */
+.result-popup .captain-only-note {
+  color: #8fd9b6;
+  justify-content: center;
+}
+
+.result-popup .captain-only-note::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238fd9b6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='8.5'/%3E%3Cline x1='12' y1='11' x2='12' y2='16'/%3E%3Ccircle cx='12' cy='7.5' r='0.6' fill='%238fd9b6'/%3E%3C/svg%3E");
+}
+
+/* The old full-page landmark/site detail layout (image/title/address fixed at top, two card-style
+   "about" sections scrolling below, a floating Wikipedia link) has been superseded by the shared
+   .detail-popup format above — landmarks and sites now open as a popup over whatever page/view
+   triggered them (Home, Map, or mid-play), not a separate routed page. See
+   feedback-css-specificity-traps and project-landmark-detail-feature memory for the design history. */

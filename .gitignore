@@ -1,0 +1,27 @@
+# Local Claude Code runtime state
+.claude/
+
+# Dependencies
+node_modules/
+
+# Env files / secrets
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+
+# Root-level scratch/debug scripts (not part of the app)
+/_build_leg4_csv.js
+/_check_meta.js
+/_crop_leg4.js
+/tmp-places-check.js
+/tmp-places-check2.js
+/avs.html
+
+# tools/poi-field-review is its own separate git repo — excluded to avoid nesting
+tools/poi-field-review/
+
+# Historical/archived content snapshots — not needed to run or build the app
+db/content/edinburgh-tour/archive/

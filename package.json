@@ -1,0 +1,13 @@
+{
+  "name": "tourz",
+  "private": true,
+  "version": "0.0.1",
+  "scripts": {
+    "seed": "node db/seed.js"
+  },
+  "dependencies": {
+    "csv-parse": "^7.0.2",
+    "pg": "^8.23.0",
+    "sharp": "^0.35.4"
+  }
+}

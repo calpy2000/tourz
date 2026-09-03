@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>POI Reader</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    /* ---- Colors/fonts copied from client/src/index.css :root, same as tools/poi-field-review,
+       so this preview matches the real DetailPopup component exactly. ---- */
+    :root {
+      --stone: #f2ede1;
+      --stone-raised: #fffdf8;
+      --stone-line: #ddd2bd;
+      --ink: #23201b;
+      --ink-soft: #6b5f4f;
+      --brass: #b8823a;
+      --brass-deep: #93662a;
+      --forest: #2f6b4f;
+      --forest-tint: #dcece2;
+      --brick: #b33f2e;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Quicksand', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      margin: 0;
+      background: var(--stone);
+      background-image: radial-gradient(circle at 1px 1px, var(--stone-line) 1px, transparent 0);
+      background-size: 22px 22px;
+      color: var(--ink);
+    }
+    #app { max-width: 560px; margin: 0 auto; padding: 16px; padding-bottom: 90px; }
+    .progress { font-size: 13px; color: var(--ink-soft); margin-bottom: 8px; }
+    .bar { height: 4px; background: var(--stone-line); border-radius: 2px; overflow: hidden; margin-bottom: 16px; }
+    .bar-fill { height: 100%; background: var(--brick); transition: width 0.2s; }
+
+    .flag-banner {
+      background: #fdeceb; border: 1px solid var(--brick); color: #7a2418;
+      border-radius: 8px; padding: 12px 14px; font-size: 13.5px; line-height: 1.4;
+      margin-bottom: 16px;
+    }
+    .flag-banner strong { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; color: var(--brick); }
+
+    /* Game-card preview: same block as tools/poi-field-review/index.html - mirrors
+       .modal-card.detail-popup and children in client/src/index.css. */
+    .game-card {
+      background: var(--forest-tint);
+      border: 1px solid var(--stone-line);
+      border-radius: 16px;
+      box-shadow: 0 12px 32px rgba(20, 20, 20, 0.28);
+      overflow: hidden;
+      margin-bottom: 14px;
+    }
+    .game-card-image { flex: 0 0 auto; display: block; width: 100%; max-height: 200px; object-fit: cover; }
+    .game-card-body { padding: 16px 20px 20px; }
+    .game-card-body.no-image { padding-top: 20px; }
+    .game-card-eyebrow {
+      font-size: 13.5px; font-weight: 700; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--brass-deep); margin: 0 0 2px;
+    }
+    .game-card-body h3 { font-size: 17px; font-weight: 700; margin: 0 0 8px; }
+    .game-card-body p { font-size: 14px; line-height: 1.45; color: var(--ink-soft); margin: 0 0 14px; }
+    .game-card-body p:last-child { margin-bottom: 0; }
+    .game-card-address { margin-top: -8px; }
+    .no-image-placeholder {
+      height: 90px; display: flex; align-items: center; justify-content: center;
+      background: repeating-linear-gradient(45deg, #eadfca, #eadfca 10px, #e2d5bc 10px, #e2d5bc 20px);
+      color: var(--ink-soft); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em;
+    }
+
+    .meta-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+    .meta-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-soft); }
+    .meta-block { background: var(--stone-raised); border: 1px solid var(--stone-line); border-radius: 10px; padding: 12px 14px; margin-bottom: 12px; font-size: 13.5px; }
+    .gps-line { font-size: 14px; color: var(--ink); margin: 0 0 4px; }
+    .confidence-line { font-size: 12.5px; font-style: italic; margin: 0; }
+    .confidence-confirmed { color: var(--forest); }
+    .confidence-approx { color: var(--brick); }
+    .char-count { font-size: 12px; color: var(--ink-soft); margin-top: 6px; }
+    .source-notes { font-size: 13px; color: var(--ink-soft); line-height: 1.4; }
+    .source-notes-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-soft); margin: 0 0 4px; display: block; }
+
+    .leg-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+    .leg-btn {
+      padding: 6px 12px; border-radius: 999px; border: 1px solid var(--stone-line);
+      background: var(--stone-raised); color: var(--ink); font-size: 12.5px; font-weight: 600;
+      cursor: pointer; font-family: inherit; width: auto; flex: none;
+    }
+    .leg-btn.active { background: var(--brick); border-color: var(--brick); color: #fff; }
+    .nav-row { display: flex; gap: 10px; position: fixed; bottom: 0; left: 0; right: 0; background: var(--stone); padding: 12px 16px; border-top: 1px solid var(--stone-line); max-width: 560px; margin: 0 auto; }
+    button {
+      flex: 1; padding: 14px; border-radius: 8px; border: none;
+      font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit;
+    }
+    .btn-secondary { background: var(--stone-raised); border: 1px solid var(--stone-line); color: var(--ink); }
+    .btn-secondary:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-primary { background: var(--brick); color: #fff; }
+    .loading { text-align: center; padding-top: 60px; color: var(--ink-soft); }
+  </style>
+</head>
+<body>
+  <div id="app"><div class="loading">Loading POI-candidates.csv&hellip;</div></div>
+  <div class="nav-row">
+    <button class="btn-secondary" id="backBtn" onclick="goBack()">Back</button>
+    <button class="btn-primary" id="nextBtn" onclick="goNext()">Next</button>
+  </div>
+
+  <script>
+    // Read-only review tool - loads db/content/edinburgh-tour/POI-candidates.csv fresh on every
+    // page load, no build step, no caching layer of its own. Edit the CSV directly, refresh this
+    // page, see the change - the whole point is to skip a regenerate-then-reload cycle while
+    // actively reviewing. Must be served via a local static server (fetch of a local CSV is
+    // blocked from a file:// origin) - same requirement as tools/poi-field-review.
+    const CSV_PATH = '../../db/content/edinburgh-tour/POI-candidates.csv';
+    const IMAGE_BASE = '../../server/content-photos/';
+
+    // Mirrors SITE_TYPE_LABELS in client/src/components/MapView.jsx / tools/poi-field-review -
+    // the eyebrow label shown above a site's title. Extended with museum/gallery.
+    const SITE_TYPE_LABELS = {
+      statue: 'Statue', monument: 'Monument', famous_person: 'Notable figure',
+      building: 'Building', religious_building: 'Religious building', plaque: 'Plaque',
+      history: 'History', viewpoint: 'Viewpoint', architectural_point: 'Architectural detail',
+      quirky: 'Quirky find', recurring_feature: 'Recurring feature',
+      museum: 'Museum', gallery: 'Gallery',
+    };
+
+    // Mirrors the about_site_label mapping used at promotion time (see
+    // project-poi-sourcing-process memory) - what the real DetailPopup would show as the
+    // section label above the description. Extended with museum/gallery.
+    const ABOUT_LABEL_BY_TYPE = {
+      monument: 'About the monument', statue: 'About the statue',
+      religious_building: 'About the church', history: 'About this address',
+      building: 'About the building', architectural_point: 'About the building',
+      plaque: 'About the plaque', viewpoint: 'About the view',
+      recurring_feature: 'About this feature', museum: 'About the museum',
+      gallery: 'About the gallery',
+    };
+
+    // ---- Minimal RFC4180-ish CSV parser (quoted fields, "" escaping, embedded commas/newlines) --
+    function parseCsv(text) {
+      const rows = [];
+      let row = [], field = '', inQuotes = false;
+      for (let i = 0; i < text.length; i++) {
+        const c = text[i];
+        if (inQuotes) {
+          if (c === '"') {
+            if (text[i + 1] === '"') { field += '"'; i++; }
+            else inQuotes = false;
+          } else {
+            field += c;
+          }
+        } else if (c === '"') {
+          inQuotes = true;
+        } else if (c === ',') {
+          row.push(field); field = '';
+        } else if (c === '\n' || c === '\r') {
+          if (c === '\r' && text[i + 1] === '\n') i++;
+          row.push(field); field = '';
+          if (row.length > 1 || row[0] !== '') rows.push(row);
+          row = [];
+        } else {
+          field += c;
+        }
+      }
+      if (field !== '' || row.length) { row.push(field); rows.push(row); }
+      const header = rows.shift();
+      return rows.map(r => {
+        const obj = {};
+        header.forEach((h, i) => obj[h] = r[i] || '');
+        return obj;
+      });
+    }
+
+    let allPois = [];
+    let pois = [];
+    let selectedLeg = 'all';
+    // Cache-buster for image requests - same value for every image within one page load, so
+    // a rename mid-session (image now exists where it 404'd a moment ago) can't leave a stale
+    // cached 404 behind on the next load.
+    const pageLoadedAt = Date.now();
+    let current = 0;
+
+    fetch(CSV_PATH + '?_=' + Date.now())
+      .then(r => {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.text();
+      })
+      .then(text => {
+        allPois = parseCsv(text);
+        // Position within each POI's own leg (not within whatever filtered subset is currently
+        // shown) - computed once so the displayed number stays stable regardless of the leg
+        // filter, and multiple legs can be combined for review without one leg's numbering
+        // shifting because of another leg's rows.
+        const counters = {};
+        allPois.forEach(p => {
+          const leg = p.leg_number || '?';
+          counters[leg] = (counters[leg] || 0) + 1;
+          p._legPosition = counters[leg];
+          p._legTotal = 0; // filled in below once every row has been counted
+        });
+        allPois.forEach(p => { p._legTotal = counters[p.leg_number || '?']; });
+        applyLegFilter();
+      })
+      .catch(err => {
+        document.getElementById('app').innerHTML =
+          '<div class="loading">Could not load POI-candidates.csv: ' + escapeHtml(err.message) +
+          '<br><br>This page must be served via a local static server (e.g. <code>npx serve</code> from tools/poi-reader), not opened directly as a file.</div>';
+      });
+
+    function applyLegFilter() {
+      pois = selectedLeg === 'all' ? allPois : allPois.filter(p => p.leg_number === selectedLeg);
+      current = 0;
+      render();
+    }
+
+    function selectLeg(leg) {
+      selectedLeg = leg;
+      applyLegFilter();
+      window.scrollTo(0, 0);
+    }
+
+    function legSelectorHtml() {
+      const legs = [...new Set(allPois.map(p => p.leg_number || '?'))]
+        .sort((a, b) => Number(a) - Number(b) || String(a).localeCompare(String(b)));
+      if (legs.length <= 1) return ''; // no point showing a filter for a single leg
+      let html = '<div class="leg-row">';
+      html += `<button class="leg-btn${selectedLeg === 'all' ? ' active' : ''}" onclick="selectLeg('all')">All legs</button>`;
+      legs.forEach(leg => {
+        html += `<button class="leg-btn${selectedLeg === leg ? ' active' : ''}" onclick="selectLeg('${escapeAttr(leg)}')">Leg ${escapeHtml(leg)}</button>`;
+      });
+      html += '</div>';
+      return html;
+    }
+
+    function render() {
+      if (pois.length === 0) {
+        document.getElementById('app').innerHTML = legSelectorHtml() + '<div class="loading">No rows for this leg in POI-candidates.csv.</div>';
+        return;
+      }
+      const p = pois[current];
+      const pct = Math.round((p._legPosition / p._legTotal) * 100);
+      const eyebrow = SITE_TYPE_LABELS[p.type] || 'Point of interest';
+      const aboutLabel = ABOUT_LABEL_BY_TYPE[p.type] || 'About this spot';
+      const hasImage = !!p.image_path;
+      const isFlagged = /FLAG FOR USER/i.test(p.source_notes || '');
+
+      let html = '';
+      html += legSelectorHtml();
+      html += `<div class="progress">Leg ${escapeHtml(p.leg_number || '?')}, POI ${p._legPosition} of ${p._legTotal}${p.leg ? ' &middot; ' + escapeHtml(p.leg) : ''}</div>`;
+      html += `<div class="bar"><div class="bar-fill" style="width:${pct}%"></div></div>`;
+
+      if (isFlagged) {
+        html += `<div class="flag-banner"><strong>Flagged for review</strong>${escapeHtml(p.source_notes)}</div>`;
+      }
+
+      html += `<div class="game-card">`;
+      if (hasImage) {
+        html += `<img class="game-card-image" src="${escapeAttr(IMAGE_BASE + p.image_path)}?_=${pageLoadedAt}" onerror="this.outerHTML='<div class=&quot;no-image-placeholder&quot;>Image not found: ${escapeAttr(p.image_path)}</div>'">`;
+      }
+      html += `<div class="game-card-body${hasImage ? '' : ' no-image'}">`;
+      html += `<div class="game-card-eyebrow">${escapeHtml(eyebrow)}</div>`;
+      html += `<h3>${escapeHtml(p.name)}</h3>`;
+      if (p.address) html += `<p class="game-card-address">${escapeHtml(p.address)}</p>`;
+      if (p.description) {
+        html += `<p class="game-card-field-label" style="font-size:13.5px;font-weight:700;color:var(--brass-deep);margin:0 0 2px;">${escapeHtml(aboutLabel)}</p>`;
+        html += `<p>${escapeHtml(p.description)}</p>`;
+      }
+      if (p.interesting_fact) html += `<p><strong>Interesting fact:</strong> ${escapeHtml(p.interesting_fact)}</p>`;
+      if (!hasImage) html += `<div class="no-image-placeholder" style="margin-top:8px;border-radius:8px;">No image sourced yet</div>`;
+      html += `</div></div>`;
+
+      const combinedLen = (p.description || '').length + (p.interesting_fact || '').length;
+      html += `<div class="meta-block">`;
+      html += `<p class="gps-line">GPS: ${p.latitude && p.longitude ? escapeHtml(p.latitude) + ', ' + escapeHtml(p.longitude) : '<em>not set</em>'}</p>`;
+      if (p.geocode_confidence) {
+        const cls = /^approx/i.test(p.geocode_confidence) ? 'confidence-approx' : 'confidence-confirmed';
+        html += `<p class="confidence-line ${cls}">${escapeHtml(p.geocode_confidence)}</p>`;
+      }
+      html += `<p class="char-count">Description + fact: ${combinedLen} characters (target ~1,050-1,150)</p>`;
+      html += `</div>`;
+
+      if (p.source_notes && !isFlagged) {
+        html += `<div class="meta-block"><span class="source-notes-label">Source notes</span><p class="source-notes">${escapeHtml(p.source_notes)}</p></div>`;
+      }
+
+      document.getElementById('app').innerHTML = html;
+      document.getElementById('backBtn').disabled = current === 0;
+      document.getElementById('nextBtn').textContent = current === pois.length - 1 ? 'Next' : 'Next';
+      document.getElementById('nextBtn').disabled = current === pois.length - 1;
+    }
+
+    function goNext() {
+      if (current < pois.length - 1) { current++; render(); window.scrollTo(0, 0); }
+    }
+    function goBack() {
+      if (current > 0) { current--; render(); window.scrollTo(0, 0); }
+    }
+
+    function escapeHtml(str) {
+      return String(str == null ? '' : str)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+    function escapeAttr(str) {
+      return escapeHtml(str).replace(/"/g, '&quot;');
+    }
+  </script>
+</body>
+</html>
