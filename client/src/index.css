@@ -17,6 +17,21 @@
   box-sizing: border-box;
 }
 
+/* On-screen build marker, every page — see client/src/version.js for the bump convention.
+   Deliberately understated (small, low-contrast, no border/shadow) since it's a debugging aid
+   for the user, not a UI element players are meant to notice. pointer-events:none so it never
+   intercepts a tap meant for whatever's underneath it (e.g. the filter chips on Map view). */
+.app-version-badge {
+  position: fixed;
+  top: 4px;
+  left: 6px;
+  z-index: 9999;
+  font-size: 10px;
+  color: var(--ink-soft);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
 html, body, #root {
   height: 100%;
 }

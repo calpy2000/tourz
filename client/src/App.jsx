@@ -5,6 +5,7 @@ import InstructionsPage from './pages/InstructionsPage.jsx'
 import HomePage from './pages/HomePage.jsx'
 import PlayPage from './pages/PlayPage.jsx'
 import { getSession } from './localSession.js'
+import { APP_VERSION } from './version.js'
 
 // /home, /play, /instructions all need a real registered player — without a session there's no
 // team for the API to resolve, so bounce back to registration rather than showing a broken page.
@@ -17,12 +18,15 @@ function RequireSession({ children }) {
 // project-landmark-detail-feature memory for the design history of the page this replaced.
 export default function App() {
   return (
-    <Routes>
-      <Route path="/" element={<StartPage />} />
-      <Route path="/welcome" element={<RequireSession><WelcomePage /></RequireSession>} />
-      <Route path="/instructions" element={<RequireSession><InstructionsPage /></RequireSession>} />
-      <Route path="/home" element={<RequireSession><HomePage /></RequireSession>} />
-      <Route path="/play" element={<RequireSession><PlayPage /></RequireSession>} />
-    </Routes>
+    <>
+      <div className="app-version-badge">{APP_VERSION}</div>
+      <Routes>
+        <Route path="/" element={<StartPage />} />
+        <Route path="/welcome" element={<RequireSession><WelcomePage /></RequireSession>} />
+        <Route path="/instructions" element={<RequireSession><InstructionsPage /></RequireSession>} />
+        <Route path="/home" element={<RequireSession><HomePage /></RequireSession>} />
+        <Route path="/play" element={<RequireSession><PlayPage /></RequireSession>} />
+      </Routes>
+    </>
   )
 }
