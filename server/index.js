@@ -25,7 +25,9 @@ app.use(cors());
 app.use(express.json());
 app.use('/content-photos', express.static(path.join(__dirname, 'content-photos')));
 
-const db = new Client({ host: 'localhost', port: 5432, user: 'postgres', database: 'tourz' });
+const db = process.env.DATABASE_URL
+  ? new Client({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } })
+  : new Client({ host: 'localhost', port: 5432, user: 'postgres', database: 'tourz' });
 
 // Puzzle-solve scoring — re-amended 2026-08-24: a wrong answer is always 0, full stop — no
 // partial credit for how well the landmark was found. A correct answer starts at 1 point and
@@ -1134,10 +1136,10 @@ app.post('/api/dev/complete/:count', async (req, res) => {
   res.json({ completedCount: landmarks.length });
 });
 
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 db.connect()
   .then(() => {
-    app.listen(PORT, () => console.log(`TOURZ API listening on http://localhost:${PORT}`));
+    app.listen(PORT, () => console.log(`TOURZ API listening on port ${PORT}`));
   })
   .catch((err) => {
     console.error('Failed to start server:', err);

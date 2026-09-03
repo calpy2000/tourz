@@ -47,12 +47,9 @@ async function main() {
   const quizQuestions = readCsv('quiz_questions.csv');
   const sites = readCsv('sites.csv');
 
-  const client = new Client({
-    host: 'localhost',
-    port: 5432,
-    user: 'postgres',
-    database: 'tourz',
-  });
+  const client = process.env.DATABASE_URL
+    ? new Client({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } })
+    : new Client({ host: 'localhost', port: 5432, user: 'postgres', database: 'tourz' });
   await client.connect();
 
   try {
