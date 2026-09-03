@@ -4,6 +4,7 @@ import { APIProvider, Map, AdvancedMarker, Polyline, useMap, useMapsLibrary, use
 import { Utensils, Coffee, Martini, Toilet, Plus } from 'lucide-react'
 import { api } from '../api.js'
 import { API_BASE } from '../apiBase.js'
+import { useGeolocation } from '../useGeolocation.js'
 import AnchoredPopup from './AnchoredPopup.jsx'
 import DetailPopup from './DetailPopup.jsx'
 import { isStartLandmark, landmarkDisplayNumber } from '../landmarkNumber.js'
@@ -22,9 +23,9 @@ let lastCamera = null // { center: {lat,lng}, zoom }
 // line with strokeOpacity 0, plus a short line symbol repeated along the path instead.
 const DASH_ICON = { icon: { path: 'M 0,-1 0,1', strokeOpacity: 1, scale: 3 }, offset: '0', repeat: '12px' }
 
-// Placeholder only — real GPS tracking is a post-MVP feature (see project-architecture memory).
-// Renders "you are here" a short fixed offset from the most recently solved landmark, so the
-// mockup's marker exists visually without pretending to be a live position.
+// Fallback only — used when the browser's real GPS (useGeolocation) hasn't produced a fix yet,
+// or is unsupported/denied. Renders "you are here" a short fixed offset from the most recently
+// solved landmark, so the marker exists visually rather than the layer having nothing to show.
 function placeholderHereLocation(solvedLandmarks) {
   if (solvedLandmarks.length === 0) return FALLBACK_CENTER
   const last = solvedLandmarks[solvedLandmarks.length - 1]
@@ -227,6 +228,7 @@ export default function MapView() {
   // ICON_ZOOM_THRESHOLD — seeded from lastCamera so a returning player doesn't get a one-frame
   // flash of the wrong marker style before the first onCameraChanged fires.
   const [zoom, setZoom] = useState(lastCamera?.zoom ?? null)
+  const { location: liveLocation } = useGeolocation()
 
   function openLandmark(sequenceOrder) {
     api.getLandmarkDetail(sequenceOrder).then((data) => { if (!data.error) setLandmarkPopup(data) })
@@ -269,7 +271,7 @@ export default function MapView() {
   // own marker further down, and the server's currentRevealedLandmark helper).
   const knownLandmarks = currentRevealed ? [...solvedLandmarks, currentRevealed] : solvedLandmarks
   const lastKnown = knownLandmarks[knownLandmarks.length - 1]
-  const hereLocation = placeholderHereLocation(knownLandmarks)
+  const hereLocation = liveLocation || placeholderHereLocation(knownLandmarks)
   const pathCoords = knownLandmarks.map((l) => ({ lat: l.latitude, lng: l.longitude }))
   const bounds = boundsFor(pathCoords.length > 0 ? [...pathCoords, hereLocation] : [FALLBACK_CENTER])
 
@@ -359,7 +361,7 @@ export default function MapView() {
                   </AdvancedMarker>
                 )}
                 <AdvancedMarker position={hereLocation}>
-                  <div className="map-pin-here" />
+                  <div className={liveLocation ? 'map-pin-here' : 'map-pin-here map-pin-here-fallback'} />
                 </AdvancedMarker>
               </>
             )}

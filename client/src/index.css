@@ -1233,6 +1233,12 @@ button.primary.detail-popup-setgps {
   box-shadow: 0 0 0 8px rgba(61, 107, 140, 0.22);
 }
 
+/* No real GPS fix yet (unsupported, denied, or still waiting on the first one) — dimmed so it
+   doesn't read as an accurate live position. */
+.map-pin-here-fallback {
+  opacity: 0.45;
+}
+
 .home-chat {
   flex: 0 0 96px;
   border-top: 1px solid var(--stone-line);
