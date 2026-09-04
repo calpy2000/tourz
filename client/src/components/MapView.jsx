@@ -250,7 +250,7 @@ export default function MapView() {
   // ICON_ZOOM_THRESHOLD — seeded from lastCamera so a returning player doesn't get a one-frame
   // flash of the wrong marker style before the first onCameraChanged fires.
   const [zoom, setZoom] = useState(lastCamera?.zoom ?? null)
-  const { location: liveLocation } = useGeolocation()
+  const { location: liveLocation, reacquiring } = useGeolocation()
 
   function openLandmark(sequenceOrder) {
     api.getLandmarkDetail(sequenceOrder).then((data) => { if (!data.error) setLandmarkPopup(data) })
@@ -400,7 +400,11 @@ export default function MapView() {
                   </AdvancedMarker>
                 )}
                 <AdvancedMarker position={hereLocation}>
-                  <div className={liveLocation ? 'map-pin-here' : 'map-pin-here map-pin-here-fallback'} />
+                  <div className={
+                    !liveLocation ? 'map-pin-here map-pin-here-fallback'
+                      : reacquiring ? 'map-pin-here map-pin-here-reacquiring'
+                      : 'map-pin-here'
+                  } />
                 </AdvancedMarker>
               </>
             )}

@@ -1376,6 +1376,18 @@ button.primary.detail-popup-setgps {
   animation: none;
 }
 
+/* Tab just came back from being backgrounded/screen-locked and is waiting on a forced fresh fix
+   (see useGeolocation's `reacquiring`) — the old fix is still shown (better than nothing), but
+   dimmed and non-pulsing so it doesn't read as a confident live position while it might be
+   several minutes and meters stale. */
+.map-pin-here-reacquiring {
+  opacity: 0.55;
+}
+
+.map-pin-here-reacquiring::after {
+  animation: none;
+}
+
 .home-chat {
   flex: 0 0 96px;
   border-top: 1px solid var(--stone-line);

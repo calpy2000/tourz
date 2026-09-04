@@ -1,8 +1,18 @@
 {
   "name": "tourz",
   "compatibility_date": "2026-09-03",
+  "main": "worker.js",
   "assets": {
     "directory": "./dist",
-    "not_found_handling": "single-page-application"
+    "not_found_handling": "single-page-application",
+    "binding": "ASSETS"
+  },
+  "triggers": {
+    // Every 10 minutes — comfortably under Render's 15-min idle sleep threshold (see
+    // project_hosting_plan / feedback memory on the "app stalls after 10 min idle" bug).
+    "crons": ["*/10 * * * *"]
+  },
+  "vars": {
+    "API_BASE_URL": "https://tourz-api.onrender.com"
   }
 }

@@ -77,7 +77,14 @@ export default function ChatPanel() {
     }
     poll()
     const id = setInterval(poll, POLL_MS)
-    return () => { cancelled = true; clearInterval(id) }
+    // Backgrounded/screen-locked tabs suspend this interval (see feedback memory on the
+    // "app stalls after 10 min idle" bug) — catch up immediately on resume instead of waiting for
+    // the next 4s tick, which itself might be a while off if the interval was suspended mid-cycle.
+    function onVisible() {
+      if (document.visibilityState === 'visible') poll()
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => { cancelled = true; clearInterval(id); document.removeEventListener('visibilitychange', onVisible) }
   }, [])
 
   useEffect(() => {

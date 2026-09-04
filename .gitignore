@@ -4,6 +4,9 @@
 # Dependencies
 node_modules/
 
+# Local Wrangler dev/deploy cache (miniflare state, build output)
+client/.wrangler/
+
 # Env files / secrets
 .env
 .env.local

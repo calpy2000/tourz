@@ -16,6 +16,8 @@ import { rectFromEvent } from '../rect.js'
 import { isStartLandmark, landmarkDisplayNumber } from '../landmarkNumber.js'
 import { getSession } from '../localSession.js'
 import { DEV_MODE } from '../devMode.js'
+import { useRefreshOnResume } from '../useRefreshOnResume.js'
+import { useWakeLock } from '../useWakeLock.js'
 
 // Find & solve banner copy — re-amended 2026-08-24. A wrong answer is one flat outcome
 // regardless of hints (0 points always), so it no longer needs a hints-aware message.
@@ -84,6 +86,9 @@ export default function PlayPage() {
     const id = setInterval(refresh, 4000)
     return () => clearInterval(id)
   }, [])
+
+  useRefreshOnResume(refresh)
+  useWakeLock()
 
   useEffect(() => {
     setShowQuiz(false)

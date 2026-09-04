@@ -9,6 +9,8 @@ import DetailPopup from '../components/DetailPopup.jsx'
 import ChatPanel from '../components/ChatPanel.jsx'
 import LoadingScreen from '../components/LoadingScreen.jsx'
 import { isStartLandmark, landmarkDisplayNumber } from '../landmarkNumber.js'
+import { useRefreshOnResume } from '../useRefreshOnResume.js'
+import { useWakeLock } from '../useWakeLock.js'
 
 function formatMs(totalSeconds) {
   const m = Math.floor(totalSeconds / 60)
@@ -37,6 +39,9 @@ export default function HomePage() {
   useEffect(() => {
     loadHome()
   }, [])
+
+  useRefreshOnResume(loadHome)
+  useWakeLock()
 
   // elapsedSeconds is a snapshot from whenever we last fetched — tick locally so the clock
   // keeps moving between fetches instead of looking frozen.

@@ -28,6 +28,11 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use('/content-photos', express.static(path.join(__dirname, 'content-photos')));
 
+// Unauthenticated, no DB query — pinged every few minutes by the Cloudflare Worker's cron
+// trigger (see client/worker.js) purely to keep this Render free-tier service from spinning down
+// after 15 minutes idle, which otherwise cold-starts (30-60s+) on a real player's next request.
+app.get('/api/health', (req, res) => res.json({ ok: true }));
+
 const mailTransporter = nodemailer.createTransport({
   service: 'gmail',
   auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_APP_PASSWORD },
