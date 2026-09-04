@@ -4,6 +4,23 @@ import { api } from '../api.js'
 import { getSession, saveSession } from '../localSession.js'
 import { DEV_MODE } from '../devMode.js'
 import AvatarPicker from '../components/AvatarPicker.jsx'
+import LoadingScreen from '../components/LoadingScreen.jsx'
+
+// Used any time StartPage finds a session already ready to use (dev auto-login, or an existing
+// registered session on this device) — checks whether that team's tour is already complete before
+// deciding where to resume, so a completed team lands on /certificate instead of /home. This is
+// what makes the certificate page "sticky": reopening the app URL always re-runs this check, and
+// /api/game/certificate is expiry-agnostic, so it keeps returning tourComplete even once the game
+// code has expired.
+function ResumeRedirect({ fallback = '/home' }) {
+  const [destination, setDestination] = useState(null)
+  useEffect(() => {
+    api.getCertificateStatus()
+      .then((res) => setDestination(res?.tourComplete ? '/certificate' : fallback))
+      .catch(() => setDestination(fallback))
+  }, [fallback])
+  return destination ? <Navigate to={destination} replace /> : <LoadingScreen />
+}
 
 export default function StartPage() {
   const navigate = useNavigate()
@@ -47,11 +64,11 @@ export default function StartPage() {
   }, [])
 
   if (DEV_MODE) {
-    return devSessionReady ? <Navigate to="/home" replace /> : <div className="screen center">Loading&hellip;</div>
+    return devSessionReady ? <ResumeRedirect fallback="/instructions" /> : <LoadingScreen />
   }
 
   // Already registered on this device — no need to go through this again.
-  if (hadExistingSession) return <Navigate to="/home" replace />
+  if (hadExistingSession) return <ResumeRedirect />
 
   async function handleSubmit(e) {
     e.preventDefault()

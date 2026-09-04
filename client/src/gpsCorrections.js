@@ -18,3 +18,7 @@ export function saveGpsCorrection(entry) {
   list.push(entry)
   localStorage.setItem(KEY, JSON.stringify(list))
 }
+
+export function clearGpsCorrections() {
+  localStorage.removeItem(KEY)
+}

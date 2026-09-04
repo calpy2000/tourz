@@ -1,13 +1,17 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { ChevronUp, ChevronDown } from 'lucide-react'
 import { api } from '../api.js'
 import { fireConfetti } from '../confetti.js'
 import ResultPopup from '../components/ResultPopup.jsx'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
 import WhyPopup from '../components/WhyPopup.jsx'
 import DevTools from '../components/DevTools.jsx'
+import HelpButton from '../components/HelpButton.jsx'
 import DetailPopup from '../components/DetailPopup.jsx'
 import ChatPanel from '../components/ChatPanel.jsx'
+import TourCompletePopup from '../components/TourCompletePopup.jsx'
+import LoadingScreen from '../components/LoadingScreen.jsx'
 import { rectFromEvent } from '../rect.js'
 import { isStartLandmark, landmarkDisplayNumber } from '../landmarkNumber.js'
 import { getSession } from '../localSession.js'
@@ -30,6 +34,22 @@ function quizBannerText({ correctCount, points }) {
   if (correctCount === 2) return `Nice - you got 2 out of 4 right 🙂 ${points} points`
   if (correctCount === 1) return `Nice - you got 1 out of 4 right 🙂 ${points} point`
   return `Unlucky - you didn't get any right 🙁 no points`
+}
+
+// Shared closing paragraph for both pageHelpText variants below (find/solve and quiz) — same
+// team-feed reminder, same chevron icons as InstructionsPage's own mention of the chat.
+function ChatHelpNote() {
+  return (
+    <p>
+      You can chat with your team in the <strong>Team feed</strong> at the bottom of the screen —
+      tap the chevron{' '}
+      <span className="instructions-chevron-pair">
+        <ChevronUp size={14} strokeWidth={3} />
+        <ChevronDown size={14} strokeWidth={3} />
+      </span>{' '}
+      to expand or collapse it.
+    </p>
+  )
 }
 
 
@@ -73,7 +93,7 @@ export default function PlayPage() {
     setRevealConfirmAnchor(null)
   }, [state?.sequenceOrder])
 
-  if (!state) return <div className="screen center">Loading&hellip;</div>
+  if (!state) return <LoadingScreen />
 
   if (state.tourComplete) {
     return (
@@ -84,6 +104,7 @@ export default function PlayPage() {
         <button className="ghost" onClick={async () => { await api.devReset(); refresh() }}>
           Restart (dev)
         </button>
+        <TourCompletePopup />
       </div>
     )
   }
@@ -127,6 +148,10 @@ export default function PlayPage() {
     refresh()
   }
 
+  // Same condition that decides which section renders below — the help popup needs to match
+  // whichever one is actually on screen, not always describe the find/solve flow.
+  const inQuizView = (showQuiz || landmarkComplete) && quiz.unlocked
+
   return (
     <div className="home-shell">
       <header className="landmark-header">
@@ -136,6 +161,25 @@ export default function PlayPage() {
           {state.title ? <span className="landmark-name">{state.title}</span> : <span className="landmark-unsolved">Unsolved</span>}
         </span>
         {DEV_MODE && <DevTools onReset={refresh} />}
+        <HelpButton
+          pageHelpText={
+            inQuizView ? (
+              <>
+                <p>Answer a few quick questions about things you should have noticed along the way — points of interest, details on the route, that kind of thing.</p>
+                <p>Only your team captain can submit an answer, and each question can only be answered once, so make sure of your choice before submitting.</p>
+                <p>Once all questions are answered you'll move on to the next landmark.</p>
+                <ChatHelpNote />
+              </>
+            ) : (
+              <>
+                <p><strong>Find it:</strong> work out where the clue is pointing you and head there. Only your team captain can ask for a hint or reveal the location — each hint lowers the points you can earn here, and revealing caps this landmark at 1 point.</p>
+                <p><strong>Solve it:</strong> once you're confident, answer the question — only the captain can submit, and you only get one attempt.</p>
+                <p>After solving, you'll take a short quiz on things you should have noticed on the way, then move on to the next landmark.</p>
+                <ChatHelpNote />
+              </>
+            )
+          }
+        />
       </header>
 
       <div className="landmark-body">
@@ -165,12 +209,13 @@ export default function PlayPage() {
                 </div>
                 {!q.answered ? (
                   selected && (
-                    <>
-                      <button className="primary quiz-submit" onClick={() => handleQuizSubmit(q.id)} disabled={!isCaptain}>
+                    isCaptain ? (
+                      <button className="primary quiz-submit" onClick={() => handleQuizSubmit(q.id)}>
                         submit
                       </button>
-                      {!isCaptain && <p className="captain-only-note">Only your team captain can submit an answer.</p>}
-                    </>
+                    ) : (
+                      <p className="captain-only-note">Only the captain can submit answers.</p>
+                    )
                   )
                 ) : (
                   <div className="quiz-result">

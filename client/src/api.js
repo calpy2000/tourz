@@ -62,6 +62,8 @@ export const api = {
   submitPuzzleAnswer: (answer) => post(`${BASE}/puzzle/answer`, { answer }),
   submitQuizAnswer: (questionId, answer) => post(`${BASE}/quiz/answer`, { questionId, answer }),
   advance: () => post(`${BASE}/advance`),
+  getCertificateStatus: () => get(`${BASE}/certificate`),
+  sendCertificate: (email, imageDataUrl) => post(`${BASE}/certificate/send`, { email, imageDataUrl }),
   getMessages: (after) => get(`${BASE}/messages${after ? `?after=${after}` : ''}`),
   sendMessage: (text) => post(`${BASE}/messages`, { text }),
   getLandmarkDetail: (sequenceOrder) => get(`${BASE}/landmark/${sequenceOrder}`),

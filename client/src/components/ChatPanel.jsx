@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { ChevronUp, ChevronDown, Pencil, Send } from 'lucide-react'
 import { api } from '../api.js'
 import { getSession } from '../localSession.js'
+import { playChatPing } from '../chatPing.js'
 
 const POLL_MS = 4000
 
@@ -47,8 +48,12 @@ export default function ChatPanel() {
   const [mode, setMode] = useState('idle') // 'idle' | 'composing' | 'expanded'
   const [draft, setDraft] = useState('')
   const [sending, setSending] = useState(false)
+  const [pinging, setPinging] = useState(false)
   const sinceIdRef = useRef(0)
   const listRef = useRef(null)
+  // First poll loads whatever history already exists — that's not a "new" message arriving, so
+  // the ping/sweep only fires for messages picked up by a later poll.
+  const primedRef = useRef(false)
 
   // Chat must never be able to block or break the rest of the game — every failure here is
   // swallowed and just tried again next cycle, same spirit as PlayPage's gameplay poll.
@@ -57,9 +62,15 @@ export default function ChatPanel() {
     async function poll() {
       try {
         const res = await api.getMessages(sinceIdRef.current)
-        if (cancelled || !res?.messages?.length) return
+        if (cancelled || !res?.messages?.length) { primedRef.current = true; return }
+        if (primedRef.current) {
+          playChatPing()
+          setPinging(true)
+          setTimeout(() => setPinging(false), 1000)
+        }
         setMessages((prev) => [...prev, ...res.messages])
         sinceIdRef.current = res.messages[res.messages.length - 1].id
+        primedRef.current = true
       } catch {
         // offline/no signal — silently retry on the next tick
       }
@@ -98,7 +109,7 @@ export default function ChatPanel() {
 
   return (
     <>
-      <div className="home-chat">
+      <div className={pinging ? 'home-chat home-chat-ping' : 'home-chat'}>
         <div className="home-chat-head">
           <span>Team feed</span>
           <button

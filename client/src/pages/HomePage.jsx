@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
+import { ChevronUp, ChevronDown } from 'lucide-react'
 import { api } from '../api.js'
 import { API_BASE } from '../apiBase.js'
 import GameHeader from '../components/GameHeader.jsx'
 import MapView from '../components/MapView.jsx'
 import DetailPopup from '../components/DetailPopup.jsx'
 import ChatPanel from '../components/ChatPanel.jsx'
+import LoadingScreen from '../components/LoadingScreen.jsx'
 import { isStartLandmark, landmarkDisplayNumber } from '../landmarkNumber.js'
 
 function formatMs(totalSeconds) {
@@ -15,8 +17,12 @@ function formatMs(totalSeconds) {
 }
 
 export default function HomePage() {
+  const location = useLocation()
   const [data, setData] = useState(null)
-  const [view, setView] = useState('tile')
+  // Restored from the help detour (see HelpButton's returnState / InstructionsPage's back
+  // button) so tapping "back" from help-mode instructions doesn't silently drop you into tile
+  // view even if you'd been looking at the map.
+  const [view, setView] = useState(location.state?.view || 'tile')
   const [fetchedAt, setFetchedAt] = useState(null)
   const [, setTick] = useState(0)
   const [landmarkPopup, setLandmarkPopup] = useState(null)
@@ -39,7 +45,7 @@ export default function HomePage() {
     return () => clearInterval(id)
   }, [])
 
-  if (!data) return <div className="screen center">Loading&hellip;</div>
+  if (!data) return <LoadingScreen />
 
   const liveElapsedSeconds = data.elapsedSeconds + Math.floor((Date.now() - fetchedAt) / 1000)
 
@@ -57,7 +63,29 @@ export default function HomePage() {
 
   return (
     <div className="home-shell">
-      <GameHeader data={data} elapsedSeconds={liveElapsedSeconds} onReset={loadHome} />
+      <GameHeader
+        data={data}
+        elapsedSeconds={liveElapsedSeconds}
+        onReset={loadHome}
+        showHelp
+        helpReturnState={{ view }}
+        pageHelpText={
+          <>
+            <p><strong>Tile view</strong> shows every landmark — solved ones as photos, your current landmark marked "in progress", and landmarks you haven't reached yet as "?". Tap a solved tile to see details about the landmark.</p>
+            <p><strong>Map view</strong> shows solved landmarks and points-of-interest markers on the map, plus your live location — tap any marker to open it.</p>
+            <p>Switch between the two with the buttons above the grid.</p>
+            <p>
+              You can chat with your team in the <strong>Team feed</strong> at the bottom of the
+              screen — tap the chevron{' '}
+              <span className="instructions-chevron-pair">
+                <ChevronUp size={14} strokeWidth={3} />
+                <ChevronDown size={14} strokeWidth={3} />
+              </span>{' '}
+              to expand or collapse it.
+            </p>
+          </>
+        }
+      />
 
       <div className="home-body">
         <div className="view-switch">

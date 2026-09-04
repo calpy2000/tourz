@@ -4,6 +4,7 @@ import WelcomePage from './pages/WelcomePage.jsx'
 import InstructionsPage from './pages/InstructionsPage.jsx'
 import HomePage from './pages/HomePage.jsx'
 import PlayPage from './pages/PlayPage.jsx'
+import CertificatePage from './pages/CertificatePage.jsx'
 import { getSession } from './localSession.js'
 import { APP_VERSION } from './version.js'
 
@@ -26,6 +27,7 @@ export default function App() {
         <Route path="/instructions" element={<RequireSession><InstructionsPage /></RequireSession>} />
         <Route path="/home" element={<RequireSession><HomePage /></RequireSession>} />
         <Route path="/play" element={<RequireSession><PlayPage /></RequireSession>} />
+        <Route path="/certificate" element={<RequireSession><CertificatePage /></RequireSession>} />
       </Routes>
     </>
   )

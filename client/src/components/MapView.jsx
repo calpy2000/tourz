@@ -9,6 +9,7 @@ import { saveGpsCorrection } from '../gpsCorrections.js'
 import AnchoredPopup from './AnchoredPopup.jsx'
 import DetailPopup from './DetailPopup.jsx'
 import { isStartLandmark, landmarkDisplayNumber } from '../landmarkNumber.js'
+import { DEV_MODE } from '../devMode.js'
 
 // Used only if the team has no solved landmarks yet (map needs some center before the first find).
 const FALLBACK_CENTER = { lat: 55.9535, lng: -3.197 }
@@ -313,12 +314,11 @@ export default function MapView() {
 
   const { solvedLandmarks, sites, currentRevealed } = mapData
   // The revealed-but-in-progress landmark (puzzle solved, quiz pending) counts as "known" for
-  // every map-display purpose below — the walking path, the "here" connector, and the initial
-  // camera fit all treat it the same as a fully solved landmark. The only thing it deliberately
-  // doesn't do is get its own separate marker treatment or affect scoring (see currentRevealed's
-  // own marker further down, and the server's currentRevealedLandmark helper).
+  // every map-display purpose below — the walking path and the initial camera fit both treat it
+  // the same as a fully solved landmark. The only thing it deliberately doesn't do is get its own
+  // separate marker treatment or affect scoring (see currentRevealed's own marker further down,
+  // and the server's currentRevealedLandmark helper).
   const knownLandmarks = currentRevealed ? [...solvedLandmarks, currentRevealed] : solvedLandmarks
-  const lastKnown = knownLandmarks[knownLandmarks.length - 1]
   const hereLocation = liveLocation || placeholderHereLocation(knownLandmarks)
   const pathCoords = knownLandmarks.map((l) => ({ lat: l.latitude, lng: l.longitude }))
   const bounds = boundsFor(pathCoords.length > 0 ? [...pathCoords, hereLocation] : [FALLBACK_CENTER])
@@ -341,8 +341,8 @@ export default function MapView() {
       <div className="filter-chips">
         <FilterChip active={filters.landmarks} onClick={() => toggleFilter('landmarks')}>Landmarks</FilterChip>
         <FilterChip active={filters.interests} onClick={() => toggleFilter('interests')}>Interests</FilterChip>
-        <FilterChip active={filters.amenities} onClick={() => toggleFilter('amenities')}>Amenities</FilterChip>
-        <FilterChip active={filters.poiDrafts} onClick={() => toggleFilter('poiDrafts')}>POI Drafts</FilterChip>
+        {DEV_MODE && <FilterChip active={filters.amenities} onClick={() => toggleFilter('amenities')}>Amenities</FilterChip>}
+        {DEV_MODE && <FilterChip active={filters.poiDrafts} onClick={() => toggleFilter('poiDrafts')}>POI Drafts</FilterChip>}
       </div>
 
       <div className="map-container">
@@ -363,15 +363,6 @@ export default function MapView() {
             {filters.landmarks && (
               <>
                 <WalkingPath legs={routeLegs} fallbackPath={pathCoords} />
-                {lastKnown && (
-                  <Polyline
-                    path={[{ lat: lastKnown.latitude, lng: lastKnown.longitude }, hereLocation]}
-                    strokeColor="#3d6b8c"
-                    strokeOpacity={0}
-                    strokeWeight={2}
-                    icons={[DASH_ICON]}
-                  />
-                )}
                 {/* Solved landmarks — never the current/future one, mapData already excludes it.
                     zIndex explicit and deliberately huge: at least one POI (Frederick Street
                     Castle View) shares exact coordinates with a landmark by design ("same corner"
@@ -434,11 +425,11 @@ export default function MapView() {
               )
             })}
 
-            {filters.amenities && places && places.map((p) => (
+            {DEV_MODE && filters.amenities && places && places.map((p) => (
               <AmenityMarker key={p.id} place={p} onOpen={setPoiPopup} showDots={showDots} />
             ))}
 
-            {filters.poiDrafts && poiDrafts && poiDrafts.map((poi, i) => (
+            {DEV_MODE && filters.poiDrafts && poiDrafts && poiDrafts.map((poi, i) => (
               <DraftMarker
                 key={i}
                 poi={poi}

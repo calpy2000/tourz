@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../api.js'
 import { rectFromEvent } from '../rect.js'
-import { loadGpsCorrections } from '../gpsCorrections.js'
+import { loadGpsCorrections, clearGpsCorrections } from '../gpsCorrections.js'
 import DevMenu from './DevMenu.jsx'
 
 // The "Dev" button + menu shared by every page that needs quick test shortcuts. `onReset` lets
@@ -45,12 +45,17 @@ export default function DevTools({ onReset }) {
     URL.revokeObjectURL(url)
   }
 
+  function handleClearGps() {
+    clearGpsCorrections()
+  }
+
   const actions = [
     { label: 'Reset', onClick: handleReset },
     { label: 'Landmark 1 complete', onClick: () => completeThrough(1) },
     { label: 'Landmark 2 complete', onClick: () => completeThrough(2) },
     { label: 'All landmarks + POIs complete', onClick: () => completeThrough(999) },
     { label: 'Export GPS updates', onClick: handleExportGps },
+    { label: 'Clear GPS corrections', onClick: handleClearGps },
   ]
 
   return (

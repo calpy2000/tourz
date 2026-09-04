@@ -12,7 +12,11 @@
     <title>TOURZ</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- crossorigin is required here (not just on the gstatic preconnect above) — without it the
+         browser treats this stylesheet as opaque to JS, and html-to-image's font-embedding step
+         (used by CertificatePage to rasterize the Cormorant Garamond certificate text into the
+         emailed PNG) throws a SecurityError trying to read its cssRules. -->
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;700&family=Cormorant+Garamond:ital,wght@0,600;1,600&display=swap" rel="stylesheet" crossorigin="anonymous">
     <!-- Powers the confetti celebration on solving a puzzle with no hints — see src/confetti.js -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js" defer></script>
   </head>

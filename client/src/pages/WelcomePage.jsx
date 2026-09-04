@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../api.js'
+import LoadingScreen from '../components/LoadingScreen.jsx'
 
 function ordinal(n) {
   const suffixes = ['th', 'st', 'nd', 'rd']
@@ -19,7 +20,7 @@ export default function WelcomePage() {
     api.getSession().then(setStatus)
   }, [])
 
-  if (!status) return <div className="screen center">Loading&hellip;</div>
+  if (!status) return <LoadingScreen />
 
   const { player, team, registrationNumber, maxPlayers, captainName } = status
   const remaining = Math.max(0, maxPlayers - registrationNumber)
@@ -106,11 +107,9 @@ export default function WelcomePage() {
         </section>
       </div>
 
-      <div className="form-shell-footer">
-        <button className="primary" disabled={!canContinue} onClick={() => navigate('/instructions')}>
-          See instructions
-        </button>
-      </div>
+      <button className="primary instructions-start-btn" disabled={!canContinue} onClick={() => navigate('/instructions')}>
+        See instructions
+      </button>
     </div>
   )
 }

@@ -19,11 +19,19 @@ const fs = require('fs');
 const crypto = require('crypto');
 const { parse: parseCsv } = require('csv-parse/sync');
 const { Client } = require('pg');
+const nodemailer = require('nodemailer');
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+// 10mb (not the default 100kb) — the certificate-email route posts a rasterized PNG as a base64
+// data URL, which runs several hundred KB even for a small card.
+app.use(express.json({ limit: '10mb' }));
 app.use('/content-photos', express.static(path.join(__dirname, 'content-photos')));
+
+const mailTransporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_APP_PASSWORD },
+});
 
 const db = process.env.DATABASE_URL
   ? new Client({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } })
@@ -484,6 +492,78 @@ app.get('/api/game/current', async (req, res) => {
     },
     landmarkComplete,
   });
+});
+
+// GET /api/game/certificate — completion summary for the confetti popup and the certificate page.
+// Deliberately built on resolveSession alone, with no game/game-code expiry check anywhere in this
+// route (unlike /api/register) — a completed team must still be able to reach their certificate
+// after the 6-hour game window and the 30-day code both expire.
+app.get('/api/game/certificate', async (req, res) => {
+  const session = await resolveSession(req, res);
+  if (!session) return;
+  const { player, team } = session;
+
+  const landmark = await getCurrentLandmark(team);
+  if (landmark) return res.json({ tourComplete: false });
+
+  const { rows: [row] } = await db.query(
+    `SELECT t.name AS tour_name, g.activated_at
+     FROM teams tm
+     JOIN games g ON g.id = tm.game_id
+     JOIN game_codes gc ON gc.id = g.game_code_id
+     JOIN tours t ON t.id = gc.tour_id
+     WHERE tm.id = $1`,
+    [team.id]
+  );
+  const { rows: [completedEvent] } = await db.query(
+    `SELECT created_at FROM progress_events
+     WHERE team_id = $1 AND event_type = 'landmark_completed'
+     ORDER BY created_at DESC LIMIT 1`,
+    [team.id]
+  );
+  const completedAt = completedEvent ? new Date(completedEvent.created_at) : new Date();
+  const elapsedSeconds = Math.round((completedAt - new Date(row.activated_at)) / 1000);
+
+  res.json({
+    tourComplete: true,
+    playerName: player.name,
+    teamName: team.name,
+    tourName: row.tour_name,
+    totalScore: team.total_score,
+    elapsedSeconds,
+    completedAt: completedAt.toISOString(),
+  });
+});
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// POST /api/game/certificate/send — emails a rasterized PNG of the certificate (built client-side
+// from the certificate card's DOM, see CertificatePage.jsx) as an attachment. Any player may send
+// (not captain-gated) — this doesn't mutate game state, it's just a personal keepsake.
+app.post('/api/game/certificate/send', async (req, res) => {
+  const session = await resolveSession(req, res);
+  if (!session) return;
+  const { email, imageDataUrl } = req.body;
+
+  if (!email || !EMAIL_RE.test(String(email).trim())) {
+    return res.status(400).json({ error: 'Enter a valid email address.' });
+  }
+  const match = typeof imageDataUrl === 'string' && imageDataUrl.match(/^data:image\/png;base64,(.+)$/);
+  if (!match) return res.status(400).json({ error: 'Missing certificate image.' });
+
+  try {
+    await mailTransporter.sendMail({
+      from: `TOURZ <${process.env.GMAIL_USER}>`,
+      to: email.trim(),
+      subject: 'Your TOURZ Certificate of Completion',
+      text: 'Congratulations on completing your TOURZ walking tour! Your certificate is attached.',
+      attachments: [{ filename: 'tourz-certificate.png', content: Buffer.from(match[1], 'base64') }],
+    });
+    res.json({ sent: true });
+  } catch (err) {
+    console.error('Certificate email error:', err);
+    res.status(502).json({ error: 'Could not send the email — try again.' });
+  }
 });
 
 app.post('/api/game/clue/hint', async (req, res) => {
@@ -1101,6 +1181,18 @@ app.post('/api/dev/complete/:count', async (req, res) => {
     [team.game_id, count]
   );
 
+  // The tour's actual final playable landmark (not just the last one `count` happened to reach) —
+  // known independently of the LIMIT above so "All landmarks complete" can stop one step short of
+  // a fully-finished tour: puzzle solved, quiz left undone, so dev testing can walk through the
+  // real final quiz and the tour-complete flow (confetti popup, certificate) by hand instead of
+  // jumping straight past it.
+  const { rows: [{ max_sequence: lastPlayableSequence }] } = await db.query(
+    `SELECT MAX(l.sequence_order) AS max_sequence
+     FROM landmarks l JOIN puzzles p ON p.landmark_id = l.id
+     WHERE l.tour_id = $1`,
+    [await tourIdForTeam(team)]
+  );
+
   for (const landmark of landmarks) {
     const { rows: [puzzle] } = await db.query('SELECT * FROM puzzles WHERE landmark_id = $1', [landmark.id]);
     const answer = readableAnswer(puzzle.type, puzzle.answer_payload);
@@ -1109,6 +1201,9 @@ app.post('/api/dev/complete/:count', async (req, res) => {
       `INSERT INTO progress_events (team_id, landmark_id, event_type, points_delta, payload) VALUES ($1, $2, 'puzzle_solved', $3, $4)`,
       [team.id, landmark.id, puzzlePointsEarned, JSON.stringify({ correct: true, answer })]
     );
+    await db.query('UPDATE teams SET total_score = total_score + $1 WHERE id = $2', [puzzlePointsEarned, team.id]);
+
+    if (landmark.sequence_order === lastPlayableSequence) continue;
 
     const { rows: questions } = await db.query(
       'SELECT id FROM quiz_questions WHERE landmark_id = $1 ORDER BY sequence_order',
@@ -1129,7 +1224,7 @@ app.post('/api/dev/complete/:count', async (req, res) => {
       `INSERT INTO progress_events (team_id, landmark_id, event_type) VALUES ($1, $2, 'landmark_completed')`,
       [team.id, landmark.id]
     );
-    await db.query('UPDATE teams SET total_score = total_score + $1 WHERE id = $2', [puzzlePointsEarned + quizPointsEarned, team.id]);
+    await db.query('UPDATE teams SET total_score = total_score + $1 WHERE id = $2', [quizPointsEarned, team.id]);
     await db.query('UPDATE teams SET current_landmark_sequence = current_landmark_sequence + 1 WHERE id = $1', [team.id]);
   }
 
