@@ -7,6 +7,7 @@ import PlayPage from './pages/PlayPage.jsx'
 import CertificatePage from './pages/CertificatePage.jsx'
 import { getSession } from './localSession.js'
 import { APP_VERSION } from './version.js'
+import { DEV_MODE } from './devMode.js'
 
 // /home, /play, /instructions all need a real registered player — without a session there's no
 // team for the API to resolve, so bounce back to registration rather than showing a broken page.
@@ -20,7 +21,7 @@ function RequireSession({ children }) {
 export default function App() {
   return (
     <>
-      <div className="app-version-badge">{APP_VERSION}</div>
+      {DEV_MODE && <div className="app-version-badge">{APP_VERSION}</div>}
       <Routes>
         <Route path="/" element={<StartPage />} />
         <Route path="/welcome" element={<RequireSession><WelcomePage /></RequireSession>} />

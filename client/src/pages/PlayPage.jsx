@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ChevronUp, ChevronDown } from 'lucide-react'
 import { api } from '../api.js'
@@ -10,6 +10,7 @@ import DevTools from '../components/DevTools.jsx'
 import HelpButton from '../components/HelpButton.jsx'
 import DetailPopup from '../components/DetailPopup.jsx'
 import ChatPanel from '../components/ChatPanel.jsx'
+import { playScreenUpdatePing } from '../screenUpdatePing.js'
 import TourCompletePopup from '../components/TourCompletePopup.jsx'
 import LoadingScreen from '../components/LoadingScreen.jsx'
 import { rectFromEvent } from '../rect.js'
@@ -43,7 +44,7 @@ function quizBannerText({ correctCount, points }) {
 function ChatHelpNote() {
   return (
     <p>
-      You can chat with your team in the <strong>Team feed</strong> at the bottom of the screen —
+      You can chat with your team in the <strong>CHAT</strong> at the bottom of the screen —
       tap the chevron{' '}
       <span className="instructions-chevron-pair">
         <ChevronUp size={14} strokeWidth={3} />
@@ -54,6 +55,20 @@ function ChatHelpNote() {
   )
 }
 
+
+// Captures just the fields that change when the captain uses a hint, reveals the clue, attempts
+// the puzzle, or submits a quiz answer — compared poll-to-poll so teammates get a ping for those
+// specific actions without also pinging on an ordinary unchanged refresh.
+function actionSignal(state) {
+  if (!state || state.tourComplete) return null
+  return {
+    sequenceOrder: state.sequenceOrder,
+    hints: state.clue.hintsRevealed.length,
+    revealed: state.clue.revealed,
+    solved: state.puzzle.solved,
+    quizAnswered: state.quiz.questions.filter((q) => q.answered).length,
+  }
+}
 
 export default function PlayPage() {
   const navigate = useNavigate()
@@ -66,6 +81,10 @@ export default function PlayPage() {
   const [revealConfirmAnchor, setRevealConfirmAnchor] = useState(null)
   const [whyPopup, setWhyPopup] = useState(null) // { text, anchorRect } | null
   const [landmarkPopup, setLandmarkPopup] = useState(null)
+  // Only the captain's device ever calls the hint/reveal/puzzle/quiz endpoints (server-gated —
+  // see resolveCaptain in index.js), so on a non-captain device any change here between polls is
+  // by definition the captain's doing, never our own action bouncing back.
+  const prevSignalRef = useRef(null)
 
   const refresh = () => api.getCurrent().then(setState)
 
@@ -89,6 +108,24 @@ export default function PlayPage() {
 
   useRefreshOnResume(refresh)
   useWakeLock()
+
+  // Fires the screen-update ping on a teammate's device when a poll picks up one of the captain's
+  // four gated actions. Skipped entirely on the captain's own device (they see the result of their
+  // own tap immediately, no ping needed) and on the very first signal for a landmark (the baseline,
+  // not a change) — same "prime before pinging" shape as ChatPanel's chat ping.
+  useEffect(() => {
+    if (isCaptain) return
+    const sig = actionSignal(state)
+    const prev = prevSignalRef.current
+    if (prev && sig && prev.sequenceOrder === sig.sequenceOrder) {
+      const changed = sig.hints > prev.hints
+        || (sig.revealed && !prev.revealed)
+        || (sig.solved && !prev.solved)
+        || sig.quizAnswered > prev.quizAnswered
+      if (changed) playScreenUpdatePing()
+    }
+    prevSignalRef.current = sig
+  }, [state, isCaptain])
 
   useEffect(() => {
     setShowQuiz(false)

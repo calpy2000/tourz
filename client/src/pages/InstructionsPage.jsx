@@ -127,7 +127,7 @@ export default function InstructionsPage() {
           <p>
             You will be <strong>working as a team</strong>, and each team member will have the
             app on their phone, so you can work independently if you want to. You can also{' '}
-            <strong>chat</strong> to each other in the <strong>team feed</strong> that is always
+            <strong>chat</strong> to each other in the <strong>CHAT</strong> that is always
             at the bottom of the screen &mdash; tap the chevron{' '}
             <span className="instructions-chevron-pair">
               <ChevronUp size={14} strokeWidth={3} />

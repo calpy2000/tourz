@@ -22,7 +22,7 @@ export default function GameHeader({ data, elapsedSeconds, onReset, showHelp = f
         <span className="tour-name">{data.tourName}</span>
       </div>
       <div className="home-pills">
-        <div className="home-pill">
+        <div className="home-pill home-pill-oat">
           {/* foundCount/totalLandmarks include the start landmark (sequence_order 1), which
               isn't something a team "finds" — subtract it so the pill reads e.g. 0/14, not 1/15. */}
           <span className="stat-line">Found {data.foundCount - 1}/{data.totalLandmarks - 1}</span>
@@ -30,7 +30,7 @@ export default function GameHeader({ data, elapsedSeconds, onReset, showHelp = f
         <div className="home-pill home-pill-brass">
           <span className="stat-line">{data.totalScore} / {data.maxScore} pts</span>
         </div>
-        <div className="home-pill">
+        <div className="home-pill home-pill-brick">
           <span className="icon-clock" />
           <span className="stat-line">{formatHms(elapsedSeconds)}</span>
         </div>

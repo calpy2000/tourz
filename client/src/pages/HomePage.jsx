@@ -80,7 +80,7 @@ export default function HomePage() {
             <p><strong>Map view</strong> shows solved landmarks and points-of-interest markers on the map, plus your live location — tap any marker to open it.</p>
             <p>Switch between the two with the buttons above the grid.</p>
             <p>
-              You can chat with your team in the <strong>Team feed</strong> at the bottom of the
+              You can chat with your team in the <strong>CHAT</strong> at the bottom of the
               screen — tap the chevron{' '}
               <span className="instructions-chevron-pair">
                 <ChevronUp size={14} strokeWidth={3} />
@@ -94,8 +94,8 @@ export default function HomePage() {
 
       <div className="home-body">
         <div className="view-switch">
-          <button className={view === 'tile' ? 'view-seg view-seg-active' : 'view-seg'} onClick={() => setView('tile')}>Tile view</button>
-          <button className={view === 'map' ? 'view-seg view-seg-active' : 'view-seg'} onClick={() => setView('map')}>Map view</button>
+          <button className={view === 'tile' ? 'view-seg view-seg-active' : 'view-seg'} onClick={() => setView('tile')}><strong>TILE</strong> view</button>
+          <button className={view === 'map' ? 'view-seg view-seg-active' : 'view-seg'} onClick={() => setView('map')}><strong>MAP</strong> view</button>
         </div>
 
         {view === 'tile' && (

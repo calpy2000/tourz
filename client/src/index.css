@@ -11,6 +11,14 @@
   --forest-tint: #dcece2;
   --brick: #b33f2e;
   --brick-tint: #f6dcd7;
+  --umber: #3d2a13;
+  --umber-line: #5a4020;
+  --cream: #f7ede0;
+  --cream-soft: #d3b78e;
+  --oat: #f0e6d2;
+  --toffee: #8a6238;
+  --toffee-line: #6d4c2a;
+  --chevron-yellow: #ffd400;
 }
 
 * {
@@ -27,7 +35,7 @@
   left: 6px;
   z-index: 9999;
   font-size: 10px;
-  color: var(--ink-soft);
+  color: #fff;
   opacity: 0.55;
   pointer-events: none;
 }
@@ -119,15 +127,16 @@ h1 {
 }
 
 /* Blueprint for every primary-action button in the game (Start walking, Continue, Take the
-   quiz, both submit buttons) — settled 2026-08-24. Pastel-blue puffy-bevel pill, borrowed from
-   6 GAME HUB's shared .shell-btn ("Play Now"). Deliberately NOT applied to back/reset links.
-   a.primary added 2026-08-24 for the landmark detail page's external link, which is semantically
-   an <a>, not a <button>, but needs the identical pill style. */
+   quiz, both submit buttons) — settled 2026-08-24, recolored 2026-09-05 from the original
+   pastel-blue (borrowed from 6 GAME HUB's .shell-btn) to a solid brass gold now that the game
+   has its own umber/toffee/brass palette — blue wasn't a token anywhere in it. Deliberately
+   NOT applied to back/reset links. a.primary added 2026-08-24 for the landmark detail page's
+   external link, which is semantically an <a>, not a <button>, but needs the identical pill style. */
 button.primary, a.primary {
   font-size: 14px;
   font-weight: 500;
   color: #000;
-  background: #cfe6f5;
+  background: var(--brass);
   border: none;
   border-radius: 999px;
   display: block;
@@ -177,6 +186,9 @@ button.primary:active, a.primary:active {
   overflow-y: auto;
   overflow-x: hidden; /* without this, setting only overflow-y computes overflow-x to auto too
                           (per spec) — any content even 1px too wide becomes sideways-draggable */
+  /* Solid oat, same call as .home-body — covers body's dot pattern so find-it/solve-it and the
+     quiz share Home's flat warm background instead of the leftover dotted texture. */
+  background: var(--oat);
 }
 
 .landmark-header-title {
@@ -238,7 +250,7 @@ button.primary:active, a.primary:active {
 /* Pill with a lightbulb + label, matching the "💡 Help" control from the 6 GAME HUB project
    (games/slydz/style.css's .help-toggle) rather than a bare icon circle. */
 .help-btn {
-  padding: 6px 14px;
+  padding: 6px 7px;
   border-radius: 999px;
   border: 1px solid var(--stone-line);
   background: var(--stone-raised);
@@ -312,8 +324,8 @@ button.primary:active, a.primary:active {
 }
 
 .hint.reveal {
-  background: #e4e9f2;
-  color: #33465e;
+  background: var(--brick-tint);
+  color: var(--brick);
 }
 
 .hint.solved {
@@ -432,7 +444,7 @@ button.ghost {
 }
 
 button.primary.btn-reveal {
-  background: var(--brick-tint);
+  background: var(--cream-soft);
 }
 
 button.primary.btn-hint {
@@ -450,11 +462,13 @@ button.primary.btn-hint {
   z-index: 70;
 }
 
-/* Light pastel green for every popup (why?, hint/reveal confirms) — settled 2026-08-24.
-   Cancel buttons intentionally use plain button.primary (no override) so they read as the
-   same "safe" blue as every submit button — only the confirm action gets a distinct color. */
+/* Every popup (why?, hint/reveal confirms, landmark/site/POI detail, amenity POI) shares this
+   off-white card now — was a pastel green (--forest-tint) until 2026-09-05, when it read as an
+   arbitrary leftover color next to the umber/oat/toffee/brass palette. Cancel buttons
+   intentionally use plain button.primary (no override) so they read as the same "safe" brass
+   as every submit button — only the confirm action (hint/reveal) gets a distinct color. */
 .modal-card {
-  background: var(--forest-tint);
+  background: var(--stone-raised);
   border: 1px solid var(--stone-line);
   border-radius: 16px;
   padding: 20px;
@@ -673,8 +687,9 @@ button.primary.quiz-submit {
 .home-header {
   flex: 0 0 auto;
   padding: 8px 13px 10px;
-  border-bottom: 1px solid var(--stone-line);
-  background: var(--stone-raised);
+  border-bottom: 1px solid var(--umber-line);
+  background: var(--umber);
+  color: var(--cream);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -692,12 +707,12 @@ button.primary.quiz-submit {
 }
 
 .sep {
-  color: #b0a48f;
+  color: var(--cream-soft);
 }
 
 .tour-name {
   font-weight: 500;
-  color: var(--ink-soft);
+  color: var(--cream-soft);
   font-size: 13px;
 }
 
@@ -709,20 +724,33 @@ button.primary.quiz-submit {
 .home-pill {
   flex: 1;
   border-radius: 8px;
-  padding: 6px 4px;
+  padding: 6px 2px;
   text-align: center;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 5px;
-  background: var(--stone-raised);
-  border: 1px solid var(--stone-line);
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #f1e2c9;
+}
+
+.home-pill-oat {
+  background: var(--oat);
+  border-color: var(--stone-line);
+  color: var(--ink);
 }
 
 .home-pill-brass {
-  background: var(--brass-tint);
-  color: var(--brass-deep);
-  border: none;
+  background: #5f4019;
+  border-color: #7a5624;
+  color: #ffe6ad;
+}
+
+.home-pill-brick {
+  background: #4a2118;
+  border-color: var(--brick);
+  color: var(--brick-tint);
 }
 
 .stat-line {
@@ -739,14 +767,22 @@ button.primary.quiz-submit {
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
+  background: var(--oat);
+}
+
+/* Home page only (InstructionsPage also carries .home-shell, so it's excluded here) — the view
+   switcher's gap above (this) and below (.view-switch's margin-bottom) are both 0.5x the base
+   .home-body top padding / original margin. */
+.home-shell:not(.instructions-shell) .home-body {
+  padding-top: 5px;
 }
 
 .view-switch {
   display: flex;
-  background: #e9e2d2;
+  background: rgba(35, 32, 27, 0.18);
   border-radius: 8px;
   padding: 2px;
-  margin-bottom: 12px;
+  margin-bottom: 6px;
   flex: 0 0 auto;
 }
 
@@ -782,7 +818,7 @@ button.primary.quiz-submit {
   aspect-ratio: 1;
   border-radius: 10px;
   overflow: hidden;
-  background: #dbe4dc;
+  background: var(--stone);
   border: none;
   padding: 0;
   font: inherit;
@@ -1076,6 +1112,7 @@ button.primary.quiz-submit {
 }
 
 .modal-card.poi-popup {
+  background: var(--stone-raised);
   max-width: 240px;
 }
 
@@ -1162,14 +1199,15 @@ button.primary.quiz-submit {
 /* --- Detail popup: shared format for landmarks, sites ("Interests"), and POI drafts --- */
 /* Deliberately not anchored to whatever was tapped — at this size (image + long body text) it
    reads as a modal regardless, so it gets a plain fixed inset instead of chasing a tap position.
-   Stops 108px short of the bottom (96px .home-chat height + 12px margin) so the chat panel stays
+   Stops 70px short of the bottom (58px .home-chat height + 12px margin) so the chat panel stays
    visible underneath rather than being covered. */
 .modal-card.detail-popup {
+  background: var(--stone-raised);
   position: fixed;
   top: 12px;
   left: 12px;
   right: 12px;
-  bottom: 108px;
+  bottom: 70px;
   width: auto;
   max-width: none;
   max-height: none;
@@ -1389,13 +1427,14 @@ button.primary.detail-popup-setgps {
 }
 
 .home-chat {
-  flex: 0 0 96px;
-  border-top: 1px solid var(--stone-line);
-  background: var(--stone-raised);
-  padding: 10px 13px;
+  flex: 0 0 auto;
+  min-height: 58px; /* 0.6x the original 96px for a single-line preview; grows for a 2-line wrap */
+  border-top: 1px solid var(--umber-line);
+  background: var(--umber);
+  padding: 8px 13px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  justify-content: center;
   position: relative;
   overflow: hidden;
 }
@@ -1423,40 +1462,56 @@ button.primary.detail-popup-setgps {
   .home-chat-ping::after { animation: none; }
 }
 
-.home-chat-head {
+.home-chat-row {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
+}
+
+.home-chat-label {
+  flex: 0 0 auto;
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--ink-soft);
+  color: var(--cream);
 }
 
 .home-chat-msg {
+  flex: 1 1 auto;
+  min-width: 0;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .home-chat-msg .avatar {
-  flex: 0 0 30px;
-  width: 30px;
-  height: 30px;
+  flex: 0 0 26px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   background: var(--stone);
   border: 1px solid var(--stone-line);
-  font-size: 15px;
+  font-size: 13px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.msg-text {
+/* Mirrors .chat-row-mine .chat-bubble below (border + same corner radii) so the collapsed
+   preview reads as a shrunk copy of the expanded panel's bubbles, not bare text. */
+.home-chat-bubble {
   flex: 1 1 auto;
   min-width: 0;
-  font-size: 13px;
+  padding: 5px 10px;
+  background: var(--stone);
+  border: 1px solid var(--stone-line);
+  border-radius: 4px 14px 14px 14px;
+}
+
+.msg-text {
+  min-width: 0;
+  font-size: 12.5px;
   line-height: 1.3;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -1479,7 +1534,7 @@ button.primary.detail-popup-setgps {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--ink-soft);
+  color: var(--chevron-yellow);
 }
 
 .chat-compose-btn {
@@ -1503,8 +1558,8 @@ button.primary.detail-popup-setgps {
   border-radius: 50%;
   border: none;
   padding: 0;
-  background: #cfe6f5;
-  color: var(--ink);
+  background: var(--brass);
+  color: #000;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1551,6 +1606,7 @@ button.primary.detail-popup-setgps {
   box-shadow: 0 -6px 20px rgba(35, 32, 27, 0.18);
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .chat-sheet-head {
@@ -1559,12 +1615,13 @@ button.primary.detail-popup-setgps {
   align-items: center;
   gap: 4px;
   padding: 14px 18px 12px;
-  border-bottom: 1px solid var(--stone-line);
+  border-bottom: 1px solid var(--toffee-line);
+  background: var(--toffee);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--ink-soft);
+  color: var(--cream);
 }
 
 .chat-sheet-msgs {
@@ -1651,7 +1708,8 @@ button.primary.detail-popup-setgps {
   align-items: center;
   gap: 8px;
   padding: 10px 14px 16px;
-  border-top: 1px solid var(--stone-line);
+  border-top: 1px solid var(--umber-line);
+  background: var(--umber);
 }
 
 .chat-sheet-compose input {
@@ -1679,7 +1737,10 @@ button.primary.detail-popup-setgps {
   height: 13px;
   background-repeat: no-repeat;
   background-position: center;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b5f4f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='8.5'/%3E%3Cpath d='M12 7.5 V12 L15 14'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f6dcd7' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='8.5'/%3E%3Cpath d='M12 7.5 V12 L15 14'/%3E%3C/svg%3E");
+  /* Scaled visually rather than resized — keeps the box (and therefore the pill) the same
+     size while the glyph itself renders 1.5x larger. */
+  transform: scale(1.5);
 }
 
 .icon-chevron {
@@ -1748,7 +1809,10 @@ button.primary.instructions-start-btn {
   vertical-align: 1px;
 }
 
-/* Mirrors MapView's .map-pin-site (same blue circle + star) at instructions-copy scale. */
+/* No longer mirrors MapView's .map-pin-site — the real map pin stays its established blue (a
+   deliberate exception, same as the GPS/toilet markers), but that blue read as arbitrary once
+   set beside body copy on the oat page, so this inline legend icon gets its own palette color
+   (toffee) instead of matching it. */
 .instructions-poi-marker {
   display: inline-flex;
   align-items: center;
@@ -1756,7 +1820,7 @@ button.primary.instructions-start-btn {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: #4169e1;
+  background: var(--toffee);
   vertical-align: -3px;
 }
 
@@ -1799,6 +1863,9 @@ button.primary.instructions-start-btn {
   flex-direction: column;
   overflow: hidden;
   position: relative;
+  /* Same call as .home-body/.landmark-body — solid oat covers the body's dot pattern so
+     StartPage and WelcomePage share the rest of the app's flat warm background. */
+  background: var(--oat);
 }
 
 .form-shell-body {
@@ -1822,7 +1889,9 @@ button.primary.instructions-start-btn {
   padding: 12px 14px;
   border-radius: 10px;
   border: 1px solid var(--stone-line);
-  background: var(--stone);
+  /* stone-raised, not stone — stone is nearly identical to the form-shell's oat background
+     behind it and would all but disappear, same trap as the view-switch track. */
+  background: var(--stone-raised);
 }
 
 .field-input:focus {
@@ -2161,8 +2230,8 @@ button.primary.instructions-start-btn {
   margin: 0 auto 14px;
   padding: 4px 14px;
   border-radius: 999px;
-  background: var(--brick-tint);
-  color: var(--brick);
+  background: var(--brass-tint);
+  color: var(--brass-deep);
   font-size: 12px;
   font-weight: 600;
 }

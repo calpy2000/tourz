@@ -29,17 +29,21 @@ function MessageRow({ message, myPlayerId }) {
 // Single-line "latest message" preview shown on the collapsed bar — mirrors the same Me/Name
 // convention as the full bubbles, but system messages (already carrying their own emoji, e.g.
 // "🎉 Sarah has joined the team") render as plain text with no avatar, since there's no sender.
+// The text sits in a bordered bubble so the preview reads like a shrunk copy of the expanded
+// panel's own message bubbles rather than bare text on the bar — and the avatar/bubble order
+// matches MessageRow's too: avatar-then-bubble for a teammate, bubble-then-avatar for your own.
 function LatestPreview({ message, myPlayerId }) {
   if (message.type !== 'chat') {
-    return <div className="msg-text">{message.text}</div>
+    return <div className="home-chat-bubble"><div className="msg-text">{message.text}</div></div>
   }
   const mine = message.playerId === myPlayerId
-  return (
-    <>
-      <div className="avatar">{message.playerAvatar}</div>
+  const avatar = <div className="avatar">{message.playerAvatar}</div>
+  const bubble = (
+    <div className="home-chat-bubble">
       <div className="msg-text"><strong>{mine ? 'Me' : message.playerName}</strong>&nbsp;&mdash; {message.text}</div>
-    </>
+    </div>
   )
+  return mine ? <>{bubble}{avatar}</> : <>{avatar}{bubble}</>
 }
 
 export default function ChatPanel() {
@@ -117,17 +121,6 @@ export default function ChatPanel() {
   return (
     <>
       <div className={pinging ? 'home-chat home-chat-ping' : 'home-chat'}>
-        <div className="home-chat-head">
-          <span>Team feed</span>
-          <button
-            className="chat-icon-btn"
-            aria-label={mode === 'expanded' ? 'Collapse chat' : 'Expand chat'}
-            onClick={() => setMode((m) => (m === 'expanded' ? 'idle' : 'expanded'))}
-          >
-            {mode === 'expanded' ? <ChevronDown size={20} strokeWidth={3} /> : <ChevronUp size={20} strokeWidth={3} />}
-          </button>
-        </div>
-
         {mode === 'composing' ? (
           <div className="home-chat-compose">
             <input
@@ -135,6 +128,11 @@ export default function ChatPanel() {
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') handleSend() }}
+              // Tapping anywhere else on screen blurs this input — if there's nothing typed yet,
+              // treat that as "never mind" and collapse back to the display row instead of leaving
+              // an empty compose box stuck open with no other way to dismiss it. A draft in
+              // progress is left alone so an accidental tap-away can't lose it.
+              onBlur={() => { if (!draft.trim()) setMode('idle') }}
               placeholder="Message your team…"
             />
             <button className="chat-send-btn" onClick={handleSend} disabled={!draft.trim() || sending} aria-label="Send">
@@ -142,8 +140,18 @@ export default function ChatPanel() {
             </button>
           </div>
         ) : (
-          <div className="home-chat-msg">
-            {latest ? <LatestPreview message={latest} myPlayerId={session?.playerId} /> : <div className="msg-text muted">No messages yet — say hello!</div>}
+          <div className="home-chat-row">
+            <button
+              className="chat-icon-btn"
+              aria-label={mode === 'expanded' ? 'Collapse chat' : 'Expand chat'}
+              onClick={() => setMode((m) => (m === 'expanded' ? 'idle' : 'expanded'))}
+            >
+              {mode === 'expanded' ? <ChevronDown size={20} strokeWidth={3} /> : <ChevronUp size={20} strokeWidth={3} />}
+            </button>
+            <span className="home-chat-label">Chat</span>
+            <div className="home-chat-msg">
+              {latest ? <LatestPreview message={latest} myPlayerId={session?.playerId} /> : <div className="home-chat-bubble"><div className="msg-text muted">No messages yet — say hello!</div></div>}
+            </div>
             <button className="chat-compose-btn" onClick={() => setMode('composing')} aria-label="New message">
               <Pencil size={14} />
             </button>
@@ -154,10 +162,10 @@ export default function ChatPanel() {
       {mode === 'expanded' && (
         <div className="chat-sheet">
           <div className="chat-sheet-head">
-            <span>Team feed</span>
             <button className="chat-icon-btn" aria-label="Collapse chat" onClick={() => setMode('idle')}>
               <ChevronDown size={22} strokeWidth={3} />
             </button>
+            <span>Chat</span>
           </div>
           <div className="chat-sheet-msgs" ref={listRef}>
             {messages.length === 0 && <div className="chat-empty">No messages yet — say hello!</div>}
