@@ -273,6 +273,51 @@ app.post('/api/game/team/name', async (req, res) => {
   res.json({ name: updated.name });
 });
 
+// GET /api/game/team/players — captain-only: the teammate roster shown in the "change team
+// captain" picker (HelpMenu -> ChangeCaptainPopup). Excludes the calling captain themselves,
+// since they can't hand the role to themselves.
+app.get('/api/game/team/players', async (req, res) => {
+  const session = await resolveSession(req, res);
+  if (!session) return;
+  const { player, team } = session;
+  if (!requireCaptain(player, res)) return;
+
+  const { rows } = await db.query(
+    'SELECT id, name, avatar FROM players WHERE team_id = $1 AND id != $2 ORDER BY joined_at',
+    [team.id, player.id]
+  );
+  res.json({ players: rows });
+});
+
+// POST /api/game/team/captain — captain-only: hands the captaincy to another team member.
+// Session tokens never change — is_captain is checked fresh by requireCaptain on every
+// captain-gated request, so flipping it here takes effect immediately for both players on their
+// next action, with no need to reissue or invalidate anything. Posts a system chat message so
+// the whole team sees the change (picked up by ChatPanel's poll, which also refreshes every
+// client's own isCaptain flag — see HelpButton.jsx/ChatPanel.jsx).
+app.post('/api/game/team/captain', async (req, res) => {
+  const session = await resolveSession(req, res);
+  if (!session) return;
+  const { player, team } = session;
+  if (!requireCaptain(player, res)) return;
+
+  const newCaptainId = Number(req.body.newCaptainId);
+  const { rows: [newCaptain] } = await db.query(
+    'SELECT * FROM players WHERE id = $1 AND team_id = $2', [newCaptainId, team.id]
+  );
+  if (!newCaptain) return res.status(400).json({ error: 'That player is not on your team.' });
+  if (newCaptain.id === player.id) return res.status(400).json({ error: 'You are already the captain.' });
+
+  await db.query('UPDATE players SET is_captain = false WHERE id = $1', [player.id]);
+  await db.query('UPDATE players SET is_captain = true WHERE id = $1', [newCaptain.id]);
+  await db.query(
+    `INSERT INTO messages (team_id, type, text) VALUES ($1, 'captain_changed', $2)`,
+    [team.id, `👑 ${newCaptain.name} is now the team captain`]
+  );
+
+  res.json({ newCaptainId: newCaptain.id, newCaptainName: newCaptain.name });
+});
+
 // GET /api/game/messages?after=<id> — polled from the client (see ChatPanel.jsx), same simple
 // interval-poll pattern already used for gameplay sync rather than sockets. `after` omitted (or
 // 0) returns the most recent page for the initial load; `after` set returns only newer rows,
@@ -426,12 +471,34 @@ app.get('/api/game/current', async (req, res) => {
 
   let quizQuestions = [];
   if (puzzleSolvedEvent) {
+    // Only the landmark's active quiz_format is served — other types (e.g. a kept-as-backup
+    // multiple_choice set while five_right is what's actually played) stay in the DB, unused.
     const { rows } = await db.query(
-      'SELECT id, sequence_order, type, question_text, answer_payload, explanation, points FROM quiz_questions WHERE landmark_id = $1 ORDER BY sequence_order',
-      [landmark.id]
+      'SELECT id, sequence_order, type, question_text, answer_payload, explanation, points FROM quiz_questions WHERE landmark_id = $1 AND type = $2 ORDER BY sequence_order',
+      [landmark.id, landmark.quiz_format]
     );
     quizQuestions = rows.map((q) => {
       const answered = quizAnswered.find((e) => Number(e.payload.questionId) === Number(q.id));
+      if (q.type === 'five_right') {
+        return {
+          id: q.id,
+          type: q.type,
+          questionText: q.question_text,
+          title: q.answer_payload.title || null,
+          instructions: q.answer_payload.instructions || null,
+          // `correct` per tile only revealed once this question has been answered — never in advance.
+          tiles: q.answer_payload.tiles.map((t) => ({
+            id: t.id,
+            name: t.name,
+            imagePath: t.imagePath,
+            correct: answered ? t.correct : null,
+          })),
+          answered: Boolean(answered),
+          pickedTileIds: answered ? answered.payload.picked : null,
+          score: answered ? answered.payload.score : null,
+          explanation: answered ? q.explanation : null,
+        };
+      }
       return {
         id: q.id,
         type: q.type,
@@ -502,14 +569,16 @@ app.get('/api/game/current', async (req, res) => {
 // GET /api/game/certificate — completion summary for the confetti popup and the certificate page.
 // Deliberately built on resolveSession alone, with no game/game-code expiry check anywhere in this
 // route (unlike /api/register) — a completed team must still be able to reach their certificate
-// after the 6-hour game window and the 30-day code both expire.
+// after the 6-hour game window and the 30-day code both expire. Also doubles as the resume-check
+// StartPage's ResumeRedirect uses to decide between /certificate, /instructions and /home — hence
+// instructionsComplete riding along on the tourComplete: false early return too.
 app.get('/api/game/certificate', async (req, res) => {
   const session = await resolveSession(req, res);
   if (!session) return;
   const { player, team } = session;
 
   const landmark = await getCurrentLandmark(team);
-  if (landmark) return res.json({ tourComplete: false });
+  if (landmark) return res.json({ tourComplete: false, instructionsComplete: player.instructions_complete, coachComplete: player.coach_complete });
 
   const { rows: [row] } = await db.query(
     `SELECT t.name AS tour_name, g.activated_at
@@ -540,6 +609,29 @@ app.get('/api/game/certificate', async (req, res) => {
   });
 });
 
+// POST /api/game/instructions-complete — called once, when this player taps "let's start the
+// tour" at the end of the paginated onboarding flow. Per-player (not per-team), matching how each
+// team member goes through their own copy of the app: a player who quits partway through
+// onboarding and reopens the app should land back at the start of instructions, while a
+// player who finished should skip straight to /home.
+app.post('/api/game/instructions-complete', async (req, res) => {
+  const session = await resolveSession(req, res);
+  if (!session) return;
+  await db.query('UPDATE players SET instructions_complete = true WHERE id = $1', [session.player.id]);
+  res.json({ ok: true });
+});
+
+// POST /api/game/coach-complete — called once, when this player reaches the end of the guided
+// navigation "coach" walkthrough. Per-player, same reasoning as instructions-complete above: a
+// player who quits partway through gets shown the whole thing again on their next session,
+// while one who finished it doesn't see it auto-launch again.
+app.post('/api/game/coach-complete', async (req, res) => {
+  const session = await resolveSession(req, res);
+  if (!session) return;
+  await db.query('UPDATE players SET coach_complete = true WHERE id = $1', [session.player.id]);
+  res.json({ ok: true });
+});
+
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // POST /api/game/certificate/send — emails a rasterized PNG of the certificate (built client-side
@@ -568,6 +660,54 @@ app.post('/api/game/certificate/send', async (req, res) => {
   } catch (err) {
     console.error('Certificate email error:', err);
     res.status(502).json({ error: 'Could not send the email — try again.' });
+  }
+});
+
+// POST /api/game/problem-report — emails the app's own inbox (GMAIL_USER, same address the
+// certificate sender uses) with the player's free-text description plus enough team/progress
+// context to triage it. Any player may send (not captain-gated) — reporting a problem isn't a
+// captain-only action and doesn't mutate game state.
+app.post('/api/game/problem-report', async (req, res) => {
+  const session = await resolveSession(req, res);
+  if (!session) return;
+  const { player, team } = session;
+
+  const message = String(req.body.message || '').trim();
+  if (!message) return res.status(400).json({ error: 'Enter a description of the problem.' });
+
+  const { rows: [info] } = await db.query(
+    `SELECT t.name AS tour_name, l.title AS current_landmark_title,
+            (SELECT COUNT(*) FROM progress_events pe
+             WHERE pe.team_id = tm.id AND pe.event_type = 'landmark_completed') AS landmarks_completed
+     FROM teams tm
+     JOIN games g ON g.id = tm.game_id
+     JOIN game_codes gc ON gc.id = g.game_code_id
+     JOIN tours t ON t.id = gc.tour_id
+     LEFT JOIN landmarks l ON l.tour_id = t.id AND l.sequence_order = tm.current_landmark_sequence
+     WHERE tm.id = $1`,
+    [team.id]
+  );
+
+  const details = [
+    `Team: ${team.name}`,
+    `Player: ${player.name} ${player.avatar}${player.is_captain ? ' (captain)' : ''}`,
+    `Tour: ${info?.tour_name || 'unknown'}`,
+    `Current landmark: ${info?.current_landmark_title || `sequence ${team.current_landmark_sequence}`}`,
+    `Landmarks completed: ${info?.landmarks_completed ?? 0}`,
+    `Score: ${team.total_score}`,
+  ].join('\n');
+
+  try {
+    await mailTransporter.sendMail({
+      from: `TOURZ <${process.env.GMAIL_USER}>`,
+      to: process.env.GMAIL_USER,
+      subject: `TOURZ problem report — ${team.name}`,
+      text: `${details}\n\nProblem description:\n${message}`,
+    });
+    res.json({ sent: true });
+  } catch (err) {
+    console.error('Problem report email error:', err);
+    res.status(502).json({ error: 'Could not send the report — try again.' });
   }
 });
 
@@ -666,14 +806,38 @@ app.post('/api/game/quiz/answer', async (req, res) => {
   }
 
   const { rows: [question] } = await db.query('SELECT * FROM quiz_questions WHERE id = $1', [questionId]);
-  const correct = normalize(question.answer_payload.correct) === normalize(answer);
 
-  await db.query(
-    `INSERT INTO progress_events (team_id, landmark_id, event_type, payload) VALUES ($1, $2, 'quiz_answered', $3)`,
-    [team.id, landmark.id, JSON.stringify({ questionId, correct })]
+  // five_right: `answer` is an array of tile ids the captain tapped, any number of them (not
+  // necessarily one "correct" scalar) — +1 per correct tile picked, -1 per wrong one, so this
+  // single question's own score (-4..+5) already IS the lump-sum points, unlike multiple_choice
+  // where points are only awarded once every question in the set has been answered.
+  const isFiveRight = question.type === 'five_right';
+  let correct = null;
+  let fiveRightScore = null;
+  if (isFiveRight) {
+    const picked = Array.isArray(answer) ? answer.map(Number) : [];
+    fiveRightScore = question.answer_payload.tiles.reduce(
+      (score, tile) => (picked.includes(tile.id) ? score + (tile.correct ? 1 : -1) : score),
+      0
+    );
+    await db.query(
+      `INSERT INTO progress_events (team_id, landmark_id, event_type, payload) VALUES ($1, $2, 'quiz_answered', $3)`,
+      [team.id, landmark.id, JSON.stringify({ questionId, picked, score: fiveRightScore })]
+    );
+  } else {
+    correct = normalize(question.answer_payload.correct) === normalize(answer);
+    await db.query(
+      `INSERT INTO progress_events (team_id, landmark_id, event_type, payload) VALUES ($1, $2, 'quiz_answered', $3)`,
+      [team.id, landmark.id, JSON.stringify({ questionId, correct })]
+    );
+  }
+
+  // Only this landmark's active quiz_format is ever "the quiz" for completion purposes — a kept
+  // backup set of a different type (see landmarks.quiz_format) must never block completion.
+  const { rows: allQuestions } = await db.query(
+    'SELECT id FROM quiz_questions WHERE landmark_id = $1 AND type = $2',
+    [landmark.id, question.type]
   );
-
-  const { rows: allQuestions } = await db.query('SELECT id FROM quiz_questions WHERE landmark_id = $1', [landmark.id]);
   const freshEvents = await eventsFor(team.id, landmark.id);
   const answered = freshEvents.filter((e) => e.event_type === 'quiz_answered');
   // Number(...) both sides: pg returns bigint id columns as strings, but payload.questionId
@@ -683,8 +847,7 @@ app.post('/api/game/quiz/answer', async (req, res) => {
   let quizPointsEarned = null;
   let correctCount = null;
   if (quizComplete) {
-    correctCount = answered.filter((e) => e.payload.correct).length;
-    quizPointsEarned = quizPoints(correctCount);
+    quizPointsEarned = isFiveRight ? fiveRightScore : quizPoints((correctCount = answered.filter((e) => e.payload.correct).length));
 
     await db.query(
       `INSERT INTO progress_events (team_id, landmark_id, event_type, points_delta) VALUES ($1, $2, 'quiz_completed', $3)`,
@@ -698,8 +861,13 @@ app.post('/api/game/quiz/answer', async (req, res) => {
   }
 
   res.json({
+    type: question.type,
     correct,
-    correctAnswer: question.answer_payload.correct,
+    correctAnswer: isFiveRight ? null : question.answer_payload.correct,
+    // Reveals every tile's correct/wrong flag at once — the whole point of the format is seeing
+    // all 9 answers together after submitting, not one at a time.
+    tiles: isFiveRight ? question.answer_payload.tiles.map((t) => ({ id: t.id, correct: t.correct })) : null,
+    score: fiveRightScore,
     explanation: question.explanation,
     quizComplete,
     correctCount,

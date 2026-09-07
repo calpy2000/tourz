@@ -43,9 +43,7 @@ export default function DetailPopup({ eyebrow, title, address, imagePath, sectio
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-card detail-popup" onClick={(e) => e.stopPropagation()}>
-        <button className="detail-popup-back" onClick={onClose} aria-label="Back">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#23201b" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-        </button>
+        <button data-coach-id="detail-popup-back-btn" className="detail-popup-back" onClick={onClose}>&larr; back</button>
 
         {imagePath && (
           <img className="detail-popup-image" src={`${API_BASE}/content-photos/${imagePath}`} alt={title} />

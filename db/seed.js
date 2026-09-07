@@ -45,6 +45,7 @@ async function main() {
   const landmarks = readCsv('landmarks.csv');
   const clueHints = readCsv('clue_hints.csv');
   const quizQuestions = readCsv('quiz_questions.csv');
+  const quizFiveRight = readCsv('quiz_five_right.csv');
   const sites = readCsv('sites.csv');
 
   const client = process.env.DATABASE_URL
@@ -75,8 +76,8 @@ async function main() {
         `INSERT INTO landmarks
            (tour_id, sequence_order, title, address, latitude, longitude,
             about_landmark_label, about_landmark_text, about_subject_label, about_subject_text,
-            interesting_fact, external_link)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+            interesting_fact, external_link, quiz_format)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
          RETURNING id`,
         [
           tour.id,
@@ -91,6 +92,7 @@ async function main() {
           row.about_subject_text || null,
           row.interesting_fact || null,
           row.external_link || null,
+          row.quiz_format || 'multiple_choice',
         ]
       );
       landmarkIdBySequence[row.sequence_order] = landmark.id;
@@ -151,6 +153,43 @@ async function main() {
       );
     }
 
+    // five_right is a single "question" made of many tile rows in the CSV (one per photo) —
+    // group them back into one quiz_questions row per (landmark, question_order), same table/shape
+    // as multiple_choice, just with a `tiles` array in answer_payload instead of `options`/`correct`.
+    const fiveRightGroups = new Map();
+    for (const row of quizFiveRight) {
+      const key = `${row.landmark_sequence_order}:${row.question_order}`;
+      if (!fiveRightGroups.has(key)) {
+        fiveRightGroups.set(key, {
+          landmarkSequence: row.landmark_sequence_order,
+          questionOrder: row.question_order,
+          title: row.title,
+          instructions: row.instructions,
+          tiles: [],
+        });
+      }
+      fiveRightGroups.get(key).tiles.push({
+        id: Number(row.tile_order),
+        name: row.name,
+        imagePath: row.image_path,
+        correct: row.correct === 'true',
+      });
+    }
+    for (const group of fiveRightGroups.values()) {
+      const landmarkId = landmarkIdBySequence[group.landmarkSequence];
+      await client.query(
+        `INSERT INTO quiz_questions (landmark_id, sequence_order, type, question_text, answer_payload, explanation)
+         VALUES ($1, $2, 'five_right', $3, $4, $5)`,
+        [
+          landmarkId,
+          group.questionOrder,
+          group.title,
+          JSON.stringify({ title: group.title, instructions: group.instructions, tiles: group.tiles }),
+          null,
+        ]
+      );
+    }
+
     for (const row of sites) {
       await client.query(
         `INSERT INTO sites
@@ -176,8 +215,19 @@ async function main() {
       );
     }
 
+    // TRUNCATE ... CASCADE above wipes game_codes too (it references tours), including the
+    // DEV-LOCAL row that POST /api/dev/login depends on — see feedback_reseed_wipes_dev_login
+    // memory (2026-09-04): that row was only ever created by a manual one-off INSERT, so every
+    // reseed silently broke dev auto-login until someone noticed and reinserted it by hand.
+    // Recreating it here, every run, closes that gap for good.
+    await client.query(
+      `INSERT INTO game_codes (code, tour_id, expires_at)
+       VALUES ('DEV-LOCAL', $1, now() + interval '10 years')`,
+      [tour.id]
+    );
+
     await client.query('COMMIT');
-    console.log(`Seeded ${landmarks.length} landmarks, ${clueHints.length} hints, ${quizQuestions.length} quiz questions, ${sites.length} sites.`);
+    console.log(`Seeded ${landmarks.length} landmarks, ${clueHints.length} hints, ${quizQuestions.length + fiveRightGroups.size} quiz questions (${fiveRightGroups.size} five_right), ${sites.length} sites.`);
   } catch (err) {
     await client.query('ROLLBACK');
     throw err;

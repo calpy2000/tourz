@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { api } from '../api.js'
 import { rectFromEvent } from '../rect.js'
 import { loadGpsCorrections, clearGpsCorrections } from '../gpsCorrections.js'
+import { useCoach } from '../coach/CoachContext.jsx'
 import DevMenu from './DevMenu.jsx'
 
 // The "Dev" button + menu shared by every page that needs quick test shortcuts. `onReset` lets
@@ -12,6 +13,7 @@ import DevMenu from './DevMenu.jsx'
 export default function DevTools({ onReset }) {
   const navigate = useNavigate()
   const [menuAnchor, setMenuAnchor] = useState(null)
+  const coach = useCoach()
 
   async function completeThrough(count) {
     await api.devComplete(count)
@@ -21,6 +23,10 @@ export default function DevTools({ onReset }) {
   async function handleReset() {
     await api.devReset()
     if (onReset) onReset()
+    // Land back on "/" so the app's own dev-mode redirect logic (StartPage's ResumeRedirect)
+    // sends us to /instructions — a fresh reset means tourComplete is false, so this always
+    // lands on instructions section 1, matching what a real fresh team would see.
+    navigate('/')
   }
 
   // Dumps every locally-saved GPS correction (from the POI popup's Set GPS button) to a
@@ -53,9 +59,11 @@ export default function DevTools({ onReset }) {
     { label: 'Reset', onClick: handleReset },
     { label: 'Landmark 1 complete', onClick: () => completeThrough(1) },
     { label: 'Landmark 2 complete', onClick: () => completeThrough(2) },
+    { label: 'Up to Greyfriars (unsolved)', onClick: () => completeThrough(10) },
     { label: 'All landmarks + POIs complete', onClick: () => completeThrough(999) },
     { label: 'Export GPS updates', onClick: handleExportGps },
     { label: 'Clear GPS corrections', onClick: handleClearGps },
+    { label: 'Start coach (test)', onClick: coach.start },
   ]
 
   return (

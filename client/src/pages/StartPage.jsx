@@ -12,14 +12,35 @@ import LoadingScreen from '../components/LoadingScreen.jsx'
 // what makes the certificate page "sticky": reopening the app URL always re-runs this check, and
 // /api/game/certificate is expiry-agnostic, so it keeps returning tourComplete even once the game
 // code has expired.
+//
+// Also gates on this player's own instructionsComplete flag (see /api/game/instructions-complete):
+// a player who quit partway through the paginated onboarding and reopens the app lands back on
+// /instructions to go through it again from the start, rather than skipping straight to fallback.
+// Only reached once instructionsComplete is true does fallback (normally /home, /instructions for
+// DEV_MODE's own iteration convenience) apply.
+//
+// Same idea for coachComplete (see /api/game/coach-complete): a player who has read the
+// instructions but hasn't finished the guided-navigation "coach" walkthrough gets sent through
+// the whole thing again from the start, every time they reopen the app, until they finish it.
+// Deliberately only applied when falling through to the real /home destination — DEV_MODE's
+// '/instructions' fallback is a deliberate dev-iteration shortcut and stays untouched by this.
 function ResumeRedirect({ fallback = '/home' }) {
   const [destination, setDestination] = useState(null)
+  const [state, setState] = useState(null)
   useEffect(() => {
     api.getCertificateStatus()
-      .then((res) => setDestination(res?.tourComplete ? '/certificate' : fallback))
+      .then((res) => {
+        if (res?.tourComplete) return setDestination('/certificate')
+        if (!res?.instructionsComplete) return setDestination('/instructions')
+        if (fallback === '/home' && !res?.coachComplete) {
+          setState({ startCoach: true })
+          return setDestination('/home')
+        }
+        setDestination(fallback)
+      })
       .catch(() => setDestination(fallback))
   }, [fallback])
-  return destination ? <Navigate to={destination} replace /> : <LoadingScreen />
+  return destination ? <Navigate to={destination} state={state} replace /> : <LoadingScreen />
 }
 
 export default function StartPage() {

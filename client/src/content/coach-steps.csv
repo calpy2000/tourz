@@ -1,0 +1,33 @@
+step,location,target,interaction,first_message,error_message,help_message
+1,home,home-map-view-btn,tap,"Hi - I'm your navigation coach
+let's be sure you can get around the app
+right now you're on the Home page TILE view
+tap on the **MAP view**",That's not quite right — try again.,Not quite — let me help you out.
+,map view,the landmark marker,tap,"you're now in the MAP view **✓**
+tap on the **RBS landmark marker**",same,same
+,landmark pop up,back button,tap,"you're now in the detail page **✓**
+tap on the **back button**",same,same
+,map view,map navigation,expand and swipe,"you're back on the MAP view **✓**
+expand the map a little and move around, just like google maps",same,same
+,map view,any POI marker marker,tap,"OK - you're still in the MAP view
+tap on any **point of interest marker**",same,same
+,POI pop up,back button,tap,"you're now in the detail page **✓**
+tap on the **back button**",same,same
+,chat panel,pencil icon,tap,"you're back on the MAP view **✓**
+now write a **CHAT**",same,same
+,chat panel,chat input,type,now write your **CHAT** content,same,same
+,chat panel,post icon,tap,OK now **POST** it,same,same
+,chat panel,expand icon,tap,OK now **EXPAND** the chat panel,same,same
+,chat panel,collapse icon,tap,OK now **COLLAPSE** the chat panel,same,same
+,map view,help button,tap,OK now tap on the **HELP** button,same,same
+,help panel,see instructions option,tap,OK now tap on **SHOW INSTRUCTIONS**,same,same
+,help see instructions,back button,tap,"you're in the show instructions page **✓**
+tap on the **back button**",same,same
+,map view,tile view,tap,"you're back on the MAP view **✓**
+tap on the **TILE view**",same,same
+,tile view,in progress tile,tap,"you're now on the TILE view **✓**
+tap on the **IN PROGRESS** tile",same,same
+,Find It Solve It,end,tap,"well done - you certainly know your way around the app now **✓**
+tap anywhere to get going and find your first landmark
+start by trying to solve the clue and use hints only if you have to
+don't forget to keep an eagle eye out as you walk - **GOOD LUCK**",no need,no need

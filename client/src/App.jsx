@@ -8,6 +8,8 @@ import CertificatePage from './pages/CertificatePage.jsx'
 import { getSession } from './localSession.js'
 import { APP_VERSION } from './version.js'
 import { DEV_MODE } from './devMode.js'
+import { CoachProvider } from './coach/CoachContext.jsx'
+import CoachOverlay from './coach/CoachOverlay.jsx'
 
 // /home, /play, /instructions all need a real registered player — without a session there's no
 // team for the API to resolve, so bounce back to registration rather than showing a broken page.
@@ -20,7 +22,7 @@ function RequireSession({ children }) {
 // project-landmark-detail-feature memory for the design history of the page this replaced.
 export default function App() {
   return (
-    <>
+    <CoachProvider>
       {DEV_MODE && <div className="app-version-badge">{APP_VERSION}</div>}
       <Routes>
         <Route path="/" element={<StartPage />} />
@@ -30,6 +32,7 @@ export default function App() {
         <Route path="/play" element={<RequireSession><PlayPage /></RequireSession>} />
         <Route path="/certificate" element={<RequireSession><CertificatePage /></RequireSession>} />
       </Routes>
-    </>
+      <CoachOverlay />
+    </CoachProvider>
   )
 }

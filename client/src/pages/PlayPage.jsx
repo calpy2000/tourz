@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ChevronUp, ChevronDown } from 'lucide-react'
 import { api } from '../api.js'
+import { API_BASE } from '../apiBase.js'
 import { fireConfetti } from '../confetti.js'
 import ResultPopup from '../components/ResultPopup.jsx'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
@@ -37,6 +38,22 @@ function quizBannerText({ correctCount, points }) {
   if (correctCount === 2) return `Nice - you got 2 out of 4 right 🙂 ${points} points`
   if (correctCount === 1) return `Nice - you got 1 out of 4 right 🙂 ${points} point`
   return `Unlucky - you didn't get any right 🙁 no points`
+}
+
+// Content-authored emphasis for plain-text fields (e.g. quiz_five_right.csv's `instructions`
+// column) — `**word**` renders bold, same convention as markdown, without pulling in a markdown
+// parser for what's otherwise ordinary player-facing copy.
+function renderWithBold(text) {
+  return text.split(/\*\*(.+?)\*\*/g).map((part, i) => (i % 2 === 1 ? <strong key={i}>{part}</strong> : part))
+}
+
+// "5 right" completion banner copy — same tone as quizBannerText, but scored -4..+5 rather than
+// bucketed by correctCount, so the tiers are by score instead.
+function fiveRightBannerText(score) {
+  if (score === 5) return `Congratulations, you got all 5 right 🥳 +5 points`
+  if (score > 0) return `Well done, that's ${score} points 🙂`
+  if (score === 0) return `Even split — 0 points 🙂`
+  return `Unlucky - that's ${score} points 🙁`
 }
 
 // Shared closing paragraph for both pageHelpText variants below (find/solve and quiz) — same
@@ -77,6 +94,7 @@ export default function PlayPage() {
   const [answer, setAnswer] = useState('')
   const [showQuiz, setShowQuiz] = useState(false)
   const [selectedOptions, setSelectedOptions] = useState({})
+  const [fiveRightPicks, setFiveRightPicks] = useState({}) // { [questionId]: Set<tileId> }
   const [hintConfirmAnchor, setHintConfirmAnchor] = useState(null)
   const [revealConfirmAnchor, setRevealConfirmAnchor] = useState(null)
   const [whyPopup, setWhyPopup] = useState(null) // { text, anchorRect } | null
@@ -130,6 +148,7 @@ export default function PlayPage() {
   useEffect(() => {
     setShowQuiz(false)
     setSelectedOptions({})
+    setFiveRightPicks({})
     setWhyPopup(null)
     setHintConfirmAnchor(null)
     setRevealConfirmAnchor(null)
@@ -185,6 +204,22 @@ export default function PlayPage() {
     if (result.quizComplete && result.correctCount === 4) fireConfetti()
   }
 
+  function toggleFiveRightTile(questionId, tileId) {
+    setFiveRightPicks((prev) => {
+      const next = new Set(prev[questionId])
+      if (next.has(tileId)) next.delete(tileId)
+      else next.add(tileId)
+      return { ...prev, [questionId]: next }
+    })
+  }
+
+  async function handleFiveRightSubmit(questionId) {
+    const picked = Array.from(fiveRightPicks[questionId] || [])
+    const result = await api.submitQuizAnswer(questionId, picked)
+    refresh()
+    if (result.quizComplete && result.score === 5) fireConfetti()
+  }
+
   async function handleContinue() {
     await api.advance()
     refresh()
@@ -197,7 +232,7 @@ export default function PlayPage() {
   return (
     <div className="home-shell">
       <header className="landmark-header">
-        <button className="ghost back-link" onClick={() => navigate('/home')}>&larr; back</button>
+        <button className="back-link" onClick={() => navigate('/home')}>&larr; back</button>
         <span className="landmark-header-title">
           Landmark {landmarkDisplayNumber(state.sequenceOrder)}:{' '}
           {state.title ? <span className="landmark-name">{state.title}</span> : <span className="landmark-unsolved">Unsolved</span>}
@@ -226,68 +261,139 @@ export default function PlayPage() {
 
       <div className="landmark-body">
       {(showQuiz || landmarkComplete) && quiz.unlocked ? (
-        <section className="card">
-          <h2>What did you notice?</h2>
-          {quiz.questions.map((q) => {
-            const selected = selectedOptions[q.id]
-            return (
-              <div key={q.id} className="quiz-question">
-                <p>{q.questionText}</p>
-                <div className="opt-row">
-                  {q.options.map((opt) => {
-                    let cls = 'quiz-opt'
-                    if (q.answered) {
-                      if (opt === q.correctAnswer) cls += ' quiz-opt-correct'
-                      else if (opt === selected) cls += ' quiz-opt-wrong'
-                    } else if (opt === selected) {
-                      cls += ' quiz-opt-selected'
-                    }
-                    return (
-                      <button key={opt} disabled={q.answered} className={cls} onClick={() => handleSelectOption(q.id, opt)}>
-                        {opt}
-                      </button>
-                    )
-                  })}
-                </div>
-                {!q.answered ? (
-                  selected && (
-                    isCaptain ? (
-                      <button className="primary quiz-submit" onClick={() => handleQuizSubmit(q.id)}>
-                        submit
-                      </button>
+        <section className={quiz.questions[0]?.type === 'five_right' ? 'five-right-section' : 'card'}>
+          {quiz.questions[0]?.type === 'five_right' ? (
+            <>
+              <h2>{quiz.questions[0].title}</h2>
+              {quiz.questions.map((q) => {
+                const picks = fiveRightPicks[q.id] || new Set()
+                return (
+                  <div key={q.id} className="five-right-block">
+                    <p>{renderWithBold(q.instructions)}</p>
+                    <div className="five-right-grid">
+                      {q.tiles.map((tile) => {
+                        const picked = q.answered ? (q.pickedTileIds || []).includes(tile.id) : picks.has(tile.id)
+                        return (
+                          <button
+                            key={tile.id}
+                            type="button"
+                            className="five-right-tile"
+                            disabled={q.answered}
+                            onClick={() => toggleFiveRightTile(q.id, tile.id)}
+                          >
+                            <img src={`${API_BASE}/content-photos/${tile.imagePath}`} alt={tile.name} />
+                            <span className="five-right-tile-name">{tile.name}</span>
+                            <span className="five-right-checkbox" aria-hidden="true">
+                              {picked && <span className="five-right-checkbox-mark">&#10003;</span>}
+                            </span>
+                            {q.answered && (
+                              <span
+                                className={tile.correct ? 'five-right-correct-mark is-correct' : 'five-right-correct-mark is-wrong'}
+                                aria-hidden="true"
+                              >
+                                {tile.correct ? '✓' : '✗'}
+                              </span>
+                            )}
+                          </button>
+                        )
+                      })}
+                    </div>
+                    {!q.answered ? (
+                      <>
+                        <p className="five-right-count">{picks.size} tile{picks.size === 1 ? '' : 's'} selected</p>
+                        {isCaptain ? (
+                          <button className="primary quiz-submit" onClick={() => handleFiveRightSubmit(q.id)}>
+                            submit
+                          </button>
+                        ) : (
+                          <p className="captain-only-note">Only the captain can submit answers.</p>
+                        )}
+                      </>
                     ) : (
-                      <p className="captain-only-note">Only the captain can submit answers.</p>
-                    )
-                  )
-                ) : (
-                  <div className="quiz-result">
-                    <p className={q.wasCorrect ? 'feedback ok' : 'feedback bad'}>
-                      {q.wasCorrect ? 'Correct!' : `Not quite — it's ${q.correctAnswer}`}
-                    </p>
-                    {q.explanation && (
-                      <button className="why-link" onClick={(e) => setWhyPopup({ text: q.explanation, anchorRect: rectFromEvent(e) })}>
-                        why?
-                      </button>
+                      <div className="quiz-result">
+                        <p className={q.score > 0 ? 'feedback ok' : q.score < 0 ? 'feedback bad' : 'feedback'}>
+                          {q.score > 0 ? `+${q.score}` : q.score} point{Math.abs(q.score) === 1 ? '' : 's'}
+                        </p>
+                      </div>
                     )}
                   </div>
-                )}
-              </div>
-            )
-          })}
-          {landmarkComplete && (
-            <ResultPopup
-              text={quizBannerText({ correctCount: quiz.correctCount, points: quiz.pointsEarned })}
-              buttonLabel="Head to next landmark"
-              onContinue={handleContinue}
-              disabled={!isCaptain}
-              disabledNote="Only your team captain can advance to the next landmark."
-            />
+                )
+              })}
+              {landmarkComplete && (
+                <ResultPopup
+                  text={fiveRightBannerText(quiz.pointsEarned)}
+                  buttonLabel="Head to next landmark"
+                  onContinue={handleContinue}
+                  disabled={!isCaptain}
+                  disabledNote="Only your team captain can advance to the next landmark."
+                />
+              )}
+            </>
+          ) : (
+            <>
+              <h2>What did you notice?</h2>
+              {quiz.questions.map((q) => {
+                const selected = selectedOptions[q.id]
+                return (
+                  <div key={q.id} className="quiz-question">
+                    <p>{q.questionText}</p>
+                    <div className="opt-row">
+                      {q.options.map((opt) => {
+                        let cls = 'quiz-opt'
+                        if (q.answered) {
+                          if (opt === q.correctAnswer) cls += ' quiz-opt-correct'
+                          else if (opt === selected) cls += ' quiz-opt-wrong'
+                        } else if (opt === selected) {
+                          cls += ' quiz-opt-selected'
+                        }
+                        return (
+                          <button key={opt} disabled={q.answered} className={cls} onClick={() => handleSelectOption(q.id, opt)}>
+                            {opt}
+                          </button>
+                        )
+                      })}
+                    </div>
+                    {!q.answered ? (
+                      selected && (
+                        isCaptain ? (
+                          <button className="primary quiz-submit" onClick={() => handleQuizSubmit(q.id)}>
+                            submit
+                          </button>
+                        ) : (
+                          <p className="captain-only-note">Only the captain can submit answers.</p>
+                        )
+                      )
+                    ) : (
+                      <div className="quiz-result">
+                        <p className={q.wasCorrect ? 'feedback ok' : 'feedback bad'}>
+                          {q.wasCorrect ? 'Correct!' : `Not quite — it's ${q.correctAnswer}`}
+                        </p>
+                        {q.explanation && (
+                          <button className="why-link" onClick={(e) => setWhyPopup({ text: q.explanation, anchorRect: rectFromEvent(e) })}>
+                            why?
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+              {landmarkComplete && (
+                <ResultPopup
+                  text={quizBannerText({ correctCount: quiz.correctCount, points: quiz.pointsEarned })}
+                  buttonLabel="Head to next landmark"
+                  onContinue={handleContinue}
+                  disabled={!isCaptain}
+                  disabledNote="Only your team captain can advance to the next landmark."
+                />
+              )}
+            </>
           )}
         </section>
       ) : (
         <>
           <section className="card">
-            <h2>Find it</h2>
+            <h2>Find it clue</h2>
             <p>{clue.text}</p>
 
             {clue.hintsRevealed.map((hint, i) => (

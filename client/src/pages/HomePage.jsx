@@ -11,11 +11,24 @@ import LoadingScreen from '../components/LoadingScreen.jsx'
 import { isStartLandmark, landmarkDisplayNumber } from '../landmarkNumber.js'
 import { useRefreshOnResume } from '../useRefreshOnResume.js'
 import { useWakeLock } from '../useWakeLock.js'
+import { useCoach } from '../coach/CoachContext.jsx'
 
 function formatMs(totalSeconds) {
   const m = Math.floor(totalSeconds / 60)
   const s = totalSeconds % 60
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+}
+
+// Bootstrap Icons' "house-fill" (bi-house-fill) — picked over a hand-drawn shape so the switcher
+// icon matches a real icon library exactly. Shown before both segment labels, not just one, since
+// both are ways of viewing the same home page.
+function HouseIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+      <path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L8 2.207l6.646 6.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293z" />
+      <path d="m8 3.293 6 6V13.5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 13.5V9.293z" />
+    </svg>
+  )
 }
 
 export default function HomePage() {
@@ -29,6 +42,7 @@ export default function HomePage() {
   const [, setTick] = useState(0)
   const [landmarkPopup, setLandmarkPopup] = useState(null)
   const navigate = useNavigate()
+  const coach = useCoach()
 
   const loadHome = () => api.getHome().then((res) => { setData(res); setFetchedAt(Date.now()) })
 
@@ -38,6 +52,13 @@ export default function HomePage() {
 
   useEffect(() => {
     loadHome()
+  }, [])
+
+  // Set by StartPage's ResumeRedirect (fresh from finishing instructions, or reopening the app
+  // with the coach walkthrough still unfinished) — see CoachContext's markCoachComplete call for
+  // where that "unfinished" state gets cleared for good once the player actually finishes it.
+  useEffect(() => {
+    if (location.state?.startCoach) coach.start()
   }, [])
 
   useRefreshOnResume(loadHome)
@@ -94,8 +115,8 @@ export default function HomePage() {
 
       <div className="home-body">
         <div className="view-switch">
-          <button className={view === 'tile' ? 'view-seg view-seg-active' : 'view-seg'} onClick={() => setView('tile')}><strong>TILE</strong> view</button>
-          <button className={view === 'map' ? 'view-seg view-seg-active' : 'view-seg'} onClick={() => setView('map')}><strong>MAP</strong> view</button>
+          <button data-coach-id="home-tile-view-btn" className={view === 'tile' ? 'view-seg view-seg-active' : 'view-seg'} onClick={() => setView('tile')}><HouseIcon /><strong>TILE</strong> view</button>
+          <button data-coach-id="home-map-view-btn" className={view === 'map' ? 'view-seg view-seg-active' : 'view-seg'} onClick={() => setView('map')}><HouseIcon /><strong>MAP</strong> view</button>
         </div>
 
         {view === 'tile' && (
@@ -124,7 +145,7 @@ export default function HomePage() {
               // rather than opening the detail popup.
               if (t.type === 'current-revealed') {
                 return (
-                  <button key={t.seq} className="landmark-tile landmark-tile-current" onClick={() => navigate('/play')}>
+                  <button key={t.seq} data-coach-id="home-tile-in-progress" className="landmark-tile landmark-tile-current" onClick={() => navigate('/play')}>
                     <img src={`${API_BASE}/content-photos/${t.imagePath}`} alt="" />
                     <span className="tile-number">{numberLabel}</span>
                     <div className="tile-scrim tile-scrim-current">
@@ -137,7 +158,7 @@ export default function HomePage() {
 
               if (t.type === 'current') {
                 return (
-                  <button key={t.seq} className="landmark-tile landmark-tile-current" onClick={() => navigate('/play')}>
+                  <button key={t.seq} data-coach-id="home-tile-in-progress" className="landmark-tile landmark-tile-current" onClick={() => navigate('/play')}>
                     <span className="tile-number">{numberLabel}</span>
                     <div className="tile-scrim tile-scrim-current"><span className="tile-name">In progress</span></div>
                   </button>

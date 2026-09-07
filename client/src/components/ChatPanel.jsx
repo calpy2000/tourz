@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ChevronUp, ChevronDown, Pencil, Send } from 'lucide-react'
 import { api } from '../api.js'
-import { getSession } from '../localSession.js'
+import { getSession, saveSession } from '../localSession.js'
 import { playChatPing } from '../chatPing.js'
 
 const POLL_MS = 4000
@@ -75,6 +75,18 @@ export default function ChatPanel() {
         setMessages((prev) => [...prev, ...res.messages])
         sinceIdRef.current = res.messages[res.messages.length - 1].id
         primedRef.current = true
+
+        // A captain-swap flips is_captain server-side only — this device's cached isCaptain flag
+        // (read straight from localStorage all over the game, e.g. PlayPage's action buttons)
+        // otherwise never learns about it until a manual refresh. Every teammate's chat poll picks
+        // up the system message, so re-check this device's own status off the back of it — cheap,
+        // and correct for whichever of the two roles (or neither) this device actually holds now.
+        if (res.messages.some((m) => m.type === 'captain_changed')) {
+          api.getSession().then((s) => {
+            const current = getSession()
+            if (current && s?.player) saveSession({ ...current, isCaptain: s.player.isCaptain })
+          }).catch(() => {})
+        }
       } catch {
         // offline/no signal — silently retry on the next tick
       }
@@ -124,6 +136,7 @@ export default function ChatPanel() {
         {mode === 'composing' ? (
           <div className="home-chat-compose">
             <input
+              data-coach-id="chat-input"
               autoFocus
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
@@ -135,13 +148,14 @@ export default function ChatPanel() {
               onBlur={() => { if (!draft.trim()) setMode('idle') }}
               placeholder="Message your team…"
             />
-            <button className="chat-send-btn" onClick={handleSend} disabled={!draft.trim() || sending} aria-label="Send">
+            <button data-coach-id="chat-send-btn" className="chat-send-btn" onClick={handleSend} disabled={!draft.trim() || sending} aria-label="Send">
               <Send size={15} />
             </button>
           </div>
         ) : (
           <div className="home-chat-row">
             <button
+              data-coach-id="chat-expand-btn"
               className="chat-icon-btn"
               aria-label={mode === 'expanded' ? 'Collapse chat' : 'Expand chat'}
               onClick={() => setMode((m) => (m === 'expanded' ? 'idle' : 'expanded'))}
@@ -152,7 +166,7 @@ export default function ChatPanel() {
             <div className="home-chat-msg">
               {latest ? <LatestPreview message={latest} myPlayerId={session?.playerId} /> : <div className="home-chat-bubble"><div className="msg-text muted">No messages yet — say hello!</div></div>}
             </div>
-            <button className="chat-compose-btn" onClick={() => setMode('composing')} aria-label="New message">
+            <button data-coach-id="chat-compose-btn" className="chat-compose-btn" onClick={() => setMode('composing')} aria-label="New message">
               <Pencil size={14} />
             </button>
           </div>
@@ -162,7 +176,7 @@ export default function ChatPanel() {
       {mode === 'expanded' && (
         <div className="chat-sheet">
           <div className="chat-sheet-head">
-            <button className="chat-icon-btn" aria-label="Collapse chat" onClick={() => setMode('idle')}>
+            <button data-coach-id="chat-collapse-btn" className="chat-icon-btn" aria-label="Collapse chat" onClick={() => setMode('idle')}>
               <ChevronDown size={22} strokeWidth={3} />
             </button>
             <span>Chat</span>

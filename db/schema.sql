@@ -39,6 +39,12 @@ CREATE TABLE landmarks (
     about_subject_text    TEXT,      -- facts about the person/history behind the landmark
     interesting_fact      TEXT,      -- one standout callout shown at the end of about_subject_text
     external_link         TEXT,      -- e.g. Wikipedia, same idea as sites.external_link
+    quiz_format           TEXT NOT NULL DEFAULT 'multiple_choice',
+                                     -- which quiz_questions rows (by `type`) are actually served/scored
+                                     -- for this landmark. Lets a landmark keep a full backup set of
+                                     -- multiple_choice questions authored while a different format
+                                     -- (e.g. 'five_right') is the one actually played — switch back
+                                     -- by just changing this value, no content loss either way.
     created_at            TIMESTAMPTZ NOT NULL DEFAULT now(),
     UNIQUE (tour_id, sequence_order)
 );
@@ -185,6 +191,13 @@ CREATE TABLE players (
     is_captain     BOOLEAN NOT NULL DEFAULT false,
     session_token  TEXT NOT NULL UNIQUE,   -- random, unguessable — proves identity across reconnects.
                                             -- NOT the same as a sequential id; generate with a CSPRNG.
+    instructions_complete BOOLEAN NOT NULL DEFAULT false,  -- set once this player finishes the
+                                            -- paginated onboarding flow; gates whether a resumed
+                                            -- session lands back on /instructions or /home.
+    coach_complete BOOLEAN NOT NULL DEFAULT false,  -- set once this player finishes the guided
+                                            -- navigation "coach" walkthrough; a resumed session
+                                            -- that hasn't finished it is sent through it again
+                                            -- from the start (see ResumeRedirect in StartPage.jsx).
     joined_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
     created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
 );

@@ -345,7 +345,7 @@ export default function MapView() {
         {DEV_MODE && <FilterChip active={filters.poiDrafts} onClick={() => toggleFilter('poiDrafts')}>POI Drafts</FilterChip>}
       </div>
 
-      <div className="map-container">
+      <div className="map-container" data-coach-id="map-navigation-area">
         <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
           <Map
             mapId={import.meta.env.VITE_GOOGLE_MAPS_MAP_ID}
@@ -377,7 +377,11 @@ export default function MapView() {
                     onClick={() => openLandmark(l.sequenceOrder)}
                     zIndex={999999}
                   >
-                    <div className="map-pin-landmark" style={{ backgroundImage: `url(${API_BASE}/content-photos/${l.imagePath})` }}>
+                    <div
+                      data-coach-id={isStartLandmark(l.sequenceOrder) ? 'map-rbs-landmark-marker' : undefined}
+                      className="map-pin-landmark"
+                      style={{ backgroundImage: `url(${API_BASE}/content-photos/${l.imagePath})` }}
+                    >
                       {!isStartLandmark(l.sequenceOrder) && <div className="map-pin-badge">{landmarkDisplayNumber(l.sequenceOrder)}</div>}
                     </div>
                   </AdvancedMarker>
@@ -420,8 +424,8 @@ export default function MapView() {
                   onClick={() => openSite(s.id)}
                   zIndex={dragging ? 999999 : undefined}
                 >
-                  {showDots ? <div className={dragging ? 'map-dot map-dot-site map-pin-site-dragging' : 'map-dot map-dot-site'} /> : (
-                    <div className={dragging ? 'map-pin-site map-pin-site-dragging' : 'map-pin-site'}>
+                  {showDots ? <div data-coach-id="map-poi-marker" className={dragging ? 'map-dot map-dot-site map-pin-site-dragging' : 'map-dot map-dot-site'} /> : (
+                    <div data-coach-id="map-poi-marker" className={dragging ? 'map-pin-site map-pin-site-dragging' : 'map-pin-site'}>
                       <StarIcon />
                     </div>
                   )}
