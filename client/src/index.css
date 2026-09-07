@@ -173,8 +173,9 @@ button.primary:active, a.primary:active {
   display: flex;
   align-items: center;
   padding: 12px 4px;
-  border-bottom: 1px solid var(--stone-line);
-  background: var(--stone-raised);
+  border-bottom: 1px solid var(--umber-line);
+  background: var(--umber);
+  color: var(--cream);
 }
 
 .landmark-body {
@@ -200,12 +201,12 @@ button.primary:active, a.primary:active {
 }
 
 .landmark-name {
-  color: var(--forest);
+  color: var(--forest-tint);
 }
 
 .landmark-unsolved {
   font-weight: 500;
-  color: #b0a48f;
+  color: var(--cream-soft);
 }
 
 .progress-pill {
@@ -251,7 +252,7 @@ button.primary:active, a.primary:active {
 /* Pill with a lightbulb + label, matching the "💡 Help" control from the 6 GAME HUB project
    (games/slydz/style.css's .help-toggle) rather than a bare icon circle. */
 .help-btn {
-  padding: 6px 7px;
+  padding: 3px 7px;
   border-radius: 999px;
   border: 1px solid var(--stone-line);
   background: var(--stone-raised);
@@ -967,7 +968,7 @@ button.primary.quiz-submit {
 .home-pill {
   flex: 1;
   border-radius: 8px;
-  padding: 6px 2px;
+  padding: 3px 2px;
   text-align: center;
   display: flex;
   align-items: center;

@@ -255,6 +255,25 @@ export default function CoachOverlay() {
     }
   }, [active, currentStep, advance])
 
+  // The map-navigation step is unblocked so real pan/zoom gestures work, but a tap on a landmark
+  // or POI marker isn't a gesture — it opens a real DetailPopup, covering the map and stranding
+  // the player mid-step (this happened for real: a POI tap while on this step left the "expand
+  // the map" popup floating over an unrelated Harvey Nichols detail page). Swallow just those
+  // marker taps here, same swallow-and-registerWrongAttempt treatment as a wrong tap-step guess.
+  useEffect(() => {
+    if (!active || !currentStep || currentStep.coachId !== 'map-navigation-area') return
+
+    function onClick(e) {
+      if (!e.target.closest('.map-pin-landmark, [data-coach-id="map-poi-marker"]')) return
+      e.preventDefault()
+      e.stopPropagation()
+      registerWrongAttempt()
+    }
+
+    document.addEventListener('click', onClick, true)
+    return () => document.removeEventListener('click', onClick, true)
+  }, [active, currentStep, registerWrongAttempt])
+
   if (!active || !currentStep) return null
 
   const showError = wrongAttempts >= 1
