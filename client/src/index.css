@@ -2882,6 +2882,11 @@ button.primary.instructions-start-btn {
   width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--stone-line);
   background: var(--stone); color: var(--ink-soft); vertical-align: -3px; margin: 0 2px;
 }
+.instructions-coach-tile {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border-radius: 7px; background: var(--forest);
+  font-size: 15px; vertical-align: -7px; margin: 0 2px;
+}
 
 /* Section 11's help button + help menu demo — .help-btn/.modal-card.help-menu/.help-menu-* are
    the real classes from HelpButton.jsx/HelpMenu.jsx, used non-interactively here. */
@@ -2898,6 +2903,14 @@ button.primary.instructions-start-btn {
    visual is reused as the row's icon instead of a generic pick. */
 .instructions-tips-list {
   display: flex; flex-direction: column; gap: 13px; margin: 10px 0 6px;
+}
+/* Section 12 only — half the usual paragraph/list spacing, per request, so the "7 key things"
+   intro, the tips list and the closing coach sentence all sit tighter together. */
+.instructions-final-tips p {
+  margin-bottom: 5px;
+}
+.instructions-final-tips .instructions-tips-list {
+  gap: 6.5px; margin: 5px 0 3px;
 }
 /* Grid (not flex) for the icon column: a fixed-width track means every row's text starts at the
    same x position no matter how wide that row's own icon/pill happens to be, and nothing in a

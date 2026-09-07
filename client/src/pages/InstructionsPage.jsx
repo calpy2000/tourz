@@ -226,6 +226,13 @@ function ChatSheetDemo() {
   )
 }
 
+// Same dark forest-green as the real coach popup background (see .coach-popup in index.css) —
+// shown here so the "navigation coach" callout in the final tips uses the same colour cue the
+// player is about to see for real.
+function CoachTileDemo() {
+  return <span className="instructions-coach-tile" role="img" aria-label="Coach">🤓</span>
+}
+
 // Real HelpButton.jsx/HelpMenu.jsx classes/icons, rendered non-interactively — see HelpMenu.jsx
 // for the source of the six items and their icons.
 function HelpButtonDemo() {
@@ -573,11 +580,15 @@ function sections() {
     },
     {
       body: (
-        <>
+        <div className="instructions-final-tips">
           <h2>Final tips</h2>
           <p><strong className="instructions-red">7 key things</strong> to remember:</p>
           <TipsList />
-        </>
+          <p>
+            When you tap on let&rsquo;s start the tour below you will see a green panel with your
+            navigation coach - do what they say <CoachTileDemo />
+          </p>
+        </div>
       ),
     },
   ]
