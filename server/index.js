@@ -57,6 +57,11 @@ function quizPoints(correctCount) {
   return { 4: 5, 3: 3, 2: 2, 1: 1, 0: 0 }[correctCount] ?? 0;
 }
 
+// anagram: single question per landmark, same lump-sum-on-completion shape as five_right, but
+// scored as a flat pass/fail (no partial credit for a near-miss letter order) — matches the max
+// score of the other quiz formats.
+const ANAGRAM_POINTS = 5;
+
 // The current landmark's identity is "revealed" the moment its puzzle is solved — same gate
 // already used by GET /api/game/landmark/:sequenceOrder to allow viewing it before the quiz is
 // done. Home (tile grid) and the Map view need this same signal, separately from
@@ -147,6 +152,31 @@ async function eventsFor(teamId, landmarkId) {
 
 function normalize(text) {
   return String(text).trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+// Deterministic shuffle for five_right tile display order — seeded by team+question so every poll
+// (and every team member's device) sees the same random-looking arrangement for the lifetime of
+// that team's playthrough, but a different arrangement than any other team gets. Tile identity for
+// picking/scoring is always by `tile.id`, never by array position, so shuffling this is display-only.
+function seededShuffle(array, seedStr) {
+  let h = 2166136261;
+  for (let i = 0; i < seedStr.length; i++) {
+    h ^= seedStr.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  let state = h >>> 0;
+  function rand() {
+    state |= 0; state = (state + 0x6d2b79f5) | 0;
+    let t = Math.imul(state ^ (state >>> 15), 1 | state);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  }
+  const result = array.slice();
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    ;[result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
 }
 
 function readableAnswer(type, payload) {
@@ -487,7 +517,9 @@ app.get('/api/game/current', async (req, res) => {
           title: q.answer_payload.title || null,
           instructions: q.answer_payload.instructions || null,
           // `correct` per tile only revealed once this question has been answered — never in advance.
-          tiles: q.answer_payload.tiles.map((t) => ({
+          // Display order is shuffled (seeded by team+question, so it's stable across polls/devices
+          // for this team's playthrough) rather than the authored CSV order.
+          tiles: seededShuffle(q.answer_payload.tiles, `${team.id}:${q.id}`).map((t) => ({
             id: t.id,
             name: t.name,
             imagePath: t.imagePath,
@@ -496,6 +528,24 @@ app.get('/api/game/current', async (req, res) => {
           answered: Boolean(answered),
           pickedTileIds: answered ? answered.payload.picked : null,
           score: answered ? answered.payload.score : null,
+          explanation: answered ? q.explanation : null,
+        };
+      }
+      if (q.type === 'anagram') {
+        return {
+          id: q.id,
+          type: q.type,
+          questionText: q.question_text,
+          title: q.answer_payload.title || null,
+          rowCounts: q.answer_payload.rowCounts,
+          // Starting scrambled order before answering; once answered, the board freezes to show
+          // what was actually submitted instead (the live in-progress order is client-only state).
+          tiles: answered ? null : q.answer_payload.scrambled.split(''),
+          submittedTiles: answered ? answered.payload.submitted.split('') : null,
+          answered: Boolean(answered),
+          wasCorrect: answered ? answered.payload.correct : null,
+          // Only revealed once this question has been answered — never in advance.
+          correctAnswer: answered ? q.answer_payload.solution : null,
           explanation: answered ? q.explanation : null,
         };
       }
@@ -812,6 +862,7 @@ app.post('/api/game/quiz/answer', async (req, res) => {
   // single question's own score (-4..+5) already IS the lump-sum points, unlike multiple_choice
   // where points are only awarded once every question in the set has been answered.
   const isFiveRight = question.type === 'five_right';
+  const isAnagram = question.type === 'anagram';
   let correct = null;
   let fiveRightScore = null;
   if (isFiveRight) {
@@ -823,6 +874,12 @@ app.post('/api/game/quiz/answer', async (req, res) => {
     await db.query(
       `INSERT INTO progress_events (team_id, landmark_id, event_type, payload) VALUES ($1, $2, 'quiz_answered', $3)`,
       [team.id, landmark.id, JSON.stringify({ questionId, picked, score: fiveRightScore })]
+    );
+  } else if (isAnagram) {
+    correct = normalize(question.answer_payload.solution) === normalize(answer);
+    await db.query(
+      `INSERT INTO progress_events (team_id, landmark_id, event_type, payload) VALUES ($1, $2, 'quiz_answered', $3)`,
+      [team.id, landmark.id, JSON.stringify({ questionId, correct, submitted: answer })]
     );
   } else {
     correct = normalize(question.answer_payload.correct) === normalize(answer);
@@ -847,7 +904,11 @@ app.post('/api/game/quiz/answer', async (req, res) => {
   let quizPointsEarned = null;
   let correctCount = null;
   if (quizComplete) {
-    quizPointsEarned = isFiveRight ? fiveRightScore : quizPoints((correctCount = answered.filter((e) => e.payload.correct).length));
+    quizPointsEarned = isFiveRight
+      ? fiveRightScore
+      : isAnagram
+        ? (correct ? ANAGRAM_POINTS : 0)
+        : quizPoints((correctCount = answered.filter((e) => e.payload.correct).length));
 
     await db.query(
       `INSERT INTO progress_events (team_id, landmark_id, event_type, points_delta) VALUES ($1, $2, 'quiz_completed', $3)`,
@@ -863,7 +924,7 @@ app.post('/api/game/quiz/answer', async (req, res) => {
   res.json({
     type: question.type,
     correct,
-    correctAnswer: isFiveRight ? null : question.answer_payload.correct,
+    correctAnswer: isFiveRight ? null : isAnagram ? question.answer_payload.solution : question.answer_payload.correct,
     // Reveals every tile's correct/wrong flag at once — the whole point of the format is seeing
     // all 9 answers together after submitting, not one at a time.
     tiles: isFiveRight ? question.answer_payload.tiles.map((t) => ({ id: t.id, correct: t.correct })) : null,

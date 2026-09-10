@@ -842,6 +842,25 @@ button.primary.quiz-submit {
   display: block;
 }
 
+.five-right-tile.is-text-tile {
+  background: var(--brass);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+}
+
+.five-right-tile-text {
+  color: var(--umber);
+  font-weight: 800;
+  text-align: center;
+  font-size: clamp(13px, 4.1vw, 17px);
+  line-height: 1.2;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+  overflow-wrap: break-word;
+}
+
 .five-right-tile-name {
   position: absolute;
   left: 0; right: 0; bottom: 0;
@@ -915,6 +934,82 @@ button.primary.quiz-submit {
   background: none;
   border: none;
   padding: 0;
+}
+
+/* Anagram quiz format — drag-swap letter tiles, ported from design/anagram-quiz-prototype.html
+   (itself ported from 6 GAME HUB's SLYDZ mechanic). Lives inside .card, same as multiple_choice. */
+/* container-type turns cqw into "% of .anagram-board's own width" — lets --tile-size be computed
+   directly from the largest row (6 tiles, 5 gaps) so that row fills the card edge-to-edge instead
+   of guessing a viewport-relative size that leaves the board looking small inside a wide card. */
+.anagram-board {
+  container-type: inline-size;
+  --tile-size: clamp(40px, calc((100cqw - 30px) / 6), 70px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+/* grid-auto-flow: column + a shared --tile-size (not a per-count grid-template) means every tile
+   is exactly the same square regardless of which row it's in or how many tiles that row holds —
+   a 4-tile row and a 6-tile row size identically instead of stretching to fill the card width. */
+.tile-row {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: var(--tile-size);
+  grid-auto-rows: var(--tile-size);
+  gap: 6px;
+}
+
+.tile {
+  width: var(--tile-size);
+  height: var(--tile-size);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 20%;
+  background: var(--forest);
+  color: var(--cream);
+  font-size: calc(var(--tile-size) * 0.44);
+  font-weight: 700;
+  text-transform: uppercase;
+  user-select: none;
+  touch-action: none;
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.12);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease, background-color 0.15s ease, color 0.15s ease;
+}
+
+.tile.is-dragging { opacity: 0.35; }
+
+.tile.drag-over {
+  box-shadow: 0 0 0 3px var(--brass-deep);
+  transform: scale(1.06);
+}
+
+.tile.is-locked { cursor: default; }
+
+/* Manual drag-drop swap feedback — same "pop" used by 6 GAME HUB's SLYDZ (games/slydz/style.css's
+   .tile-swapped/tilePop), deliberately distinct from the sliding slideExchange() animation reserved
+   for the auto-reveal-on-wrong-answer sequence. */
+.tile.is-swapped { animation: tilePop 0.2s ease-in-out; }
+
+@keyframes tilePop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.tile.result-correct {
+  background: var(--forest-tint);
+  color: var(--forest);
+  box-shadow: inset 0 0 0 2px var(--forest);
+}
+
+.tile.result-wrong {
+  background: var(--brick-tint);
+  color: var(--brick);
+  box-shadow: inset 0 0 0 2px var(--brick);
 }
 
 /* --- Home screen --- */

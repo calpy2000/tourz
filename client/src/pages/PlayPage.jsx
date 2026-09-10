@@ -5,6 +5,7 @@ import { api } from '../api.js'
 import { API_BASE } from '../apiBase.js'
 import { fireConfetti } from '../confetti.js'
 import ResultPopup from '../components/ResultPopup.jsx'
+import AnagramBoard from '../components/AnagramBoard.jsx'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
 import WhyPopup from '../components/WhyPopup.jsx'
 import DevTools from '../components/DevTools.jsx'
@@ -51,9 +52,15 @@ function renderWithBold(text) {
 // bucketed by correctCount, so the tiers are by score instead.
 function fiveRightBannerText(score) {
   if (score === 5) return `Congratulations, you got all 5 right 🥳 +5 points`
-  if (score > 0) return `Well done, that's ${score} points 🙂`
+  if (score > 0) return `Well done, that's ${score} point${score === 1 ? '' : 's'} 🙂`
   if (score === 0) return `Even split — 0 points 🙂`
-  return `Unlucky - that's ${score} points 🙁`
+  return `Unlucky - that's ${score} point${Math.abs(score) === 1 ? '' : 's'} 🙁`
+}
+
+// Anagram completion banner copy — single question, flat pass/fail, same tone as the other banners.
+function anagramBannerText(points) {
+  if (points > 0) return `Correct! 🥳 ${points} points`
+  return `Unlucky - not quite right 🙁 no points`
 }
 
 // Shared closing paragraph for both pageHelpText variants below (find/solve and quiz) — same
@@ -103,6 +110,7 @@ export default function PlayPage() {
   // see resolveCaptain in index.js), so on a non-captain device any change here between polls is
   // by definition the captain's doing, never our own action bouncing back.
   const prevSignalRef = useRef(null)
+  const anagramBoardRef = useRef(null)
 
   const refresh = () => api.getCurrent().then(setState)
 
@@ -220,6 +228,14 @@ export default function PlayPage() {
     if (result.quizComplete && result.score === 5) fireConfetti()
   }
 
+  async function handleAnagramSubmit(questionId) {
+    const answerText = anagramBoardRef.current?.getAnswer()
+    if (!answerText) return
+    const result = await api.submitQuizAnswer(questionId, answerText)
+    refresh()
+    if (result.correct) fireConfetti()
+  }
+
   async function handleContinue() {
     await api.advance()
     refresh()
@@ -262,7 +278,58 @@ export default function PlayPage() {
       <div className="landmark-body">
       {(showQuiz || landmarkComplete) && quiz.unlocked ? (
         <section className={quiz.questions[0]?.type === 'five_right' ? 'five-right-section' : 'card'}>
-          {quiz.questions[0]?.type === 'five_right' ? (
+          {quiz.questions[0]?.type === 'anagram' ? (
+            <>
+              <h2>{quiz.questions[0].title}</h2>
+              <p>{quiz.questions[0].questionText}</p>
+              {(() => {
+                const q = quiz.questions[0]
+                // A wrong answer keeps the tiles' normal colour — the slide reveal itself (and the
+                // "Not quite" text below) already carries that signal, no need to also flip red.
+                const resultClass = q.answered && q.wasCorrect ? 'result-correct' : null
+                return (
+                  <AnagramBoard
+                    key={q.id}
+                    ref={anagramBoardRef}
+                    tiles={q.answered ? q.submittedTiles : q.tiles}
+                    rowCounts={q.rowCounts}
+                    locked={q.answered}
+                    resultClass={resultClass}
+                    revealAnswer={q.answered && !q.wasCorrect ? q.correctAnswer : undefined}
+                  />
+                )
+              })()}
+              {!quiz.questions[0].answered ? (
+                isCaptain ? (
+                  <button className="primary quiz-submit" onClick={() => handleAnagramSubmit(quiz.questions[0].id)}>
+                    submit
+                  </button>
+                ) : (
+                  <p className="captain-only-note">Only the captain can submit answers.</p>
+                )
+              ) : (
+                <div className="quiz-result">
+                  <p className={quiz.questions[0].wasCorrect ? 'feedback ok' : 'feedback bad'}>
+                    {quiz.questions[0].wasCorrect ? 'Correct!' : `Not quite — it's ${quiz.questions[0].correctAnswer}`}
+                  </p>
+                  {quiz.questions[0].explanation && (
+                    <button className="why-link" onClick={(e) => setWhyPopup({ text: quiz.questions[0].explanation, anchorRect: rectFromEvent(e) })}>
+                      why?
+                    </button>
+                  )}
+                </div>
+              )}
+              {landmarkComplete && (
+                <ResultPopup
+                  text={anagramBannerText(quiz.pointsEarned)}
+                  buttonLabel="Head to next landmark"
+                  onContinue={handleContinue}
+                  disabled={!isCaptain}
+                  disabledNote="Only your team captain can advance to the next landmark."
+                />
+              )}
+            </>
+          ) : quiz.questions[0]?.type === 'five_right' ? (
             <>
               <h2>{quiz.questions[0].title}</h2>
               {quiz.questions.map((q) => {
@@ -277,12 +344,18 @@ export default function PlayPage() {
                           <button
                             key={tile.id}
                             type="button"
-                            className="five-right-tile"
+                            className={`five-right-tile${tile.imagePath ? '' : ' is-text-tile'}`}
                             disabled={q.answered}
                             onClick={() => toggleFiveRightTile(q.id, tile.id)}
                           >
-                            <img src={`${API_BASE}/content-photos/${tile.imagePath}`} alt={tile.name} />
-                            <span className="five-right-tile-name">{tile.name}</span>
+                            {tile.imagePath ? (
+                              <>
+                                <img src={`${API_BASE}/content-photos/${tile.imagePath}`} alt={tile.name} />
+                                <span className="five-right-tile-name">{tile.name}</span>
+                              </>
+                            ) : (
+                              <span className="five-right-tile-text">{tile.name}</span>
+                            )}
                             <span className="five-right-checkbox" aria-hidden="true">
                               {picked && <span className="five-right-checkbox-mark">&#10003;</span>}
                             </span>

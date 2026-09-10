@@ -46,6 +46,7 @@ async function main() {
   const clueHints = readCsv('clue_hints.csv');
   const quizQuestions = readCsv('quiz_questions.csv');
   const quizFiveRight = readCsv('quiz_five_right.csv');
+  const quizAnagram = readCsv('quiz_anagram.csv');
   const sites = readCsv('sites.csv');
 
   const client = process.env.DATABASE_URL
@@ -190,6 +191,29 @@ async function main() {
       );
     }
 
+    // anagram is one "question" per landmark (like five_right) — letters live in `scrambled`
+    // (the starting board order, authored pre-scrambled) and `solution` (the correct order),
+    // both just different orderings of the same letter multiset.
+    for (const row of quizAnagram) {
+      const landmarkId = landmarkIdBySequence[row.landmark_sequence_order];
+      await client.query(
+        `INSERT INTO quiz_questions (landmark_id, sequence_order, type, question_text, answer_payload, explanation)
+         VALUES ($1, $2, 'anagram', $3, $4, $5)`,
+        [
+          landmarkId,
+          row.question_order,
+          row.question_text,
+          JSON.stringify({
+            title: row.title,
+            solution: row.solution,
+            scrambled: row.scrambled,
+            rowCounts: row.row_counts.split(',').map(Number),
+          }),
+          row.explanation || null,
+        ]
+      );
+    }
+
     for (const row of sites) {
       await client.query(
         `INSERT INTO sites
@@ -227,7 +251,7 @@ async function main() {
     );
 
     await client.query('COMMIT');
-    console.log(`Seeded ${landmarks.length} landmarks, ${clueHints.length} hints, ${quizQuestions.length + fiveRightGroups.size} quiz questions (${fiveRightGroups.size} five_right), ${sites.length} sites.`);
+    console.log(`Seeded ${landmarks.length} landmarks, ${clueHints.length} hints, ${quizQuestions.length + fiveRightGroups.size + quizAnagram.length} quiz questions (${fiveRightGroups.size} five_right, ${quizAnagram.length} anagram), ${sites.length} sites.`);
   } catch (err) {
     await client.query('ROLLBACK');
     throw err;
