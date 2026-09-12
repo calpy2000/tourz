@@ -170,9 +170,11 @@ export default function PlayPage() {
         <p className="eyebrow">Tour complete</p>
         <h1>Nice walking.</h1>
         <p className="subtitle">Final score: {state.totalScore} points</p>
-        <button className="ghost" onClick={async () => { await api.devReset(); refresh() }}>
-          Restart (dev)
-        </button>
+        {DEV_MODE && (
+          <button className="ghost" onClick={async () => { await api.devReset(); refresh() }}>
+            Restart (dev)
+          </button>
+        )}
         <TourCompletePopup />
       </div>
     )
