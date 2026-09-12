@@ -296,7 +296,9 @@ function TipsList() {
       </div>
       <div className="instructions-tip-item">
         <span className="instructions-tip-icon-wrap"><PoiMarkerIcon /></span>
-        <span className="instructions-tip-text">Take the time to review the <strong className="instructions-red">points of interest cards</strong> as you pass them &mdash; this will help you learn more and gain quiz points</span>
+        <span className="instructions-tip-text">Take the time to review the <strong className="instructions-red">points of interest cards</strong> as you pass them &mdash; this will help you learn more and gain quiz points<br />
+          <strong className="instructions-red">Top hint</strong> &mdash; share this across the team
+        </span>
       </div>
       <div className="instructions-tip-item">
         <span className="instructions-tip-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719" /></svg></span>
@@ -514,6 +516,11 @@ function sections() {
             <strong className="instructions-red">solve</strong> a landmark or{' '}
             <strong className="instructions-red">submit</strong> quiz answers. All team members will
             see these updates on their phone.
+          </p>
+          <p>
+            There are lots of <strong className="instructions-red">points of interest cards</strong> to
+            read - so it is a <strong className="instructions-red">VERY</strong> good idea to{' '}
+            <strong className="instructions-red">share</strong> this across the team.
           </p>
           <p>
             Team members can also communicate via the{' '}
