@@ -5,8 +5,9 @@
 // file doesn't grow unboundedly and the POI Reader / POI Drafts map layer stay scoped to what's
 // actually still being worked on.
 //
-// Usage: node db/archive-leg.js <leg_number>
-// Writes db/content/edinburgh-tour/archive/POI-candidates-leg<N>-promoted-<date>.csv
+// Usage: node db/archive-leg.js <leg_number> [--tour <tour-folder>]
+// Writes db/content/<tour-folder>/archive/POI-candidates-leg<N>-promoted-<date>.csv
+// Omit --tour to default to edinburgh-tour (existing behavior unchanged).
 
 const fs = require('fs');
 const path = require('path');
@@ -14,12 +15,15 @@ const { parse } = require('csv-parse/sync');
 
 const legNumber = process.argv[2];
 if (!legNumber) {
-  console.error('Usage: node db/archive-leg.js <leg_number>');
+  console.error('Usage: node db/archive-leg.js <leg_number> [--tour <tour-folder>]');
   process.exit(1);
 }
 
-const CANDIDATES_PATH = path.join(__dirname, 'content/edinburgh-tour/POI-candidates.csv');
-const ARCHIVE_DIR = path.join(__dirname, 'content/edinburgh-tour/archive');
+const tourArgIndex = process.argv.indexOf('--tour');
+const tourFolder = tourArgIndex !== -1 ? process.argv[tourArgIndex + 1] : 'edinburgh-tour';
+
+const CANDIDATES_PATH = path.join(__dirname, `content/${tourFolder}/POI-candidates.csv`);
+const ARCHIVE_DIR = path.join(__dirname, `content/${tourFolder}/archive`);
 
 const rows = parse(fs.readFileSync(CANDIDATES_PATH, 'utf8'), { columns: true, relax_quotes: true });
 const legRows = rows.filter(r => r.leg_number === legNumber);

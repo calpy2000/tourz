@@ -68,13 +68,13 @@ function ViewSwitchDemo({ active, ring, animate }) {
   )
 }
 
-function TileGridDemo() {
+function TileGridDemo({ startLandmark }) {
   return (
     <div className="tile-grid">
       <button className="landmark-tile">
-        <img src={`${API_BASE}/content-photos/rbs-hq.jpg`} alt="" />
+        {startLandmark?.imagePath && <img src={`${API_BASE}/content-photos/${startLandmark.imagePath}`} alt="" />}
         <span className="tile-number">start</span>
-        <div className="tile-scrim"><span className="tile-name">Royal Bank of Scotland Headquarters</span></div>
+        <div className="tile-scrim"><span className="tile-name">{startLandmark?.title || 'Your starting landmark'}</span></div>
       </button>
       <button className="landmark-tile landmark-tile-current">
         <span className="tile-number">1</span>
@@ -91,22 +91,34 @@ function TileGridDemo() {
 // Section 4 and 7's "tap a tile/marker -> details card" callout, the real DetailPopup markup
 // built at its real phone-fill dimensions then shrunk with a single transform: scale so it
 // keeps the exact real shape/proportions.
-function MiniDetailCardDemo() {
+function MiniDetailCardDemo({ startLandmark }) {
+  const aboutSections = [
+    { label: startLandmark?.aboutLandmarkLabel, text: startLandmark?.aboutLandmarkText },
+    { label: startLandmark?.aboutSubjectLabel, text: startLandmark?.aboutSubjectText },
+  ].filter((s) => s.text)
+
   return (
     <div className="mini-detail-card-frame">
       <div className="mini-detail-card">
         <button className="detail-popup-back" aria-label="Back">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#23201b" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
         </button>
-        <img className="detail-popup-image" src={`${API_BASE}/content-photos/rbs-hq-hero.jpg`} alt="" />
+        {startLandmark?.imagePath && (
+          <img className="detail-popup-image" src={`${API_BASE}/content-photos/${startLandmark.imagePath}`} alt="" />
+        )}
         <div className="detail-popup-body">
-          <div className="detail-popup-eyebrow">About the building</div>
-          <h3>Royal Bank of Scotland Headquarters</h3>
-          <p className="poi-popup-address">St Andrew Square, Edinburgh</p>
-          <p>Designed by Sir William Chambers and completed in 1774 as a private townhouse for Sir Lawrence Dundas, this Palladian mansion became the Scottish Excise Office in 1795 before the Royal Bank of Scotland acquired it in 1825. It remains the bank&rsquo;s registered head office today.</p>
-          <p className="field-label">About its history</p>
-          <p>The domed banking hall was added in 1857 by architect John Dick Peddie, its ceiling ringed with star-shaped skylights trimmed in gold. Sir Lawrence Dundas, who commissioned the original house, was one of the wealthiest men in Georgian Scotland &mdash; his fortune was built substantially on the transatlantic slave trade.</p>
-          <p><strong>Interesting fact:</strong> The domed ceiling of the banking hall is famous enough to have been featured on Royal Bank of Scotland banknotes.</p>
+          <div className="detail-popup-eyebrow">Starting landmark</div>
+          <h3>{startLandmark?.title || 'Your starting landmark'}</h3>
+          {startLandmark?.address && <p className="poi-popup-address">{startLandmark.address}</p>}
+          {aboutSections.map((s, i) => (
+            <div key={i}>
+              {s.label && aboutSections.length > 1 && <p className="field-label">{s.label}</p>}
+              <p>{s.text}</p>
+            </div>
+          ))}
+          {startLandmark?.interestingFact && (
+            <p><strong>Interesting fact:</strong> {startLandmark.interestingFact}</p>
+          )}
         </div>
         <div className="detail-popup-footer">
           <a className="primary detail-popup-link" href="#" onClick={(e) => e.preventDefault()} tabIndex={-1}>
@@ -132,7 +144,7 @@ function MiniPlayPageDemo() {
         <div className="landmark-body">
           <section className="card">
             <h2>Find it</h2>
-            <p>look for the big man in the sky - follow his eyes for just over half a kilometre - you are looking for the green man - dont forget to note what you see on the way, you will need it for the quiz</p>
+            <p>follow the clue to find your next landmark - it might send you down a side street or point out a small detail - dont forget to note what you see on the way, you will need it for the quiz</p>
             <div className="button-row">
               <button className="primary" tabIndex={-1}>Get a hint (2 left)</button>
               <button className="primary btn-reveal" tabIndex={-1}>Reveal location</button>
@@ -140,7 +152,7 @@ function MiniPlayPageDemo() {
           </section>
           <section className="card">
             <h2>Solve it</h2>
-            <p>What year did the green man die? (4 digits please)</p>
+            <p>What year was it built? (4 digits please)</p>
             <div className="answer-form">
               <input placeholder="Your answer" readOnly tabIndex={-1} />
               <button className="primary" type="button" tabIndex={-1}>submit</button>
@@ -155,7 +167,7 @@ function MiniPlayPageDemo() {
 function MapPanelDemo({ crop }) {
   return (
     <div className={crop === 'bottom20' ? 'map-panel-demo map-panel-demo-crop-bottom20' : 'map-panel-demo'}>
-      <img src={mapViewScreenshot} alt="Map view showing St Andrew Square, the RBS landmark and nearby points of interest" />
+      <img src={mapViewScreenshot} alt="Map view showing the landmark marker and nearby points of interest" />
       <div className="map-panel-here" />
     </div>
   )
@@ -165,12 +177,12 @@ function MapToCardVisual() {
   return (
     <div className="map-to-card-visual">
       <div className="map-panel-demo-crop-top">
-        <img src={mapViewScreenshot} alt="Map view showing the topmost point of interest marker and the RBS landmark pin" />
+        <img src={mapViewScreenshot} alt="Map view showing the topmost point of interest marker and the landmark pin" />
       </div>
       <svg className="map-to-card-arrow-overlay" viewBox="0 0 340 154" preserveAspectRatio="none" fill="none">
-        <path d="M130 67 C 130 105, 150 122, 150 144" stroke="#b33f2e" strokeWidth="2.2" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+        <path d="M171 67 C 171 105, 155 122, 150 144" stroke="#b33f2e" strokeWidth="2.2" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
         <polygon points="143,144 157,144 150,152" fill="#b33f2e" />
-        <path d="M240 90 C 240 118, 190 122, 190 144" stroke="#b33f2e" strokeWidth="2.2" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+        <path d="M234 109 C 234 122, 190 122, 190 144" stroke="#b33f2e" strokeWidth="2.2" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
         <polygon points="183,144 197,144 190,152" fill="#b33f2e" />
       </svg>
     </div>
@@ -314,7 +326,8 @@ function TipsList() {
 
 // The 12-step onboarding sequence, finalised in design/instructions-pagination-mockup.html and
 // ported here verbatim. Section 1 gets the page's only <h1>; the rest open with an <h2>.
-function sections() {
+function sections(data, startLandmark) {
+  const playableCount = (data?.totalLandmarks || 1) - 1
   return [
     {
       body: (
@@ -325,14 +338,17 @@ function sections() {
             so read them well and you will enjoy the tour much more.
           </p>
           <p>
-            The aim is to find <strong className="instructions-red">14 landmarks</strong> &mdash; some
+            The aim is to find <strong className="instructions-red">{playableCount} landmarks</strong> &mdash; some
             big, some small. For each landmark you can gain up to{' '}
-            <strong className="instructions-red">10 points</strong>. Your starting landmark is the
-            Royal Bank of Scotland headquarters on St Andrew&rsquo;s Square.
+            <strong className="instructions-red">10 points</strong>. Your starting landmark is{' '}
+            <strong className="instructions-red">{startLandmark?.title}</strong>
+            {startLandmark?.address ? `, ${startLandmark.address}` : ''}.
           </p>
-          <div className="instructions-landmark-image">
-            <img src={`${API_BASE}/content-photos/rbs-hq-hero.jpg`} alt="Royal Bank of Scotland headquarters, St Andrew's Square" />
-          </div>
+          {startLandmark?.imagePath && (
+            <div className="instructions-landmark-image">
+              <img src={`${API_BASE}/content-photos/${startLandmark.imagePath}`} alt={startLandmark.title} />
+            </div>
+          )}
           <p>Hopefully you are there &mdash; if not, go to it now before continuing.</p>
         </>
       ),
@@ -383,7 +399,7 @@ function sections() {
             <strong>?</strong> &mdash; to be found (see below right).
           </p>
           <ViewSwitchDemo active="tile" ring />
-          <TileGridDemo />
+          <TileGridDemo startLandmark={startLandmark} />
         </>
       ),
     },
@@ -396,14 +412,14 @@ function sections() {
             details card for the landmark (see below).
           </p>
           <ViewSwitchDemo active="tile" ring />
-          <TileGridDemo />
+          <TileGridDemo startLandmark={startLandmark} />
           <div className="tile-to-card-arrow">
             <svg width="100%" height="36" viewBox="0 0 454 36" preserveAspectRatio="none" fill="none">
               <path d="M72 2 C 72 20, 227 12, 227 24" stroke="#b33f2e" strokeWidth="2.5" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
               <polygon points="220,24 234,24 227,34" fill="#b33f2e" />
             </svg>
           </div>
-          <MiniDetailCardDemo />
+          <MiniDetailCardDemo startLandmark={startLandmark} />
         </>
       ),
     },
@@ -418,7 +434,7 @@ function sections() {
             are there) page.
           </p>
           <ViewSwitchDemo active="tile" ring />
-          <TileGridDemo />
+          <TileGridDemo startLandmark={startLandmark} />
           <div className="tile-to-card-arrow center">
             <svg width="16" height="36" viewBox="0 0 16 36" fill="none">
               <path d="M8 2 L8 26" stroke="#b33f2e" strokeWidth="2.5" strokeLinecap="round" />
@@ -459,7 +475,7 @@ function sections() {
           </p>
           <ViewSwitchDemo active="map" ring />
           <MapToCardVisual />
-          <MiniDetailCardDemo />
+          <MiniDetailCardDemo startLandmark={startLandmark} />
         </>
       ),
     },
@@ -616,11 +632,16 @@ export default function InstructionsPage() {
   const [fetchedAt, setFetchedAt] = useState(null)
   const [, setTick] = useState(0)
   const [step, setStep] = useState(0)
+  // The real starting landmark's full detail (image/about-text/interesting-fact included) — used
+  // by the tile/detail-card demo mockups below so they show this tour's actual start landmark
+  // instead of a fixed Edinburgh example. sequence_order 1 is always the start landmark.
+  const [startLandmark, setStartLandmark] = useState(null)
 
   const loadHome = () => api.getHome().then((res) => { setData(res); setFetchedAt(Date.now()) })
 
   useEffect(() => {
-    if (!helpMode) loadHome()
+    loadHome()
+    api.getLandmarkDetail(1).then((res) => { if (!res.error) setStartLandmark(res) })
   }, [helpMode])
 
   // Same live-ticking pattern as HomePage — elapsedSeconds is a snapshot from the last fetch.
@@ -629,7 +650,7 @@ export default function InstructionsPage() {
     return () => clearInterval(id)
   }, [])
 
-  if (!helpMode && !data) return <LoadingScreen />
+  if (!data) return <LoadingScreen />
 
   const liveElapsedSeconds = data ? data.elapsedSeconds + Math.floor((Date.now() - fetchedAt) / 1000) : 0
 
@@ -645,8 +666,8 @@ export default function InstructionsPage() {
             <h1>Instructions</h1>
 
             <p>
-              Welcome to your Edinburgh walking tour. The aim is to find{' '}
-              <strong className="instructions-red">14 landmarks</strong> &mdash; some big, some
+              Welcome to your {data.tourName}. The aim is to find{' '}
+              <strong className="instructions-red">{data.totalLandmarks - 1} landmarks</strong> &mdash; some big, some
               small. For each landmark you can gain up to{' '}
               <strong className="instructions-red">10 points</strong>. You&rsquo;ll have{' '}
               <strong className="instructions-red">6 hours</strong> from the moment you start, so
@@ -669,7 +690,7 @@ export default function InstructionsPage() {
               <strong className="instructions-red">Future</strong> landmarks show as{' '}
               <strong>?</strong> (below right).
             </p>
-            <TileGridDemo />
+            <TileGridDemo startLandmark={startLandmark} />
 
             <p>
               Tap a <strong className="instructions-red">found</strong> tile to see its details
@@ -681,7 +702,7 @@ export default function InstructionsPage() {
                 <polygon points="1,24 15,24 8,34" fill="#b33f2e" />
               </svg>
             </div>
-            <MiniDetailCardDemo />
+            <MiniDetailCardDemo startLandmark={startLandmark} />
 
             <p>
               Tap the <strong className="instructions-red">in progress</strong> tile to see the
@@ -708,7 +729,7 @@ export default function InstructionsPage() {
 
             <p>Tap a point of interest marker or a found landmark to see its details card:</p>
             <MapToCardVisual />
-            <MiniDetailCardDemo />
+            <MiniDetailCardDemo startLandmark={startLandmark} />
 
             <h2>Finding landmarks</h2>
             <p>
@@ -791,7 +812,7 @@ export default function InstructionsPage() {
     )
   }
 
-  const allSections = sections()
+  const allSections = sections(data, startLandmark)
   const isFirst = step === 0
   const isLast = step === allSections.length - 1
 

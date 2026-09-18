@@ -106,12 +106,15 @@
   </div>
 
   <script>
-    // Read-only review tool - loads db/content/edinburgh-tour/POI-candidates.csv fresh on every
-    // page load, no build step, no caching layer of its own. Edit the CSV directly, refresh this
-    // page, see the change - the whole point is to skip a regenerate-then-reload cycle while
-    // actively reviewing. Must be served via a local static server (fetch of a local CSV is
-    // blocked from a file:// origin) - same requirement as tools/poi-field-review.
-    const CSV_PATH = '../../db/content/edinburgh-tour/POI-candidates.csv';
+    // Read-only review tool - loads <tour-folder>/POI-candidates.csv fresh on every page load,
+    // no build step, no caching layer of its own. Edit the CSV directly, refresh this page, see
+    // the change - the whole point is to skip a regenerate-then-reload cycle while actively
+    // reviewing. Must be served via a local static server (fetch of a local CSV is blocked from
+    // a file:// origin) - same requirement as tools/poi-field-review.
+    // Which tour's content to load - ?tour=port-louis-tour, defaults to edinburgh-tour so the
+    // existing bookmarked/no-param URL keeps working unchanged.
+    const TOUR_FOLDER = new URLSearchParams(location.search).get('tour') || 'edinburgh-tour';
+    const CSV_PATH = `../../db/content/${TOUR_FOLDER}/POI-candidates.csv`;
     const IMAGE_BASE = '../../server/content-photos/';
 
     // Mirrors SITE_TYPE_LABELS in client/src/components/MapView.jsx / tools/poi-field-review -

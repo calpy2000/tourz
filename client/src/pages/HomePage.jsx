@@ -127,7 +127,7 @@ export default function HomePage() {
               if (t.type === 'solved') {
                 return (
                   <button key={t.seq} className="landmark-tile" onClick={() => openLandmark(t.seq)}>
-                    <img src={`${API_BASE}/content-photos/${t.imagePath}`} alt="" />
+                    {t.imagePath && <img src={`${API_BASE}/content-photos/${t.imagePath}`} alt="" />}
                     <span className="tile-number">{numberLabel}</span>
                     <div className="tile-scrim">
                       <span className="tile-name">{t.title}</span>
@@ -146,7 +146,7 @@ export default function HomePage() {
               if (t.type === 'current-revealed') {
                 return (
                   <button key={t.seq} data-coach-id="home-tile-in-progress" className="landmark-tile landmark-tile-current" onClick={() => navigate('/play')}>
-                    <img src={`${API_BASE}/content-photos/${t.imagePath}`} alt="" />
+                    {t.imagePath && <img src={`${API_BASE}/content-photos/${t.imagePath}`} alt="" />}
                     <span className="tile-number">{numberLabel}</span>
                     <div className="tile-scrim tile-scrim-current">
                       <span className="tile-name">{t.title}</span>

@@ -423,7 +423,7 @@ app.get('/api/game/home', async (req, res) => {
   );
 
   const { rows: solved } = await db.query(
-    `SELECT l.id, l.sequence_order, l.title,
+    `SELECT l.id, l.sequence_order, l.title, l.address,
             (SELECT image_path FROM landmark_images WHERE landmark_id = l.id ORDER BY sort_order LIMIT 1) AS image_path
      FROM landmarks l
      WHERE l.tour_id = $1 AND l.sequence_order < $2
@@ -453,6 +453,7 @@ app.get('/api/game/home', async (req, res) => {
     return {
       sequenceOrder: l.sequence_order,
       title: l.title,
+      address: l.address,
       imagePath: l.image_path,
       points: pointsByLandmark[l.id] || 0,
       secondsTaken,

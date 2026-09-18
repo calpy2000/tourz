@@ -1,18 +1,28 @@
-// Loads db/content/<tour-folder>/*.csv into the tourz database.
-// Wipes and rebuilds the content tables each run — fine at this prototype stage
-// where the CSVs are the source of truth and nothing else references this data yet.
-// Re-run with: npm run seed
+// Loads db/content/<tour-folder>/*.csv into the tourz database, for ONE tour at a time.
+// Usage: node db/seed.js [tour-folder]   (defaults to 'edinburgh-tour', so plain `npm run seed`
+// keeps working unchanged for the existing content-authoring workflow)
+//
+// Each tour folder needs a tour.json manifest ({ tourCode, cityName, tourName }). The tour is
+// looked up by tourCode (not by folder name or a numeric id) — if a tour with that code already
+// exists, ONLY that tour's own content and instance data (games/teams/players/etc for its own
+// game codes) is wiped and rebuilt. Every other tour in the database is left completely untouched
+// — this is what lets multiple tours (e.g. Edinburgh and Port Louis) coexist in the same local DB.
 
 const fs = require('fs');
 const path = require('path');
 const { parse } = require('csv-parse/sync');
 const { Client } = require('pg');
 
-const TOUR_FOLDER = 'edinburgh-tour';
-const CITY_NAME = 'Edinburgh';
-const TOUR_NAME = 'Edinburgh Old Town Walk'; // placeholder — trivial to rename later
-
+const TOUR_FOLDER = process.argv[2] || 'edinburgh-tour';
 const contentDir = path.join(__dirname, 'content', TOUR_FOLDER);
+
+function readManifest() {
+  const filePath = path.join(contentDir, 'tour.json');
+  if (!fs.existsSync(filePath)) {
+    throw new Error(`Missing ${filePath} — every tour folder needs a tour.json manifest ({ tourCode, cityName, tourName }).`);
+  }
+  return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+}
 
 function readCsv(filename) {
   const filePath = path.join(contentDir, filename);
@@ -41,7 +51,63 @@ function quizAnswerPayload(row) {
   throw new Error(`Unknown quiz question type: ${row.type}`);
 }
 
+// Deletes everything belonging to one tour — its own content AND the instance data (games/
+// teams/players/progress/messages/location_pings) hanging off its own game codes — in FK-safe
+// order. Every table is scoped by tour id via a subquery/join, so no other tour is touched.
+async function wipeTour(client, tourId) {
+  await client.query(`
+    DELETE FROM location_pings WHERE player_id IN (
+      SELECT p.id FROM players p
+      JOIN teams t ON p.team_id = t.id
+      JOIN games g ON t.game_id = g.id
+      JOIN game_codes gc ON g.game_code_id = gc.id
+      WHERE gc.tour_id = $1
+    )`, [tourId]);
+  await client.query(`
+    DELETE FROM messages WHERE team_id IN (
+      SELECT t.id FROM teams t JOIN games g ON t.game_id = g.id
+      JOIN game_codes gc ON g.game_code_id = gc.id WHERE gc.tour_id = $1
+    )`, [tourId]);
+  await client.query(`
+    DELETE FROM progress_events WHERE team_id IN (
+      SELECT t.id FROM teams t JOIN games g ON t.game_id = g.id
+      JOIN game_codes gc ON g.game_code_id = gc.id WHERE gc.tour_id = $1
+    )`, [tourId]);
+  await client.query(`
+    DELETE FROM players WHERE team_id IN (
+      SELECT t.id FROM teams t JOIN games g ON t.game_id = g.id
+      JOIN game_codes gc ON g.game_code_id = gc.id WHERE gc.tour_id = $1
+    )`, [tourId]);
+  await client.query(`
+    DELETE FROM teams WHERE game_id IN (
+      SELECT g.id FROM games g JOIN game_codes gc ON g.game_code_id = gc.id WHERE gc.tour_id = $1
+    )`, [tourId]);
+  await client.query(`
+    DELETE FROM games WHERE game_code_id IN (SELECT id FROM game_codes WHERE tour_id = $1)`, [tourId]);
+  await client.query(`DELETE FROM game_codes WHERE tour_id = $1`, [tourId]);
+  await client.query(`
+    DELETE FROM quiz_questions WHERE landmark_id IN (SELECT id FROM landmarks WHERE tour_id = $1)`, [tourId]);
+  await client.query(`
+    DELETE FROM puzzles WHERE landmark_id IN (SELECT id FROM landmarks WHERE tour_id = $1)`, [tourId]);
+  await client.query(`
+    DELETE FROM clue_hints WHERE clue_id IN (
+      SELECT c.id FROM clues c JOIN landmarks l ON c.landmark_id = l.id WHERE l.tour_id = $1
+    )`, [tourId]);
+  await client.query(`
+    DELETE FROM clues WHERE landmark_id IN (SELECT id FROM landmarks WHERE tour_id = $1)`, [tourId]);
+  await client.query(`
+    DELETE FROM landmark_images WHERE landmark_id IN (SELECT id FROM landmarks WHERE tour_id = $1)`, [tourId]);
+  await client.query(`DELETE FROM landmarks WHERE tour_id = $1`, [tourId]);
+  await client.query(`DELETE FROM sites WHERE tour_id = $1`, [tourId]);
+  await client.query(`DELETE FROM tours WHERE id = $1`, [tourId]);
+}
+
 async function main() {
+  const { tourCode, cityName, tourName } = readManifest();
+  if (!tourCode || !cityName || !tourName) {
+    throw new Error(`${TOUR_FOLDER}/tour.json must have tourCode, cityName and tourName.`);
+  }
+
   const landmarks = readCsv('landmarks.csv');
   const clueHints = readCsv('clue_hints.csv');
   const quizQuestions = readCsv('quiz_questions.csv');
@@ -57,16 +123,29 @@ async function main() {
   try {
     await client.query('BEGIN');
 
-    // Wipe content tables (cascades to landmark_images/clues/clue_hints/puzzles/quiz_questions/sites)
-    await client.query('TRUNCATE cities, tours RESTART IDENTITY CASCADE');
+    const { rows: [existingTour] } = await client.query('SELECT id FROM tours WHERE tour_code = $1', [tourCode]);
 
-    const { rows: [city] } = await client.query(
-      'INSERT INTO cities (name) VALUES ($1) RETURNING id',
-      [CITY_NAME]
-    );
+    // If DEV-LOCAL currently points at the tour we're about to rebuild, remember that so we can
+    // recreate it pointing at the fresh tour row afterwards. If it points at some OTHER tour,
+    // leave it (and that other tour) alone entirely — this is what makes reseeding one tour safe
+    // to run while a different tour is the one currently active in dev mode.
+    let recreateDevLocal = false;
+    if (existingTour) {
+      const { rows: [devLocal] } = await client.query(
+        `SELECT 1 FROM game_codes WHERE code = 'DEV-LOCAL' AND tour_id = $1`,
+        [existingTour.id]
+      );
+      recreateDevLocal = !!devLocal;
+      await wipeTour(client, existingTour.id);
+    }
+
+    let { rows: [city] } = await client.query('SELECT id FROM cities WHERE name = $1', [cityName]);
+    if (!city) {
+      ({ rows: [city] } = await client.query('INSERT INTO cities (name) VALUES ($1) RETURNING id', [cityName]));
+    }
     const { rows: [tour] } = await client.query(
-      'INSERT INTO tours (city_id, name, total_landmarks) VALUES ($1, $2, $3) RETURNING id',
-      [city.id, TOUR_NAME, landmarks.length]
+      'INSERT INTO tours (city_id, name, tour_code, total_landmarks) VALUES ($1, $2, $3, $4) RETURNING id',
+      [city.id, tourName, tourCode, landmarks.length]
     );
 
     const landmarkIdBySequence = {};
@@ -239,19 +318,17 @@ async function main() {
       );
     }
 
-    // TRUNCATE ... CASCADE above wipes game_codes too (it references tours), including the
-    // DEV-LOCAL row that POST /api/dev/login depends on — see feedback_reseed_wipes_dev_login
-    // memory (2026-09-04): that row was only ever created by a manual one-off INSERT, so every
-    // reseed silently broke dev auto-login until someone noticed and reinserted it by hand.
-    // Recreating it here, every run, closes that gap for good.
-    await client.query(
-      `INSERT INTO game_codes (code, tour_id, expires_at)
-       VALUES ('DEV-LOCAL', $1, now() + interval '10 years')`,
-      [tour.id]
-    );
+    if (recreateDevLocal) {
+      await client.query(
+        `INSERT INTO game_codes (code, tour_id, expires_at)
+         VALUES ('DEV-LOCAL', $1, now() + interval '10 years')`,
+        [tour.id]
+      );
+    }
 
     await client.query('COMMIT');
-    console.log(`Seeded ${landmarks.length} landmarks, ${clueHints.length} hints, ${quizQuestions.length + fiveRightGroups.size + quizAnagram.length} quiz questions (${fiveRightGroups.size} five_right, ${quizAnagram.length} anagram), ${sites.length} sites.`);
+    console.log(`Seeded '${tourCode}' (${tourName}): ${landmarks.length} landmarks, ${clueHints.length} hints, ${quizQuestions.length + fiveRightGroups.size + quizAnagram.length} quiz questions (${fiveRightGroups.size} five_right, ${quizAnagram.length} anagram), ${sites.length} sites.`);
+    if (recreateDevLocal) console.log(`DEV-LOCAL recreated, pointing at '${tourCode}'.`);
   } catch (err) {
     await client.query('ROLLBACK');
     throw err;

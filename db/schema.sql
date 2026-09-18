@@ -17,6 +17,10 @@ CREATE TABLE tours (
     id               BIGSERIAL PRIMARY KEY,
     city_id          BIGINT NOT NULL REFERENCES cities(id),
     name             TEXT NOT NULL,
+    tour_code        TEXT NOT NULL UNIQUE,  -- short slug ('edinburgh', 'port-louis') — how scripts/
+                                     -- dev-tools select a tour, instead of a numeric id or assuming
+                                     -- only one tour exists. Matches the tour's content folder name
+                                     -- under db/content/<tour_code>-tour/ and that folder's tour.json.
     total_landmarks  INT NOT NULL,  -- the PLANNED final tile count (incl. the start landmark),
                                      -- not just how many landmarks are authored so far — lets the
                                      -- Home tile grid draw placeholder "?" tiles for the rest

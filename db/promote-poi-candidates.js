@@ -9,15 +9,19 @@
 // of POI-candidates.csv (see the archive step in project-poi-creation-process-v2 memory) - that
 // discipline is what keeps a leg from ever being appended twice, not any dedup logic here.
 //
-// Usage: node db/promote-poi-candidates.js [--legs 1,2]
+// Usage: node db/promote-poi-candidates.js [--legs 1,2] [--tour <tour-folder>]
 // Omit --legs to promote every leg currently in POI-candidates.csv.
+// Omit --tour to default to edinburgh-tour (existing behavior unchanged).
 
 const fs = require('fs');
 const path = require('path');
 const { parse } = require('csv-parse/sync');
 
-const CANDIDATES_PATH = path.join(__dirname, 'content/edinburgh-tour/POI-candidates.csv');
-const SITES_PATH = path.join(__dirname, 'content/edinburgh-tour/sites.csv');
+const tourArgIndex = process.argv.indexOf('--tour');
+const tourFolder = tourArgIndex !== -1 ? process.argv[tourArgIndex + 1] : 'edinburgh-tour';
+
+const CANDIDATES_PATH = path.join(__dirname, `content/${tourFolder}/POI-candidates.csv`);
+const SITES_PATH = path.join(__dirname, `content/${tourFolder}/sites.csv`);
 
 const legsArgIndex = process.argv.indexOf('--legs');
 const requestedLegs = legsArgIndex !== -1 ? process.argv[legsArgIndex + 1].split(',').map(s => s.trim()) : null;

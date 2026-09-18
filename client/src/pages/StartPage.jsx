@@ -119,7 +119,7 @@ export default function StartPage() {
   return (
     <div className="form-shell">
       <div className="form-shell-body">
-        <p className="eyebrow">TOURZ &middot; Edinburgh Old Town Walk</p>
+        <p className="eyebrow">TOURZ &middot; Walking Tour</p>
         <h1 className="start-heading">Welcome to the tour</h1>
         <p className="subtitle">
           To activate the tour you will need to enter your game play code. Once you start, the

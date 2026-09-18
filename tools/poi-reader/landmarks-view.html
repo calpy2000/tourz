@@ -70,7 +70,10 @@
     // separate "about the landmark" vs "about the subject" split). Landmarks have a genuinely
     // different shape, so this is its own small page rather than shoehorning landmark rows into
     // the POI schema. Must be served via a local static server, same as poi-reader/index.html.
-    const CSV_PATH = '../../db/content/edinburgh-tour/landmarks.csv';
+    // Which tour's content to load - ?tour=port-louis-tour, defaults to edinburgh-tour so the
+    // existing bookmarked/no-param URL keeps working unchanged.
+    const TOUR_FOLDER = new URLSearchParams(location.search).get('tour') || 'edinburgh-tour';
+    const CSV_PATH = `../../db/content/${TOUR_FOLDER}/landmarks.csv`;
     const IMAGE_BASE = '../../server/content-photos/';
 
     function parseCsv(text) {
