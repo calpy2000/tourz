@@ -138,7 +138,26 @@ async function captureOneTour(tourCode) {
       const landmarkEl = document.querySelector('.map-pin-landmark');
       if (!landmarkEl) return null;
       const landmark = toCenter(landmarkEl);
-      const pois = Array.from(document.querySelectorAll('.map-pin-site')).map(toCenter);
+      // A POI marker can sit close enough to the landmark's real-world coordinates that its 26px
+      // circle renders hidden behind the landmark's 40px one — visually indistinguishable, so an
+      // arrow "pointing" at it there would look identical to the landmark arrow. Landmark radius
+      // (20) + POI radius (13) + a few px margin excludes those, keeping only markers a viewer
+      // can actually see as separate.
+      const MIN_VISUAL_SEPARATION = 40;
+      // Also require the POI to fall fully inside the crop-top visible slice (see
+      // .map-panel-demo-crop-top in index.css), not just its center — a POI marker is a 26px
+      // (13px-radius) circle, so a center within a few px of the crop edge still renders half
+      // clipped off. POI_RADIUS_MARGIN backs the bounds in by that radius plus a small buffer.
+      const cropOriginX = ${cropOriginX};
+      const cropOriginY = ${cropOriginY};
+      const POI_RADIUS_MARGIN = 15;
+      const pois = Array.from(document.querySelectorAll('.map-pin-site'))
+        .map(toCenter)
+        .filter((p) => Math.hypot(p.x - landmark.x, p.y - landmark.y) > MIN_VISUAL_SEPARATION)
+        .filter((p) =>
+          p.x >= cropOriginX + POI_RADIUS_MARGIN && p.x <= cropOriginX + 340 - POI_RADIUS_MARGIN &&
+          p.y >= cropOriginY + POI_RADIUS_MARGIN && p.y <= cropOriginY + 120 - POI_RADIUS_MARGIN
+        );
       if (pois.length === 0) return { landmark, poi: null };
       const poi = pois.reduce((nearest, p) => {
         const d = (p.x - landmark.x) ** 2 + (p.y - landmark.y) ** 2;
