@@ -17,6 +17,19 @@ function mapViewScreenshotFor(tourCode) {
   return mapViewScreenshots[key] || mapViewScreenshots['../assets/instructions/map-view-default.png']
 }
 
+// Real POI geography differs per tour, so MapToCardVisual's arrow overlay can't point at one
+// fixed pixel spot for every tour — it reads each tour's actual landmark-pin/nearest-POI-marker
+// positions (written alongside the screenshot by the capture script) instead. Falls back to
+// Edinburgh's captured positions for a tour with no metadata yet, same spirit as the image fallback.
+const mapViewMeta = import.meta.glob('../assets/instructions/map-view-*.json', { eager: true, import: 'default' })
+function mapViewMetaFor(tourCode) {
+  const key = `../assets/instructions/map-view-${tourCode}.json`
+  return mapViewMeta[key] || mapViewMeta['../assets/instructions/map-view-default.json'] || {
+    landmark: { x: 171, y: 67 },
+    poi: { x: 100, y: 101 },
+  }
+}
+
 // Same star mark as MapView's site pins (StarIcon there isn't exported) — shown inline here so
 // the "points-of-interest" callout in the instructions text matches the real map marker.
 function PoiMarkerIcon() {
@@ -182,17 +195,32 @@ function MapPanelDemo({ crop, tourCode }) {
   )
 }
 
+// Builds a smooth drop-then-curve path from a marker's actual position (start) down to a fixed
+// x position on the card's top edge (endX, always y=144) — same shape family as the original
+// hand-authored curves, generalised so it still looks right wherever the marker actually is.
+function arrowPath(start, endX) {
+  const bendY = start.y + (144 - start.y) * 0.55
+  return `M${start.x} ${start.y} C ${start.x} ${bendY}, ${endX} ${bendY}, ${endX} 144`
+}
+
 function MapToCardVisual({ tourCode }) {
+  const meta = mapViewMetaFor(tourCode)
+  const landmarkArrow = arrowPath(meta.landmark, 150)
+  const poiArrow = meta.poi ? arrowPath(meta.poi, 190) : null
   return (
     <div className="map-to-card-visual">
       <div className="map-panel-demo-crop-top">
         <img src={mapViewScreenshotFor(tourCode)} alt="Map view showing the topmost point of interest marker and the landmark pin" />
       </div>
       <svg className="map-to-card-arrow-overlay" viewBox="0 0 340 154" preserveAspectRatio="none" fill="none">
-        <path d="M171 67 C 171 105, 155 122, 150 144" stroke="#b33f2e" strokeWidth="2.2" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+        <path d={landmarkArrow} stroke="#b33f2e" strokeWidth="2.2" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
         <polygon points="143,144 157,144 150,152" fill="#b33f2e" />
-        <path d="M100 101 C 100 122, 190 122, 190 144" stroke="#b33f2e" strokeWidth="2.2" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
-        <polygon points="183,144 197,144 190,152" fill="#b33f2e" />
+        {poiArrow && (
+          <>
+            <path d={poiArrow} stroke="#b33f2e" strokeWidth="2.2" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+            <polygon points="183,144 197,144 190,152" fill="#b33f2e" />
+          </>
+        )}
       </svg>
     </div>
   )

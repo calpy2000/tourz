@@ -121,15 +121,57 @@ async function captureOneTour(tourCode) {
   // pin needs to land well up in the frame (image-local y ~85), not vertically centered — all
   // zooming above pivoted around (cx, cy), which is where the map keeps the landmark pin, so the
   // crop box's vertical offset is expressed relative to that.
+  const cropOriginX = cx - 170;
+  const cropOriginY = cy - 85;
+
+  // Real POI geography differs per tour, so a fixed arrow-start coordinate that looks right for
+  // one tour (see MapToCardVisual in InstructionsPage.jsx) points at empty map for another. Find
+  // the landmark pin and its nearest POI marker here, in this tour's actual DOM, and record both
+  // centers in crop-local coordinates so the page can draw arrows that always land on a real
+  // marker regardless of tour.
+  const markersRes = await cmd('Runtime.evaluate', {
+    expression: `JSON.stringify((() => {
+      const toCenter = (el) => {
+        const r = el.getBoundingClientRect();
+        return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+      };
+      const landmarkEl = document.querySelector('.map-pin-landmark');
+      if (!landmarkEl) return null;
+      const landmark = toCenter(landmarkEl);
+      const pois = Array.from(document.querySelectorAll('.map-pin-site')).map(toCenter);
+      if (pois.length === 0) return { landmark, poi: null };
+      const poi = pois.reduce((nearest, p) => {
+        const d = (p.x - landmark.x) ** 2 + (p.y - landmark.y) ** 2;
+        const dn = (nearest.x - landmark.x) ** 2 + (nearest.y - landmark.y) ** 2;
+        return d < dn ? p : nearest;
+      });
+      return { landmark, poi };
+    })())`,
+  });
+  const markers = JSON.parse(markersRes.result.result.value);
+
   const shot = await cmd('Page.captureScreenshot', {
     format: 'png',
-    clip: { x: cx - 170, y: cy - 85, width: 340, height: 280, scale: 2 },
+    clip: { x: cropOriginX, y: cropOriginY, width: 340, height: 280, scale: 2 },
   });
 
   fs.mkdirSync(OUT_DIR, { recursive: true });
   const outPath = path.join(OUT_DIR, `map-view-${tourCode}.png`);
   fs.writeFileSync(outPath, Buffer.from(shot.result.data, 'base64'));
   console.log(`Wrote ${outPath}`);
+
+  if (markers) {
+    const toLocal = (p) => ({ x: Math.round(p.x - cropOriginX), y: Math.round(p.y - cropOriginY) });
+    const meta = {
+      landmark: toLocal(markers.landmark),
+      poi: markers.poi ? toLocal(markers.poi) : null,
+    };
+    const metaPath = path.join(OUT_DIR, `map-view-${tourCode}.json`);
+    fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2));
+    console.log(`Wrote ${metaPath}:`, meta);
+  } else {
+    console.warn(`No landmark pin found for ${tourCode} — arrow overlay will fall back to defaults.`);
+  }
 
   ws.close();
 }
