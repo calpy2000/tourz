@@ -1274,50 +1274,14 @@ button.primary.quiz-submit {
   margin: 0 -13px;
 }
 
-.filter-chips {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  right: 12px;
-  z-index: 5;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.filter-chip {
-  padding: 5px 12px;
-  border-radius: 999px;
-  border: 1px solid var(--stone-line);
-  background: var(--stone-raised);
-  color: var(--ink-soft);
-  font: inherit;
-  font-size: 11.5px;
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: 0 2px 6px rgba(35, 32, 27, 0.22);
-}
-
-.filter-chip-active {
-  background: var(--brass-tint);
-  border-color: var(--brass);
-  color: var(--brass-deep);
-}
-
-.filter-chip-tick {
-  color: var(--brass);
-  font-weight: 700;
-  margin-right: 4px;
-}
-
 .map-container {
   flex: 1;
   min-height: 0;
   overflow: hidden;
 }
 
-/* Three-tier pin hierarchy — solved landmark (photo + forest ring), curated site (brass + star),
-   live third-party POI (small muted dot). "Here" marker is the one deliberate off-palette color. */
+/* Pin hierarchy — solved landmark (photo + forest ring), curated site (brass + star). "Here"
+   marker is the one deliberate off-palette color. */
 .map-pin-landmark {
   position: relative;
   width: 40px;
@@ -1365,10 +1329,11 @@ button.primary.quiz-submit {
 }
 
 .map-pin-site {
+  position: relative;
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  background: #4169e1;
+  background: #a855f7;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1382,47 +1347,34 @@ button.primary.quiz-submit {
   fill: #fff;
 }
 
-/* Same drag-mode ring as .map-pin-draft-dragging, reused here since Interests (sites) got the
-   drag-to-correct-GPS flow too — see gpsDragTarget in MapView. No border-style change needed
-   (sites have no dashed border to begin with), just the highlight ring. */
+/* Site name, shown alongside its pin only at icon zoom (not the zoomed-out dot form) — absolutely
+   positioned off the pin's own box so it never affects the AdvancedMarker's anchor point/size.
+   pointer-events: none so it never steals the pin's own click/drag target. */
+.map-pin-label {
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-left: 2px;
+  padding: 2px 6px;
+  color: #a855f7;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.3;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* Drag-mode ring for the one site currently draggable via "Set GPS" — see gpsDragTarget in
+   MapView. */
 .map-pin-site-dragging {
   box-shadow: 0 0 0 4px rgba(184, 74, 42, 0.28), 0 2px 6px rgba(35, 32, 27, 0.3);
   cursor: grab;
 }
 
-.map-pin-poi {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: var(--brick);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 1px 3px rgba(35, 32, 27, 0.35);
-  cursor: pointer;
-}
-
-.map-pin-poi svg {
-  width: 16px;
-  height: 16px;
-  fill: #fff;
-}
-
-.map-pin-poi-pharmacy {
-  background: var(--forest);
-}
-
-/* Toilets deliberately break from the circle pins — a rounded square in the one off-palette
-   blue already used for the "here" marker (same "strong real-world convention" justification:
-   blue restroom signage is a near-universal wayfinding color). */
-.map-pin-poi-toilet {
-  border-radius: 7px;
-  background: #3d6b8c;
-}
-
-/* Zoomed-out simplification — see ICON_ZOOM_THRESHOLD in MapView.jsx. Same colors as each type's
-   full icon pin, just a small plain dot so a dense cluster (St Andrew Square especially) doesn't
-   turn into a wall of overlapping icons at low zoom. */
+/* Zoomed-out simplification — see ICON_ZOOM_THRESHOLD in MapView.jsx. A small plain dot so a
+   dense cluster (St Andrew Square especially) doesn't turn into a wall of overlapping pins at
+   low zoom. */
 .map-dot {
   width: 10px;
   height: 10px;
@@ -1433,83 +1385,11 @@ button.primary.quiz-submit {
 }
 
 .map-dot-site {
-  background: #4169e1;
-}
-
-.map-dot-amenity {
-  background: var(--brick);
-}
-
-.map-dot-amenity-pharmacy {
-  background: var(--forest);
-}
-
-.map-dot-amenity-toilet {
-  background: #3d6b8c;
-}
-
-/* Dashed border (vs. amenities' solid) keeps the "not real content yet" language even at dot
-   size, same distinction the full .map-pin-draft pin already makes with its dashed outline. */
-.map-dot-draft {
-  background: var(--stone-raised);
-  border: 1.5px dashed var(--brick);
-}
-
-.modal-card.poi-popup {
-  background: var(--stone-raised);
-  max-width: 240px;
-}
-
-.poi-popup-type {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--ink-soft);
-  margin-bottom: 4px;
+  background: #a855f7;
 }
 
 .poi-popup-address {
   margin-top: -8px;
-}
-
-.poi-popup-status {
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--brick);
-  margin: 0 0 14px;
-}
-
-.poi-popup-status-open {
-  color: var(--forest);
-}
-
-/* Draft POI pin — deliberately off the game's palette (dashed brick outline, plain white fill,
-   same "not game content" language as the Dev-tools menu) so it can't be mistaken for a curated
-   Interest or a live Amenity while this content-sourcing review layer is still unreviewed. The
-   number is the draft's 1-5 interest rating, for at-a-glance triage before opening any one pin. */
-.map-pin-draft {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: var(--stone-raised);
-  border: 2px dashed var(--brick);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--brick);
-  box-shadow: 0 1px 3px rgba(35, 32, 27, 0.35);
-  cursor: pointer;
-}
-
-/* The one pin currently draggable via "Set GPS" (see gpsDragTarget in MapView) — solid border and
-   a wider glow distinguish it from every other fixed draft pin while it's grab-able. */
-.map-pin-draft-dragging {
-  border-style: solid;
-  box-shadow: 0 0 0 4px rgba(184, 74, 42, 0.28), 0 1px 3px rgba(35, 32, 27, 0.35);
-  cursor: grab;
 }
 
 /* Non-modal status strip for the drag-to-correct-GPS flow — deliberately not a popup (no dimmed
@@ -1540,7 +1420,7 @@ button.primary.quiz-submit {
   padding: 2px 10px;
 }
 
-/* --- Detail popup: shared format for landmarks, sites ("Interests"), and POI drafts --- */
+/* --- Detail popup: shared format for landmarks and sites ("Interests") --- */
 /* Deliberately not anchored to whatever was tapped — at this size (image + long body text) it
    reads as a modal regardless, so it gets a plain fixed inset instead of chasing a tap position.
    Stops 70px short of the bottom (58px .home-chat height + 12px margin) so the chat panel stays
@@ -2151,7 +2031,7 @@ button.primary.instructions-start-btn {
   vertical-align: 1px;
 }
 
-/* Mirrors MapView's .map-pin-site exactly (#4169e1) — this legend icon needs to match the real
+/* Mirrors MapView's .map-pin-site exactly (#a855f7) — this legend icon needs to match the real
    map marker the player will actually see, not the page's own palette. */
 .instructions-poi-marker {
   display: inline-flex;
@@ -2160,7 +2040,7 @@ button.primary.instructions-start-btn {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: #4169e1;
+  background: #a855f7;
   vertical-align: -3px;
 }
 

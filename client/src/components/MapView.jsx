@@ -1,15 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { APIProvider, Map, AdvancedMarker, Polyline, useMap, useMapsLibrary, useAdvancedMarkerRef } from '@vis.gl/react-google-maps'
-import { Utensils, Coffee, Martini, Toilet, Plus } from 'lucide-react'
+import { APIProvider, Map, AdvancedMarker, Polyline, useMap, useMapsLibrary } from '@vis.gl/react-google-maps'
 import { api } from '../api.js'
 import { API_BASE } from '../apiBase.js'
 import { useGeolocation } from '../useGeolocation.js'
 import { saveGpsCorrection } from '../gpsCorrections.js'
-import AnchoredPopup from './AnchoredPopup.jsx'
 import DetailPopup from './DetailPopup.jsx'
 import { isStartLandmark, landmarkDisplayNumber } from '../landmarkNumber.js'
-import { DEV_MODE } from '../devMode.js'
 
 // Used only if the team has no solved landmarks yet (map needs some center before the first find).
 const FALLBACK_CENTER = { lat: 55.9535, lng: -3.197 }
@@ -39,14 +36,19 @@ function placeholderHereLocation(solvedLandmarks) {
 // zoom feedback comes in.
 const START_LANDMARK_ZOOM = 17
 
-// Below this zoom, Interests/Amenities/POI Drafts render as small plain-color dots instead of
-// their full icon pins — standard practice on zooming maps (Google's own POI layer, Airbnb, etc.
-// all simplify markers below some threshold rather than letting a dense area turn into a wall of
-// overlapping icons). 17 matches START_LANDMARK_ZOOM's already-established "close, street-level"
-// feel; not yet tuned against a real dense cluster, adjust after seeing it live. Landmarks are
-// deliberately exempt — there are only ever a handful of them, so they never crowd the way
-// POIs/amenities can.
+// Below this zoom, Interests render as small plain-color dots instead of their full star pin —
+// standard practice on zooming maps (Google's own POI layer, Airbnb, etc. all simplify markers
+// below some threshold rather than letting a dense area turn into a wall of overlapping icons).
+// 17 matches START_LANDMARK_ZOOM's already-established "close, street-level" feel; not yet tuned
+// against a real dense cluster, adjust after seeing it live. Landmarks are deliberately exempt —
+// there are only ever a handful of them, so they never crowd the way Interests can.
 const ICON_ZOOM_THRESHOLD = 17
+
+// Name labels join a beat later than the icon swap itself — at dense clusters (e.g. St Andrew
+// Square, ~40+ Interests) turning on labels at the same zoom as the icon swap produces overlapping
+// text. Requiring one more zoom step first thins out how many pins are visible at once before any
+// text is drawn.
+const LABEL_ZOOM_THRESHOLD = ICON_ZOOM_THRESHOLD + 2
 
 // Initial view should show the whole solved-so-far path at once, not just center on one point —
 // otherwise a team a few landmarks in only sees whichever pin happens to be centered.
@@ -103,44 +105,6 @@ function StarIcon() {
   )
 }
 
-// Five amenity icons, all real icons from lucide-react (MIT-licensed) rather than hand-drawn —
-// deliberately a small, fixed set (not one per Places sub-type) but enough to tell a restaurant,
-// bar and cafe apart at a glance. Toilet renders a touch larger than the others (settled after
-// visual review), and pharmacy keeps its plus-sign concept but now Lucide's own clean two-line
-// Plus rather than a hand-drawn cross.
-const CATEGORY_ICONS = {
-  restaurant: () => <Utensils color="#fff" size={16} strokeWidth={2} />,
-  cafe: () => <Coffee color="#fff" size={16} strokeWidth={2} />,
-  bar: () => <Martini color="#fff" size={16} strokeWidth={2} />,
-  toilet: () => <Toilet color="#fff" size={19} strokeWidth={2} />,
-  pharmacy: () => <Plus color="#fff" size={16} strokeWidth={2.5} />,
-}
-const CATEGORY_LABELS = { restaurant: 'Restaurant', cafe: 'Cafe', bar: 'Bar', toilet: 'Toilet', pharmacy: 'Pharmacy' }
-// Pharmacy (green) and toilet (blue, rounded square) borrow real-world signage colors/shape —
-// same off-palette-exception logic already used for the "here" marker's blue. Everything else
-// (restaurant/cafe/bar) shares one brighter red, replacing the original muted-grey treatment.
-const CATEGORY_PIN_CLASS = {
-  pharmacy: 'map-pin-poi map-pin-poi-pharmacy',
-  toilet: 'map-pin-poi map-pin-poi-toilet',
-}
-// Same category colors, zoomed-out dot form — see ICON_ZOOM_THRESHOLD.
-const CATEGORY_DOT_CLASS = {
-  pharmacy: 'map-dot map-dot-amenity-pharmacy',
-  toilet: 'map-dot map-dot-amenity-toilet',
-}
-
-// Buckets Google's specific primaryType (there are ~170 possible Food and Drink sub-types alone)
-// down into the 5 icon categories above — a deliberately small, fixed set rather than one icon
-// per sub-type, but still enough to distinguish e.g. a restaurant from a bar from a cafe.
-function poiCategory(primaryType) {
-  const t = primaryType || ''
-  if (t === 'public_bathroom' || t === 'public_bath') return 'toilet'
-  if (t === 'pharmacy' || t === 'drugstore') return 'pharmacy'
-  if (/bar|pub|brewery|wine|cocktail|beer|night_club/.test(t)) return 'bar'
-  if (/cafe|coffee|bakery|bagel|tea_house|juice|dessert|ice_cream|donut|pastry|chocolate|candy/.test(t)) return 'cafe'
-  return 'restaurant'
-}
-
 // Eyebrow label shown above a site's title, keyed by its `type` column — extended from the
 // original 3-value set (moved here from the now-deleted SiteDetailPage.jsx) to cover the types
 // used by POI.csv once those rows are promoted into real sites (see feedback-content-sourcing-process
@@ -159,96 +123,20 @@ const SITE_TYPE_LABELS = {
   recurring_feature: 'Recurring feature',
 }
 
-const BUSINESS_STATUS_LABELS = {
-  OPERATIONAL: 'Open',
-  CLOSED_TEMPORARILY: 'Temporarily closed',
-  CLOSED_PERMANENTLY: 'Permanently closed',
-}
-
-// In-progress content-sourcing review layer (see feedback-content-sourcing-process memory) — not
-// real game content yet. Deliberately styled off the game's palette (dashed brick outline, plain
-// white fill), same "not game content" language already used for the Dev-tools menu, so it can't
-// be mistaken for a curated Interest or a live Amenity while scattered on the map for review.
-// `dragging` is only ever true for the one POI whose "Set GPS" button was just tapped (see
-// gpsDragTarget in MapView) — every other draft pin stays fixed. onDragEnd hands back the raw
-// google.maps 'dragend' MapMouseEvent, which is the only place the corrected lat/lng comes from
-// (AdvancedMarkerElement doesn't sync its `position` prop while draggable, so this is the one
-// moment the new coordinates are observable).
-function DraftMarker({ poi, onOpen, showDots, dragging, onDragEnd }) {
-  return (
-    <AdvancedMarker
-      position={{ lat: poi.latitude, lng: poi.longitude }}
-      draggable={dragging}
-      onDragEnd={dragging ? (e) => onDragEnd(poi, e) : undefined}
-      onClick={() => onOpen(poi)}
-      zIndex={dragging ? 999999 : undefined}
-    >
-      {showDots
-        ? <div className={dragging ? 'map-dot map-dot-draft map-pin-draft-dragging' : 'map-dot map-dot-draft'} />
-        : <div className={dragging ? 'map-pin-draft map-pin-draft-dragging' : 'map-pin-draft'}>{poi.interestRating}</div>}
-    </AdvancedMarker>
-  )
-}
-
-// A plain onClick on a <div> nested inside AdvancedMarker is unreliable — the marker's own
-// custom-element wrapper can intercept the pointer event before it reaches a nested child (this
-// was a real bug: taps silently did nothing). AdvancedMarker's own `onClick` prop is the
-// supported, reliable way in (already used for landmark pins) — this needs `useAdvancedMarkerRef`
-// too, since the popup needs the marker's actual screen position to anchor itself, which a
-// google.maps.marker.AdvancedMarkerClickEvent doesn't hand you directly the way a DOM event would.
-function AmenityMarker({ place, onOpen, showDots }) {
-  const [markerRef, marker] = useAdvancedMarkerRef()
-  const category = poiCategory(place.primaryType)
-  const Icon = CATEGORY_ICONS[category]
-  const pinClass = CATEGORY_PIN_CLASS[category] || 'map-pin-poi'
-  const dotClass = CATEGORY_DOT_CLASS[category] || 'map-dot map-dot-amenity'
-
-  return (
-    <AdvancedMarker
-      ref={markerRef}
-      position={{ lat: place.latitude, lng: place.longitude }}
-      onClick={() => {
-        const rect = marker.getBoundingClientRect()
-        onOpen({ place, category, anchor: { top: rect.top, bottom: rect.bottom, left: rect.left, width: rect.width, height: rect.height } })
-      }}
-    >
-      {showDots ? <div className={dotClass} /> : <div className={pinClass}><Icon /></div>}
-    </AdvancedMarker>
-  )
-}
-
-function FilterChip({ active, onClick, children }) {
-  return (
-    <button className={active ? 'filter-chip filter-chip-active' : 'filter-chip'} onClick={onClick}>
-      {active && <span className="filter-chip-tick">&#10003;</span>}
-      {children}
-    </button>
-  )
-}
-
 export default function MapView() {
   const navigate = useNavigate()
   const [mapData, setMapData] = useState(null)
   const [routeLegs, setRouteLegs] = useState(null)
-  // All three layers default on — landmarks/interests are our own content (free to show), and the
-  // amenities layer is meant to feel like the map is "complete" the moment you open it.
-  const [filters, setFilters] = useState({ landmarks: true, interests: true, amenities: true, poiDrafts: true })
-  const [places, setPlaces] = useState(null)
-  const [poiPopup, setPoiPopup] = useState(null)
-  const [poiDrafts, setPoiDrafts] = useState(null)
-  const [draftPopup, setDraftPopup] = useState(null)
-  // Set by DetailPopup's "Set GPS" button (POI drafts and Interests/sites) — identifies the one
-  // marker currently draggable on the map. `{ kind: 'poiDraft', ref }` compares by object
-  // reference (poiDrafts have no id); `{ kind: 'site', id }` compares by id (sitePopup is a
-  // separately-fetched object, never the same reference as its entry in mapData.sites). Cleared
-  // on drop or Cancel.
+  // Set by DetailPopup's "Set GPS" button (Interests/sites) — identifies the one marker currently
+  // draggable on the map, compared by id (sitePopup is a separately-fetched object, never the
+  // same reference as its entry in mapData.sites). Cleared on drop or Cancel.
   const [gpsDragTarget, setGpsDragTarget] = useState(null)
   const [gpsDragSavedName, setGpsDragSavedName] = useState(null)
   const [landmarkPopup, setLandmarkPopup] = useState(null)
   const [sitePopup, setSitePopup] = useState(null)
-  // Tracks camera zoom so Interests/Amenities/POI Drafts can simplify to dots below
-  // ICON_ZOOM_THRESHOLD — seeded from lastCamera so a returning player doesn't get a one-frame
-  // flash of the wrong marker style before the first onCameraChanged fires.
+  // Tracks camera zoom so Interests can simplify to dots below ICON_ZOOM_THRESHOLD — seeded from
+  // lastCamera so a returning player doesn't get a one-frame flash of the wrong marker style
+  // before the first onCameraChanged fires.
   const [zoom, setZoom] = useState(lastCamera?.zoom ?? null)
   const { location: liveLocation, reacquiring } = useGeolocation()
 
@@ -268,19 +156,12 @@ export default function MapView() {
     setTimeout(() => setGpsDragSavedName(null), 1500)
   }
 
-  // Both fire once, on drop. `event` is the raw google.maps 'dragend' MapMouseEvent — event.latLng
-  // is the only place the corrected position is observable (see DraftMarker). Each saves the
-  // correction through the same pipeline the paste-text Set GPS flow uses, then optimistically
-  // moves the pin to where it was dropped so the map reflects the fix for the rest of this
-  // session, rather than snapping back to the old (wrong) position it would otherwise re-render at.
-  function handleDraftGpsDragEnd(poi, event) {
-    const lat = event.latLng.lat()
-    const lng = event.latLng.lng()
-    saveGpsCorrection({ type: 'poiDraft', leg: poi.leg, name: poi.name, enteredGps: `${lat}, ${lng}`, capturedAt: new Date().toISOString() })
-    setPoiDrafts((prev) => prev.map((p) => (p === poi ? { ...p, latitude: lat, longitude: lng } : p)))
-    finishGpsDrag(poi.name)
-  }
-
+  // Fires once, on drop. `event` is the raw google.maps 'dragend' MapMouseEvent — event.latLng is
+  // the only place the corrected position is observable (AdvancedMarkerElement doesn't sync its
+  // `position` prop while draggable). Saves the correction through the same pipeline the
+  // paste-text Set GPS flow uses, then optimistically moves the pin to where it was dropped so the
+  // map reflects the fix for the rest of this session, rather than snapping back to the old
+  // (wrong) position it would otherwise re-render at.
   function handleSiteGpsDragEnd(site, event) {
     const lat = event.latLng.lat()
     const lng = event.latLng.lng()
@@ -292,23 +173,7 @@ export default function MapView() {
   useEffect(() => {
     api.getMap().then(setMapData)
     api.getRoute().then((res) => setRouteLegs(res.legs || []))
-    // Amenities layer defaults on, so its data has to load up front too, not just on toggle.
-    loadPlaces()
-    // POI Drafts also defaults on — it's a review layer, the whole point is seeing it immediately.
-    api.getPoiDrafts().then((res) => setPoiDrafts(res.pois))
   }, [])
-
-  // Restaurants/cafes/bars + toilets + pharmacies, one combined Places category — fetched once
-  // (on mount, since it defaults on) and kept in state so toggling it off/back on is free.
-  async function loadPlaces() {
-    const res = await api.getNearbyPlaces('google')
-    setPlaces(res.places)
-  }
-
-  function toggleFilter(key) {
-    setFilters((f) => ({ ...f, [key]: !f[key] }))
-    if (key === 'amenities' && places === null) loadPlaces()
-  }
 
   if (!mapData) return <div className="map-shell"><div className="stub-view">Loading map&hellip;</div></div>
 
@@ -335,16 +200,10 @@ export default function MapView() {
   const initialZoom = lastCamera ? lastCamera.zoom : isGameStart ? START_LANDMARK_ZOOM : 16
   const shouldFitBounds = !lastCamera && !isGameStart
   const showDots = (zoom ?? initialZoom) < ICON_ZOOM_THRESHOLD
+  const showLabels = (zoom ?? initialZoom) >= LABEL_ZOOM_THRESHOLD
 
   return (
     <div className="map-shell">
-      <div className="filter-chips">
-        <FilterChip active={filters.landmarks} onClick={() => toggleFilter('landmarks')}>Landmarks</FilterChip>
-        <FilterChip active={filters.interests} onClick={() => toggleFilter('interests')}>Interests</FilterChip>
-        {DEV_MODE && <FilterChip active={filters.amenities} onClick={() => toggleFilter('amenities')}>Amenities</FilterChip>}
-        {DEV_MODE && <FilterChip active={filters.poiDrafts} onClick={() => toggleFilter('poiDrafts')}>POI Drafts</FilterChip>}
-      </div>
-
       <div className="map-container" data-coach-id="map-navigation-area">
         <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
           <Map
@@ -360,60 +219,56 @@ export default function MapView() {
                 and re-fitting would override that with the generic "show everything" view again. */}
             {shouldFitBounds && <FitBounds bounds={bounds} />}
 
-            {filters.landmarks && (
-              <>
-                <WalkingPath legs={routeLegs} fallbackPath={pathCoords} />
-                {/* Solved landmarks — never the current/future one, mapData already excludes it.
-                    zIndex explicit and deliberately huge: at least one POI (Frederick Street
-                    Castle View) shares exact coordinates with a landmark by design ("same corner"
-                    — see POI.csv), and the coincident site's star pin was silently winning every
-                    click on top of it — a real bug caught while testing the reveal feature.
-                    Google's own default zIndex (when unset) is computed from latitude and was
-                    already bigger than a modest explicit value like 10; this has to clear that. */}
-                {solvedLandmarks.map((l) => (
-                  <AdvancedMarker
-                    key={l.sequenceOrder}
-                    position={{ lat: l.latitude, lng: l.longitude }}
-                    onClick={() => openLandmark(l.sequenceOrder)}
-                    zIndex={999999}
-                  >
-                    <div
-                      data-coach-id={isStartLandmark(l.sequenceOrder) ? 'map-rbs-landmark-marker' : undefined}
-                      className="map-pin-landmark"
-                      style={{ backgroundImage: `url(${API_BASE}/content-photos/${l.imagePath})` }}
-                    >
-                      {!isStartLandmark(l.sequenceOrder) && <div className="map-pin-badge">{landmarkDisplayNumber(l.sequenceOrder)}</div>}
-                    </div>
-                  </AdvancedMarker>
-                ))}
-                {/* Puzzle solved, quiz not finished yet — same "revealed but in progress" state
-                    as the Home tile grid. A real pin at its real location (kept separate from
-                    solvedLandmarks so it doesn't extend the walking path), tapping resumes the
-                    quiz rather than opening the detail popup. */}
-                {currentRevealed && (
-                  <AdvancedMarker
-                    position={{ lat: currentRevealed.latitude, lng: currentRevealed.longitude }}
-                    onClick={() => navigate('/play')}
-                    zIndex={999999}
-                  >
-                    <div className="map-pin-landmark map-pin-landmark-current" style={{ backgroundImage: `url(${API_BASE}/content-photos/${currentRevealed.imagePath})` }}>
-                      {!isStartLandmark(currentRevealed.sequenceOrder) && (
-                        <div className="map-pin-badge map-pin-badge-current">{landmarkDisplayNumber(currentRevealed.sequenceOrder)}</div>
-                      )}
-                    </div>
-                  </AdvancedMarker>
-                )}
-                <AdvancedMarker position={hereLocation}>
-                  <div className={
-                    !liveLocation ? 'map-pin-here map-pin-here-fallback'
-                      : reacquiring ? 'map-pin-here map-pin-here-reacquiring'
-                      : 'map-pin-here'
-                  } />
-                </AdvancedMarker>
-              </>
+            <WalkingPath legs={routeLegs} fallbackPath={pathCoords} />
+            {/* Solved landmarks — never the current/future one, mapData already excludes it.
+                zIndex explicit and deliberately huge: at least one POI (Frederick Street
+                Castle View) shares exact coordinates with a landmark by design ("same corner"
+                — see POI.csv), and the coincident site's star pin was silently winning every
+                click on top of it — a real bug caught while testing the reveal feature.
+                Google's own default zIndex (when unset) is computed from latitude and was
+                already bigger than a modest explicit value like 10; this has to clear that. */}
+            {solvedLandmarks.map((l) => (
+              <AdvancedMarker
+                key={l.sequenceOrder}
+                position={{ lat: l.latitude, lng: l.longitude }}
+                onClick={() => openLandmark(l.sequenceOrder)}
+                zIndex={999999}
+              >
+                <div
+                  data-coach-id={isStartLandmark(l.sequenceOrder) ? 'map-rbs-landmark-marker' : undefined}
+                  className="map-pin-landmark"
+                  style={{ backgroundImage: `url(${API_BASE}/content-photos/${l.imagePath})` }}
+                >
+                  {!isStartLandmark(l.sequenceOrder) && <div className="map-pin-badge">{landmarkDisplayNumber(l.sequenceOrder)}</div>}
+                </div>
+              </AdvancedMarker>
+            ))}
+            {/* Puzzle solved, quiz not finished yet — same "revealed but in progress" state
+                as the Home tile grid. A real pin at its real location (kept separate from
+                solvedLandmarks so it doesn't extend the walking path), tapping resumes the
+                quiz rather than opening the detail popup. */}
+            {currentRevealed && (
+              <AdvancedMarker
+                position={{ lat: currentRevealed.latitude, lng: currentRevealed.longitude }}
+                onClick={() => navigate('/play')}
+                zIndex={999999}
+              >
+                <div className="map-pin-landmark map-pin-landmark-current" style={{ backgroundImage: `url(${API_BASE}/content-photos/${currentRevealed.imagePath})` }}>
+                  {!isStartLandmark(currentRevealed.sequenceOrder) && (
+                    <div className="map-pin-badge map-pin-badge-current">{landmarkDisplayNumber(currentRevealed.sequenceOrder)}</div>
+                  )}
+                </div>
+              </AdvancedMarker>
             )}
+            <AdvancedMarker position={hereLocation}>
+              <div className={
+                !liveLocation ? 'map-pin-here map-pin-here-fallback'
+                  : reacquiring ? 'map-pin-here map-pin-here-reacquiring'
+                  : 'map-pin-here'
+              } />
+            </AdvancedMarker>
 
-            {filters.interests && sites.map((s) => {
+            {sites.map((s) => {
               const dragging = gpsDragTarget?.kind === 'site' && gpsDragTarget.id === s.id
               return (
                 <AdvancedMarker
@@ -427,26 +282,12 @@ export default function MapView() {
                   {showDots ? <div data-coach-id="map-poi-marker" className={dragging ? 'map-dot map-dot-site map-pin-site-dragging' : 'map-dot map-dot-site'} /> : (
                     <div data-coach-id="map-poi-marker" className={dragging ? 'map-pin-site map-pin-site-dragging' : 'map-pin-site'}>
                       <StarIcon />
+                      {showLabels && <span className="map-pin-label">{s.title}</span>}
                     </div>
                   )}
                 </AdvancedMarker>
               )
             })}
-
-            {DEV_MODE && filters.amenities && places && places.map((p) => (
-              <AmenityMarker key={p.id} place={p} onOpen={setPoiPopup} showDots={showDots} />
-            ))}
-
-            {DEV_MODE && filters.poiDrafts && poiDrafts && poiDrafts.map((poi, i) => (
-              <DraftMarker
-                key={i}
-                poi={poi}
-                onOpen={setDraftPopup}
-                showDots={showDots}
-                dragging={gpsDragTarget?.kind === 'poiDraft' && gpsDragTarget.ref === poi}
-                onDragEnd={handleDraftGpsDragEnd}
-              />
-            ))}
           </Map>
         </APIProvider>
 
@@ -460,37 +301,6 @@ export default function MapView() {
           <div className="gps-drag-banner">Saved: {gpsDragSavedName} ✓</div>
         )}
       </div>
-
-      {poiPopup && (
-        <AnchoredPopup anchorRect={poiPopup.anchor} onClose={() => setPoiPopup(null)} className="poi-popup">
-          <div className="poi-popup-type">{CATEGORY_LABELS[poiPopup.category]}</div>
-          <h3>{poiPopup.place.name}</h3>
-          {poiPopup.place.address && <p className="poi-popup-address">{poiPopup.place.address}</p>}
-          {poiPopup.place.businessStatus && (
-            <p className={poiPopup.place.businessStatus === 'OPERATIONAL' ? 'poi-popup-status poi-popup-status-open' : 'poi-popup-status'}>
-              {BUSINESS_STATUS_LABELS[poiPopup.place.businessStatus] || poiPopup.place.businessStatus}
-            </p>
-          )}
-          {poiPopup.place.mapsUri && (
-            <a className="primary" href={poiPopup.place.mapsUri} target="_blank" rel="noreferrer">View on Google Maps</a>
-          )}
-        </AnchoredPopup>
-      )}
-
-      {draftPopup && (
-        <DetailPopup
-          title={draftPopup.name}
-          address={draftPopup.address}
-          imagePath={draftPopup.imagePath}
-          sections={[{ label: null, text: draftPopup.description }]}
-          interestingFact={draftPopup.interestingFact}
-          warning={draftPopup.geocodeConfidence !== 'confirmed' ? `Approximate pin: ${draftPopup.geocodeConfidence}` : null}
-          externalLink={draftPopup.externalLink}
-          gpsRef={{ type: 'poiDraft', leg: draftPopup.leg }}
-          onDragToSetGps={() => setGpsDragTarget({ kind: 'poiDraft', ref: draftPopup })}
-          onClose={() => setDraftPopup(null)}
-        />
-      )}
 
       {landmarkPopup && (
         <DetailPopup

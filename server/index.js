@@ -15,9 +15,7 @@ require('dotenv').config({ path: require('path').join(__dirname, '.env'), quiet:
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const fs = require('fs');
 const crypto = require('crypto');
-const { parse: parseCsv } = require('csv-parse/sync');
 const { Client } = require('pg');
 const nodemailer = require('nodemailer');
 
@@ -1179,130 +1177,6 @@ app.get('/api/game/route', async (req, res) => {
     console.error('Routes API error:', err);
     res.status(502).json({ error: 'Could not compute walking route.' });
   }
-});
-
-// Live third-party POIs (food/drink, toilets) — proxied through the backend rather than called
-// from the client, so the Places API key never reaches the browser and repeated requests for the
-// same tour/category can be cached instead of re-billed. Cache is in-memory (fine at this scale,
-// resets on server restart) — see [[reference-google-places-icons]]-style reasoning: these
-// businesses don't change minute to minute, so a 24h TTL is generous, not stale.
-const PLACES_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
-const placesCache = new Map();
-
-// One combined "google" category for the map's Google layer. Deliberately uses broad parent
-// types (not an exhaustive list of ~170 Food and Drink subtypes) — Places API tags a place with
-// both its specific type (e.g. "sushi_restaurant") and its broader parent ("restaurant"), and
-// Nearby Search matches on any overlap, so these few broad types already surface the whole
-// category. Also useful since includedTypes is capped at 50 entries per request.
-const PLACE_CATEGORY_TYPES = {
-  google: ['restaurant', 'cafe', 'bar', 'bakery', 'meal_takeaway', 'meal_delivery', 'food_court', 'public_bathroom', 'pharmacy'],
-};
-
-async function fetchNearbyPlaces(tourId, category) {
-  const cacheKey = `${tourId}:${category}`;
-  const cached = placesCache.get(cacheKey);
-  if (cached && cached.expiresAt > Date.now()) return cached.data;
-
-  const { rows: landmarks } = await db.query('SELECT latitude, longitude FROM landmarks WHERE tour_id = $1', [tourId]);
-  const centerLat = landmarks.reduce((sum, l) => sum + Number(l.latitude), 0) / landmarks.length;
-  const centerLng = landmarks.reduce((sum, l) => sum + Number(l.longitude), 0) / landmarks.length;
-
-  const response = await fetch('https://places.googleapis.com/v1/places:searchNearby', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Goog-Api-Key': process.env.GOOGLE_PLACES_API_KEY,
-      // Pro-tier fields (primaryType, formattedAddress, businessStatus, googleMapsUri) — still
-      // comfortably free at this scale (5,000/month), one tier up from the id/name/location
-      // Essentials fields. Deliberately skips "photos" (Enterprise-adjacent extra call/cost for
-      // low value here) and rating/price/hours (Enterprise tier, a bigger cost step — see
-      // [[project-mapview-implementation]] for that decision).
-      'X-Goog-FieldMask': 'places.id,places.displayName,places.location,places.primaryType,places.formattedAddress,places.businessStatus,places.googleMapsUri',
-    },
-    body: JSON.stringify({
-      includedTypes: PLACE_CATEGORY_TYPES[category],
-      maxResultCount: 20,
-      locationRestriction: {
-        circle: { center: { latitude: centerLat, longitude: centerLng }, radius: 800 },
-      },
-    }),
-  });
-  const body = await response.json();
-  if (!response.ok) throw new Error(`Places API error: ${JSON.stringify(body)}`);
-
-  const places = (body.places || []).map((p) => ({
-    id: p.id,
-    name: p.displayName?.text || '',
-    latitude: p.location.latitude,
-    longitude: p.location.longitude,
-    primaryType: p.primaryType || null,
-    address: p.formattedAddress || null,
-    businessStatus: p.businessStatus || null,
-    mapsUri: p.googleMapsUri || null,
-  }));
-
-  placesCache.set(cacheKey, { data: places, expiresAt: Date.now() + PLACES_CACHE_TTL_MS });
-  return places;
-}
-
-// GET /api/places/nearby?category=google
-app.get('/api/places/nearby', async (req, res) => {
-  const { category } = req.query;
-  if (!PLACE_CATEGORY_TYPES[category]) {
-    return res.status(400).json({ error: `Unknown category "${category}".` });
-  }
-
-  const session = await resolveSession(req, res);
-  if (!session) return;
-  const { team } = session;
-  const { rows: [tourRow] } = await db.query(
-    `SELECT t.id FROM teams tm
-     JOIN games g ON g.id = tm.game_id
-     JOIN game_codes gc ON gc.id = g.game_code_id
-     JOIN tours t ON t.id = gc.tour_id
-     WHERE tm.id = $1`,
-    [team.id]
-  );
-
-  try {
-    const places = await fetchNearbyPlaces(tourRow.id, category);
-    res.json({ places });
-  } catch (err) {
-    console.error(err);
-    res.status(502).json({ error: 'Could not fetch nearby places.' });
-  }
-});
-
-// Dev-only: serves the in-progress POI research CSV (db/content/edinburgh-tour/POI.csv) straight
-// off disk so it can be scattered on the Map view for a visual first-pass review, before any of
-// it is curated or seeded into the real `sites` table. Not real game content — a content-sourcing
-// review tool. Only rows with both latitude/longitude (interpolated or confirmed) can be plotted;
-// unpinned rows (e.g. a "recurring feature" with no located example yet) are dropped here.
-app.get('/api/dev/poi-drafts', (req, res) => {
-  const filePath = path.join(__dirname, '..', 'db', 'content', 'edinburgh-tour', 'POI.csv');
-  const rows = parseCsv(fs.readFileSync(filePath, 'utf8'), { columns: true, skip_empty_lines: true, trim: true });
-
-  const pois = rows
-    .filter((row) => row.latitude && row.longitude)
-    .map((row) => ({
-      leg: row.leg,
-      name: row.name,
-      type: row.type,
-      address: row.address,
-      onRoute: row.on_route === 'Y',
-      distanceFromRouteM: Number(row.distance_from_route_m),
-      interestRating: Number(row.interest_rating),
-      description: row.description,
-      interestingFact: row.interesting_fact,
-      externalLink: row.external_link,
-      sourceNotes: row.source_notes,
-      latitude: Number(row.latitude),
-      longitude: Number(row.longitude),
-      geocodeConfidence: row.geocode_confidence,
-      imagePath: row.image_path || null,
-    }));
-
-  res.json({ pois });
 });
 
 // POST /api/dev/login — dev-tools-only auto-login, used to skip the registration form entirely

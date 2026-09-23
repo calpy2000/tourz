@@ -75,9 +75,7 @@ export const api = {
   getSiteDetail: (id) => get(`${BASE}/site/${id}`),
   getMap: () => get(`${BASE}/map`),
   getRoute: () => get(`${BASE}/route`),
-  getNearbyPlaces: (category) => get(`${API_BASE}/api/places/nearby?category=${category}`),
   devLogin: () => post(`${API_BASE}/api/dev/login`),
   devReset: () => post(`${API_BASE}/api/dev/reset`),
   devComplete: (count) => post(`${API_BASE}/api/dev/complete/${count}`),
-  getPoiDrafts: () => fetch(`${API_BASE}/api/dev/poi-drafts`).then((r) => r.json()),
 };
