@@ -21,4 +21,4 @@ function prodPool() {
   return new Pool({ connectionString: prodDatabaseUrl(), ssl: { rejectUnauthorized: false } });
 }
 
-module.exports = { localPool, prodPool };
+module.exports = { localPool, prodPool, prodDatabaseUrl };

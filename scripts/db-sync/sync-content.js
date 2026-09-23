@@ -14,12 +14,15 @@
 // Usage:
 //   node scripts/db-sync/sync-content.js <tour-folder> --dry-run   (read-only, reports counts)
 //   node scripts/db-sync/sync-content.js <tour-folder>             (writes, local DB by default)
-//   DATABASE_URL=<prod-url> node scripts/db-sync/sync-content.js <tour-folder>   (writes to prod)
+//   DATABASE_URL=1 node scripts/db-sync/sync-content.js <tour-folder>   (writes to prod - any
+//     non-empty DATABASE_URL value works as the flag; the real credential is read from
+//     scripts/game-codes/.env via connections.js, never from this env var's value)
 
 const fs = require('fs');
 const path = require('path');
 const { parse } = require('csv-parse/sync');
 const { Client } = require('pg');
+const { prodDatabaseUrl } = require('./connections');
 
 const tourFolder = process.argv[2];
 const dryRun = process.argv.includes('--dry-run');
@@ -157,8 +160,12 @@ async function main() {
   const quizAnagram = readCsv('quiz_anagram.csv');
   const sites = readCsv('sites.csv');
 
+  // DATABASE_URL is used only as an on/off flag here - the real connection string is read from
+  // scripts/game-codes/.env (gitignored) via connections.js, so a prod push never needs the
+  // actual credential pasted into a command line. Set DATABASE_URL to any non-empty value to
+  // target prod, e.g. `DATABASE_URL=1 node scripts/db-sync/sync-content.js <tour>`.
   const client = process.env.DATABASE_URL
-    ? new Client({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } })
+    ? new Client({ connectionString: prodDatabaseUrl(), ssl: { rejectUnauthorized: false } })
     : new Client({ host: 'localhost', port: 5432, user: 'postgres', database: 'tourz' });
   await client.connect();
 
