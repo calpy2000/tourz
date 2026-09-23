@@ -397,7 +397,7 @@ app.get('/api/game/home', async (req, res) => {
   const { team } = session;
 
   const { rows: [tourRow] } = await db.query(
-    `SELECT t.id, t.name, t.total_landmarks, g.activated_at
+    `SELECT t.id, t.name, t.tour_code, t.total_landmarks, g.activated_at
      FROM teams tm
      JOIN games g ON g.id = tm.game_id
      JOIN game_codes gc ON gc.id = g.game_code_id
@@ -461,6 +461,7 @@ app.get('/api/game/home', async (req, res) => {
   res.json({
     teamName: team.name,
     tourName: tourRow.name,
+    tourCode: tourRow.tour_code,
     foundCount: landmarks.length,
     totalLandmarks: tourRow.total_landmarks,
     currentSequence: team.current_landmark_sequence,

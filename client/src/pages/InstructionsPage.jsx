@@ -6,7 +6,16 @@ import { API_BASE } from '../apiBase.js'
 import GameHeader from '../components/GameHeader.jsx'
 import LoadingScreen from '../components/LoadingScreen.jsx'
 import ChatPanel from '../components/ChatPanel.jsx'
-import mapViewScreenshot from '../assets/instructions-map-view.png'
+
+// One screenshot per tour (captured via scripts/dev/capture-instructions-map-screenshot.mjs), so
+// the map-view mockups below show this tour's own landmarks/markers instead of whichever tour was
+// last screenshotted. map-view-default.png is the fallback for a tour that hasn't been captured
+// yet — better a stale-but-present image than a broken one.
+const mapViewScreenshots = import.meta.glob('../assets/instructions/map-view-*.png', { eager: true, import: 'default' })
+function mapViewScreenshotFor(tourCode) {
+  const key = `../assets/instructions/map-view-${tourCode}.png`
+  return mapViewScreenshots[key] || mapViewScreenshots['../assets/instructions/map-view-default.png']
+}
 
 // Same star mark as MapView's site pins (StarIcon there isn't exported) — shown inline here so
 // the "points-of-interest" callout in the instructions text matches the real map marker.
@@ -164,25 +173,25 @@ function MiniPlayPageDemo() {
   )
 }
 
-function MapPanelDemo({ crop }) {
+function MapPanelDemo({ crop, tourCode }) {
   return (
     <div className={crop === 'bottom20' ? 'map-panel-demo map-panel-demo-crop-bottom20' : 'map-panel-demo'}>
-      <img src={mapViewScreenshot} alt="Map view showing the landmark marker and nearby points of interest" />
+      <img src={mapViewScreenshotFor(tourCode)} alt="Map view showing the landmark marker and nearby points of interest" />
       <div className="map-panel-here" />
     </div>
   )
 }
 
-function MapToCardVisual() {
+function MapToCardVisual({ tourCode }) {
   return (
     <div className="map-to-card-visual">
       <div className="map-panel-demo-crop-top">
-        <img src={mapViewScreenshot} alt="Map view showing the topmost point of interest marker and the landmark pin" />
+        <img src={mapViewScreenshotFor(tourCode)} alt="Map view showing the topmost point of interest marker and the landmark pin" />
       </div>
       <svg className="map-to-card-arrow-overlay" viewBox="0 0 340 154" preserveAspectRatio="none" fill="none">
         <path d="M171 67 C 171 105, 155 122, 150 144" stroke="#b33f2e" strokeWidth="2.2" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
         <polygon points="143,144 157,144 150,152" fill="#b33f2e" />
-        <path d="M234 109 C 234 122, 190 122, 190 144" stroke="#b33f2e" strokeWidth="2.2" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+        <path d="M100 101 C 100 122, 190 122, 190 144" stroke="#b33f2e" strokeWidth="2.2" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
         <polygon points="183,144 197,144 190,152" fill="#b33f2e" />
       </svg>
     </div>
@@ -460,7 +469,7 @@ function sections(data, startLandmark) {
             for it.
           </p>
           <ViewSwitchDemo active="map" ring />
-          <MapPanelDemo crop="bottom20" />
+          <MapPanelDemo crop="bottom20" tourCode={data?.tourCode} />
         </>
       ),
     },
@@ -474,7 +483,7 @@ function sections(data, startLandmark) {
             <strong className="instructions-red">details card</strong> (see below).
           </p>
           <ViewSwitchDemo active="map" ring />
-          <MapToCardVisual />
+          <MapToCardVisual tourCode={data?.tourCode} />
           <MiniDetailCardDemo startLandmark={startLandmark} />
         </>
       ),
@@ -725,10 +734,10 @@ export default function InstructionsPage() {
               <strong className="instructions-red">allow location access</strong> when your phone
               asks for it.
             </p>
-            <MapPanelDemo crop="bottom20" />
+            <MapPanelDemo crop="bottom20" tourCode={data?.tourCode} />
 
             <p>Tap a point of interest marker or a found landmark to see its details card:</p>
-            <MapToCardVisual />
+            <MapToCardVisual tourCode={data?.tourCode} />
             <MiniDetailCardDemo startLandmark={startLandmark} />
 
             <h2>Finding landmarks</h2>
