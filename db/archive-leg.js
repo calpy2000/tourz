@@ -12,6 +12,7 @@
 const fs = require('fs');
 const path = require('path');
 const { parse } = require('csv-parse/sync');
+const { safeWriteFileSync } = require('../scripts/lib/safe-write-csv');
 
 const legNumber = process.argv[2];
 if (!legNumber) {
@@ -34,7 +35,7 @@ if (legRows.length === 0) {
   process.exit(1);
 }
 
-const cols = ['leg', 'leg_number', 'name', 'type', 'address', 'on_route', 'distance_from_route_m', 'interest_rating', 'description', 'interesting_fact', 'external_link', 'source_notes', 'latitude', 'longitude', 'geocode_confidence', 'image_path', 'verdict', 'text_length', 'photo_choice', 'map_icon_correct', 'note_text', 'new_gps_lat', 'new_gps_lon', 'new_gps_accuracy_m', 'reviewed_at'];
+const cols = ['leg', 'leg_number', 'name', 'type', 'address', 'on_route', 'distance_from_route_m', 'interest_rating', 'description', 'interesting_fact_1', 'interesting_fact_2', 'interesting_fact_3', 'external_link', 'source_notes', 'latitude', 'longitude', 'geocode_confidence', 'image_path', 'verdict', 'text_length', 'photo_choice', 'map_icon_correct', 'note_text', 'new_gps_lat', 'new_gps_lon', 'new_gps_accuracy_m', 'reviewed_at'];
 function csvField(v) {
   return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
 }
@@ -44,10 +45,10 @@ if (!fs.existsSync(ARCHIVE_DIR)) fs.mkdirSync(ARCHIVE_DIR, { recursive: true });
 const dateStr = new Date().toISOString().slice(0, 10);
 const archivePath = path.join(ARCHIVE_DIR, `POI-candidates-leg${legNumber}-promoted-${dateStr}.csv`);
 const archiveBody = legRows.map(r => cols.map(c => csvField(r[c])).join(',')).join('\n') + '\n';
-fs.writeFileSync(archivePath, header + archiveBody);
+safeWriteFileSync(archivePath, header + archiveBody);
 
 const remainingBody = remainingRows.map(r => cols.map(c => csvField(r[c])).join(',')).join('\n') + (remainingRows.length ? '\n' : '');
-fs.writeFileSync(CANDIDATES_PATH, header + remainingBody);
+safeWriteFileSync(CANDIDATES_PATH, header + remainingBody);
 
 console.error(`Archived ${legRows.length} row(s) for leg ${legNumber} to ${archivePath}`);
 console.error(`POI-candidates.csv now has ${remainingRows.length} row(s) remaining.`);

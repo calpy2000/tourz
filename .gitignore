@@ -26,5 +26,6 @@ client/.wrangler/
 # tools/poi-field-review is its own separate git repo — excluded to avoid nesting
 tools/poi-field-review/
 
-# Historical/archived content snapshots — not needed to run or build the app
-db/content/edinburgh-tour/archive/
+# Layer 1 backup snapshots (scripts/lib/safe-write-csv.js) — local-only rolling window,
+# already redundant with Layer 2's git history, not meant for permanent tracking
+backups/

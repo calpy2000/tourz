@@ -16,6 +16,7 @@
 const fs = require('fs');
 const path = require('path');
 const { parse } = require('csv-parse/sync');
+const { safeWriteFileSync } = require('../scripts/lib/safe-write-csv');
 
 const tourArgIndex = process.argv.indexOf('--tour');
 const tourFolder = tourArgIndex !== -1 ? process.argv[tourArgIndex + 1] : 'edinburgh-tour';
@@ -61,7 +62,7 @@ const newSiteRows = rows.map(r => ({
   about_site_text: r.description,
   about_subject_label: '',
   about_subject_text: '',
-  interesting_fact: r.interesting_fact,
+  interesting_fact: [r.interesting_fact_1, r.interesting_fact_2, r.interesting_fact_3].filter(Boolean).join(' '),
   image_path: r.image_path,
   external_link: r.external_link,
 }));
@@ -70,10 +71,28 @@ const existingSiteRows = fs.existsSync(SITES_PATH)
   ? parse(fs.readFileSync(SITES_PATH, 'utf8'), { columns: true, relax_quotes: true })
   : [];
 
-const allSiteRows = [...existingSiteRows, ...newSiteRows];
+// Dedup by title: a new row whose title already matches an existing sites.csv row
+// updates that row in place instead of being appended as a second copy. This is what
+// protects against double-promoting a leg (e.g. re-running this script by mistake) -
+// previously nothing guarded against that but the "archive right after promoting"
+// discipline described above; that discipline can still fail, so guard here too.
+const existingByTitle = new Map(existingSiteRows.map((r, i) => [r.title, i]));
+let updatedCount = 0;
+let appendedCount = 0;
+const allSiteRows = existingSiteRows.slice();
+for (const newRow of newSiteRows) {
+  if (existingByTitle.has(newRow.title)) {
+    allSiteRows[existingByTitle.get(newRow.title)] = newRow;
+    updatedCount++;
+  } else {
+    allSiteRows.push(newRow);
+    appendedCount++;
+  }
+}
+
 const header = cols.join(',') + '\n';
 const body = allSiteRows.map(r => cols.map(c => csvField(r[c])).join(',')).join('\n') + '\n';
-fs.writeFileSync(SITES_PATH, header + body);
+safeWriteFileSync(SITES_PATH, header + body);
 
 const legsUsed = [...new Set(rows.map(r => r.leg_number))].sort();
-console.error(`Promoted ${newSiteRows.length} row(s) (leg(s) ${legsUsed.join(', ')}) into sites.csv - now ${allSiteRows.length} row(s) total.`);
+console.error(`Promoted ${newSiteRows.length} row(s) (leg(s) ${legsUsed.join(', ')}) into sites.csv - ${appendedCount} appended, ${updatedCount} updated in place (title already existed) - now ${allSiteRows.length} row(s) total.`);

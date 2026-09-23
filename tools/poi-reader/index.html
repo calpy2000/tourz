@@ -63,6 +63,7 @@
     .game-card-body p { font-size: 14px; line-height: 1.45; color: var(--ink-soft); margin: 0 0 14px; }
     .game-card-body p:last-child { margin-bottom: 0; }
     .game-card-address { margin-top: -8px; }
+    .game-card-body a { color: var(--brass-deep); font-weight: 700; }
     .no-image-placeholder {
       height: 90px; display: flex; align-items: center; justify-content: center;
       background: repeating-linear-gradient(45deg, #eadfca, #eadfca 10px, #e2d5bc 10px, #e2d5bc 20px);
@@ -268,18 +269,24 @@
         html += `<p class="game-card-field-label" style="font-size:13.5px;font-weight:700;color:var(--brass-deep);margin:0 0 2px;">${escapeHtml(aboutLabel)}</p>`;
         html += `<p>${escapeHtml(p.description)}</p>`;
       }
-      if (p.interesting_fact) html += `<p><strong>Interesting fact:</strong> ${escapeHtml(p.interesting_fact)}</p>`;
+      const facts = [p.interesting_fact_1, p.interesting_fact_2, p.interesting_fact_3].filter(Boolean);
+      facts.forEach((f, i) => {
+        html += `<p><strong>Interesting fact${facts.length > 1 ? ' ' + (i + 1) : ''}:</strong> ${escapeHtml(f)}</p>`;
+      });
+      if (p.external_link) {
+        html += `<p><a href="${escapeAttr(p.external_link)}" target="_blank" rel="noreferrer">Read more &rarr;</a></p>`;
+      }
       if (!hasImage) html += `<div class="no-image-placeholder" style="margin-top:8px;border-radius:8px;">No image sourced yet</div>`;
       html += `</div></div>`;
 
-      const combinedLen = (p.description || '').length + (p.interesting_fact || '').length;
+      const combinedLen = (p.description || '').length + facts.reduce((sum, f) => sum + f.length, 0);
       html += `<div class="meta-block">`;
       html += `<p class="gps-line">GPS: ${p.latitude && p.longitude ? escapeHtml(p.latitude) + ', ' + escapeHtml(p.longitude) : '<em>not set</em>'}</p>`;
       if (p.geocode_confidence) {
         const cls = /^approx/i.test(p.geocode_confidence) ? 'confidence-approx' : 'confidence-confirmed';
         html += `<p class="confidence-line ${cls}">${escapeHtml(p.geocode_confidence)}</p>`;
       }
-      html += `<p class="char-count">Description + fact: ${combinedLen} characters (target ~1,050-1,150)</p>`;
+      html += `<p class="char-count">Description: ${(p.description || '').length} chars &middot; ${facts.length} fact${facts.length === 1 ? '' : 's'} shown, ${combinedLen} chars total (final in-game text will use just one fact, so aim for description + one fact around ~1,050-1,150)</p>`;
       html += `</div>`;
 
       if (p.source_notes && !isFlagged) {
