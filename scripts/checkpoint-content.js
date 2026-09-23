@@ -7,10 +7,9 @@
 // (once pushed) and unbounded history - a proper checkpoint, not a rolling window.
 //
 // Scope: db/content/**  (all tours' CSVs, tour.json, and the archive/ subfolders) and
-// server/content-photos/** (landmark/POI images). One-off crisis-recovery artifacts that don't
-// belong in the ongoing content pipeline (currently just db/content/edinburgh-db-backup-snapshot,
-// from the 2026-09-21 incident) are explicitly excluded - those will move into a proper archive
-// directory separately.
+// server/content-photos/** (landmark/POI images). One-off crisis-recovery artifacts never
+// belong in the ongoing content pipeline - see archive/2026-09-poi-corruption-recovery/
+// (2026-09-23) for where those get moved to instead.
 //
 // This script only ever commits LOCALLY. It never pushes - see feedback_git_push_approval
 // memory: git push always needs the user's explicit in-the-moment approval.
@@ -24,7 +23,7 @@ const path = require('path');
 
 const REPO_ROOT = path.join(__dirname, '..');
 const CONTENT_PATHS = ['db/content', 'server/content-photos'];
-const EXCLUDE_PATHS = ['db/content/edinburgh-db-backup-snapshot'];
+const EXCLUDE_PATHS = [];
 
 const dryRun = process.argv.includes('--dry-run');
 
