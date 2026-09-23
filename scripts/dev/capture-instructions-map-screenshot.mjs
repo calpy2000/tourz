@@ -114,22 +114,13 @@ async function captureOneTour(tourCode) {
   console.log(`DOM check for ${tourCode}:`, domCheck);
   await new Promise((r) => setTimeout(r, 1500)); // let map tiles finish rendering
 
-  // Crop a fixed 340x280 box (2x-scaled for sharpness) around the landmark pin — the same native
-  // aspect ratio client/src/index.css's .map-panel-demo-crop-top/-bottom20 rules and the
-  // MapToCardVisual arrow-overlay SVG are hardcoded against, not the full (much taller) map
-  // viewport. .map-panel-demo-crop-top only shows this image's top 120/280 (43%) slice, so the
-  // pin needs to land well up in the frame (image-local y ~85), not vertically centered — all
-  // zooming above pivoted around (cx, cy), which is where the map keeps the landmark pin, so the
-  // crop box's vertical offset is expressed relative to that.
-  const cropOriginX = cx - 170;
-  const cropOriginY = cy - 85;
-
   // Real POI geography differs per tour, so a fixed arrow-start coordinate that looks right for
   // one tour (see MapToCardVisual in InstructionsPage.jsx) points at empty map for another. Find
-  // the landmark pin and its nearest POI marker here, in this tour's actual DOM, and record both
-  // centers in crop-local coordinates so the page can draw arrows that always land on a real
-  // marker regardless of tour.
-  const markersRes = await cmd('Runtime.evaluate', {
+  // the landmark pin and every POI marker here, in this tour's actual DOM screen coordinates —
+  // the crop origin (below) is then chosen per tour so a real, visually distinct POI marker ends
+  // up inside the visible frame whenever the surrounding geography allows it, rather than always
+  // centering on the landmark and hoping one happens to fall inside a fixed window.
+  const rawRes = await cmd('Runtime.evaluate', {
     expression: `JSON.stringify((() => {
       const toCenter = (el) => {
         const r = el.getBoundingClientRect();
@@ -142,36 +133,63 @@ async function captureOneTour(tourCode) {
       // circle renders hidden behind the landmark's 40px one — visually indistinguishable, so an
       // arrow "pointing" at it there would look identical to the landmark arrow. Landmark radius
       // (20) + POI radius (13) + a few px margin excludes those, keeping only markers a viewer
-      // can actually see as separate.
+      // could actually see as separate from the landmark.
       const MIN_VISUAL_SEPARATION = 40;
-      // Also require the POI to fall fully inside the crop-top visible slice (see
-      // .map-panel-demo-crop-top in index.css), not just its center — a POI marker is a 26px
-      // (13px-radius) circle, so a center within a few px of the crop edge still renders half
-      // clipped off. POI_RADIUS_MARGIN backs the bounds in by that radius plus a small buffer.
-      const cropOriginX = ${cropOriginX};
-      const cropOriginY = ${cropOriginY};
-      const POI_RADIUS_MARGIN = 15;
       const pois = Array.from(document.querySelectorAll('.map-pin-site'))
         .map(toCenter)
-        .filter((p) => Math.hypot(p.x - landmark.x, p.y - landmark.y) > MIN_VISUAL_SEPARATION)
-        .filter((p) =>
-          p.x >= cropOriginX + POI_RADIUS_MARGIN && p.x <= cropOriginX + 340 - POI_RADIUS_MARGIN &&
-          p.y >= cropOriginY + POI_RADIUS_MARGIN && p.y <= cropOriginY + 120 - POI_RADIUS_MARGIN
-        );
-      if (pois.length === 0) return { landmark, poi: null };
-      const poi = pois.reduce((nearest, p) => {
-        const d = (p.x - landmark.x) ** 2 + (p.y - landmark.y) ** 2;
-        const dn = (nearest.x - landmark.x) ** 2 + (nearest.y - landmark.y) ** 2;
-        return d < dn ? p : nearest;
-      });
-      return { landmark, poi };
+        .filter((p) => Math.hypot(p.x - landmark.x, p.y - landmark.y) > MIN_VISUAL_SEPARATION);
+      return { landmark, pois };
     })())`,
   });
-  const markers = JSON.parse(markersRes.result.result.value);
+  const raw = JSON.parse(rawRes.result.result.value);
+
+  // Crop a fixed 340x280 box (2x-scaled for sharpness) — the same native aspect ratio
+  // client/src/index.css's .map-panel-demo-crop-top/-bottom20 rules and the MapToCardVisual
+  // arrow-overlay SVG are hardcoded against, not the full (much taller) map viewport.
+  // .map-panel-demo-crop-top only shows this image's top 120/280 (43%) slice, so both the
+  // landmark and any POI the arrow overlay should point at need to land inside that band (with
+  // margin for each marker's own radius, so neither renders clipped at the edge) — preferring the
+  // landmark stay well up in the frame (~y 85) when nothing else constrains it.
+  const CROP_W = 340, CROP_H = 280, TOP_SLICE_H = 120;
+  const LANDMARK_MARGIN = 25; // landmark pin radius (20) + buffer
+  const POI_MARGIN = 15; // POI marker radius (13) + buffer
+  function boundsFor(point, margin, lo, hi) {
+    return [point - (hi - margin), point - (lo + margin)]; // valid crop-origin range for this axis
+  }
+  function intersect([aLo, aHi], [bLo, bHi]) {
+    const lo = Math.max(aLo, bLo), hi = Math.min(aHi, bHi);
+    return lo <= hi ? [lo, hi] : null;
+  }
+  function clampToRange(preferred, [lo, hi]) {
+    return Math.min(Math.max(preferred, lo), hi);
+  }
+
+  let cropOriginX = cx - 170;
+  let cropOriginY = cy - 85;
+  let chosenPoi = null;
+
+  if (raw) {
+    const landmarkXRange = boundsFor(raw.landmark.x, LANDMARK_MARGIN, 0, CROP_W);
+    const landmarkYRange = boundsFor(raw.landmark.y, LANDMARK_MARGIN, 0, TOP_SLICE_H);
+    const sorted = raw.pois
+      .map((p) => ({ p, distSq: (p.x - raw.landmark.x) ** 2 + (p.y - raw.landmark.y) ** 2 }))
+      .sort((a, b) => a.distSq - b.distSq)
+      .map(({ p }) => p);
+
+    for (const poi of sorted) {
+      const xRange = intersect(landmarkXRange, boundsFor(poi.x, POI_MARGIN, 0, CROP_W));
+      const yRange = intersect(landmarkYRange, boundsFor(poi.y, POI_MARGIN, 0, TOP_SLICE_H));
+      if (!xRange || !yRange) continue; // no crop origin fits both markers in view for this candidate
+      cropOriginX = clampToRange(raw.landmark.x - 170, xRange);
+      cropOriginY = clampToRange(raw.landmark.y - 85, yRange);
+      chosenPoi = poi;
+      break; // nearest candidate that fits wins
+    }
+  }
 
   const shot = await cmd('Page.captureScreenshot', {
     format: 'png',
-    clip: { x: cropOriginX, y: cropOriginY, width: 340, height: 280, scale: 2 },
+    clip: { x: cropOriginX, y: cropOriginY, width: CROP_W, height: CROP_H, scale: 2 },
   });
 
   fs.mkdirSync(OUT_DIR, { recursive: true });
@@ -179,11 +197,11 @@ async function captureOneTour(tourCode) {
   fs.writeFileSync(outPath, Buffer.from(shot.result.data, 'base64'));
   console.log(`Wrote ${outPath}`);
 
-  if (markers) {
+  if (raw) {
     const toLocal = (p) => ({ x: Math.round(p.x - cropOriginX), y: Math.round(p.y - cropOriginY) });
     const meta = {
-      landmark: toLocal(markers.landmark),
-      poi: markers.poi ? toLocal(markers.poi) : null,
+      landmark: toLocal(raw.landmark),
+      poi: chosenPoi ? toLocal(chosenPoi) : null,
     };
     const metaPath = path.join(OUT_DIR, `map-view-${tourCode}.json`);
     fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2));
