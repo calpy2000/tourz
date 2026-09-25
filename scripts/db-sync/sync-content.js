@@ -48,10 +48,13 @@ function readCsv(filename) {
   return parse(raw, { columns: true, skip_empty_lines: true, trim: true });
 }
 
-// Same convention as db/seed.js - kept in sync by hand, see that file's own comment.
+// Same convention as db/seed.js - kept in sync by hand, see that file's own comment. A
+// fuzzy_text answer may list several accepted variants separated by "|" (e.g. "clock|a clock") -
+// each is trimmed into its own accepted entry; a plain single-value answer (no "|") still
+// produces the same one-element array as before.
 function puzzleAnswerPayload(type, answer) {
   if (type === 'exact_numeric') return { answer };
-  if (type === 'fuzzy_text') return { accepted: [answer] };
+  if (type === 'fuzzy_text') return { accepted: String(answer).split('|').map((s) => s.trim()) };
   if (type === 'multiple_choice') return { correct: answer };
   throw new Error(`Unknown puzzle type: ${type}`);
 }
