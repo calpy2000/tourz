@@ -138,25 +138,69 @@ export default function CoachOverlay() {
     setPopupStyle({ position: 'fixed', top, left, visibility: 'visible' })
   }, [active, currentStep, stepIndex, wrongAttempts, targetRects])
 
+  // Gating: for a `tap` step, capture-phase listeners on `document` block any tap that isn't the
+  // current step's target — the real page keeps running underneath, only the wrong tap's effect
+  // is swallowed (preventDefault + stopPropagation) before it reaches the real handlers. A
+  // correct tap is let through untouched so the real page does its real thing, then the step
+  // advances on the next tick once that's had a chance to happen.
+  //
+  // Map markers (`AdvancedMarker`) are a real bug here, not just a hypothetical: Google's marker
+  // custom element registers its own `touchstart`/`mousedown`/`click` listeners directly on
+  // itself (confirmed via Chrome's `getEventListeners(markerEl)`) and fires `onClick` off a
+  // `gmp-click` custom event it dispatches from that internal handling — not from the `click`
+  // event bubbling up through this page. So a wrong tap on a marker got the coach's "try again"
+  // message (our `click` listener alone still saw and swallowed the bubbled click) while the
+  // marker's real DetailPopup opened underneath anyway, since stopPropagation on `click` runs too
+  // late — the marker's own `touchstart`/`mousedown` listener had already fired and already
+  // dispatched `gmp-click` before our `click` listener ever got a turn (click fires last in the
+  // mousedown → mouseup → click / touchstart → touchend → click sequence). Confirmed via a real
+  // touch-simulated tap (CDP `Input.dispatchTouchEvent`, not a synthetic `.click()`) during the
+  // "tap the landmark marker" step: tapping a POI marker opened its real detail popup while the
+  // coach still showed "That's not quite right". Fix: gate on `mousedown`/`touchstart` too — both
+  // fire before the marker's own listener gets a chance (capture phase on `document`, an
+  // ancestor, always runs before any listener on the marker itself, a descendant) — so a wrong
+  // tap is stopped before it can ever reach the marker. `wrongAtRef` just stops the same physical
+  // tap's later `click` from counting as a second wrong attempt.
   useEffect(() => {
     if (!active || !currentStep || currentStep.interaction !== 'tap') return
+
+    const wrongAtRef = { current: 0 }
+
+    function isHit(e) {
+      if (currentStep.coachId === '__anywhere__') return true
+      return !!e.target.closest(`[data-coach-id="${currentStep.coachId}"]`)
+    }
+
+    function onEarlyEvent(e) {
+      if (currentStep.coachId === '__anywhere__') return
+      if (isHit(e)) return
+      e.preventDefault()
+      e.stopPropagation()
+      wrongAtRef.current = Date.now()
+      registerWrongAttempt()
+    }
 
     function onClick(e) {
       if (currentStep.coachId === '__anywhere__') { advance(); return }
 
-      const hitTarget = e.target.closest(`[data-coach-id="${currentStep.coachId}"]`)
-      if (hitTarget) {
+      if (isHit(e)) {
         setTimeout(() => advance(), 60)
         return
       }
 
       e.preventDefault()
       e.stopPropagation()
-      registerWrongAttempt()
+      if (Date.now() - wrongAtRef.current > 500) registerWrongAttempt()
     }
 
+    document.addEventListener('mousedown', onEarlyEvent, true)
+    document.addEventListener('touchstart', onEarlyEvent, { capture: true, passive: false })
     document.addEventListener('click', onClick, true)
-    return () => document.removeEventListener('click', onClick, true)
+    return () => {
+      document.removeEventListener('mousedown', onEarlyEvent, true)
+      document.removeEventListener('touchstart', onEarlyEvent, true)
+      document.removeEventListener('click', onClick, true)
+    }
   }, [active, currentStep, advance, registerWrongAttempt])
 
   // "type" steps (currently just the chat draft box): satisfied once the target input actually
@@ -263,15 +307,38 @@ export default function CoachOverlay() {
   useEffect(() => {
     if (!active || !currentStep || currentStep.coachId !== 'map-navigation-area') return
 
-    function onClick(e) {
-      if (!e.target.closest('.map-pin-landmark, [data-coach-id="map-poi-marker"]')) return
+    // Same touchstart/mousedown-fires-before-click issue as the general tap gate above — gate on
+    // those too, or a marker tap here can still open its real DetailPopup underneath (see the
+    // general gate's comment for the full explanation).
+    const wrongAtRef = { current: 0 }
+
+    function isMarkerTap(e) {
+      return !!e.target.closest('.map-pin-landmark, [data-coach-id="map-poi-marker"]')
+    }
+
+    function onEarlyEvent(e) {
+      if (!isMarkerTap(e)) return
       e.preventDefault()
       e.stopPropagation()
+      wrongAtRef.current = Date.now()
       registerWrongAttempt()
     }
 
+    function onClick(e) {
+      if (!isMarkerTap(e)) return
+      e.preventDefault()
+      e.stopPropagation()
+      if (Date.now() - wrongAtRef.current > 500) registerWrongAttempt()
+    }
+
+    document.addEventListener('mousedown', onEarlyEvent, true)
+    document.addEventListener('touchstart', onEarlyEvent, { capture: true, passive: false })
     document.addEventListener('click', onClick, true)
-    return () => document.removeEventListener('click', onClick, true)
+    return () => {
+      document.removeEventListener('mousedown', onEarlyEvent, true)
+      document.removeEventListener('touchstart', onEarlyEvent, true)
+      document.removeEventListener('click', onClick, true)
+    }
   }, [active, currentStep, registerWrongAttempt])
 
   if (!active || !currentStep) return null

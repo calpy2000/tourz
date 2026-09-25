@@ -32,10 +32,12 @@ function readCsv(filename) {
 
 // Converts the flat CSV puzzle/quiz columns into the JSONB answer_payload shape
 // the schema expects. Convention: exact_numeric -> {answer}, fuzzy_text -> {accepted:[]},
-// multiple_choice -> {options:[], correct}.
+// multiple_choice -> {options:[], correct}. A fuzzy_text answer may list several accepted
+// variants separated by "|" (e.g. "clock|a clock") - each is trimmed into its own accepted
+// entry; a plain single-value answer (no "|") still produces the same one-element array as before.
 function puzzleAnswerPayload(type, answer) {
   if (type === 'exact_numeric') return { answer };
-  if (type === 'fuzzy_text') return { accepted: [answer] };
+  if (type === 'fuzzy_text') return { accepted: String(answer).split('|').map((s) => s.trim()) };
   if (type === 'multiple_choice') return { correct: answer };
   throw new Error(`Unknown puzzle type: ${type}`);
 }

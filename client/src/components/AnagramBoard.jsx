@@ -233,11 +233,16 @@ const AnagramBoard = forwardRef(function AnagramBoard({ tiles, rowCounts, locked
   }
 
   const row1Count = rowCounts[0]
+  const row2Count = order.length - row1Count
   const row1 = order.slice(0, row1Count)
   const row2 = order.slice(row1Count)
+  // Tile size is derived from the widest row's column count (see index.css's --tile-cols usage) —
+  // without this, a row longer than the previously-hardcoded assumption of 6 columns would size
+  // tiles as if there were only 6, then overflow the card.
+  const maxCols = Math.max(row1Count, row2Count)
 
   return (
-    <div className="anagram-board" ref={boardRef}>
+    <div className="anagram-board" ref={boardRef} style={{ '--tile-cols': maxCols }}>
       {[row1, row2].map((row, rowIdx) => (
         <div className="tile-row" key={rowIdx}>
           {row.map((letter, i) => {

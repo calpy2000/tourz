@@ -1,15 +1,33 @@
 landmark_sequence_order,landmark_title,question_order,type,question_text,option_a,option_b,option_c,option_d,correct_answer,explanation
-2,Port Louis Casino,1,multiple_choice,question text,a1,a2,a3,a4,a1,
-3,SAJ Statue,1,multiple_choice,question text,a1,a2,a3,a4,a1,
-4,Aapravasi Ghat World Heritage Site,1,multiple_choice,question text,a1,a2,a3,a4,a1,
-5,China Town Gate,1,multiple_choice,question text,a1,a2,a3,a4,a1,
-6,Street Art and Murals,1,multiple_choice,question text,a1,a2,a3,a4,a1,
-7,Jummah Masjid,1,multiple_choice,question text,a1,a2,a3,a4,a1,
-8,Central Market Port Louis,1,multiple_choice,question text,a1,a2,a3,a4,a1,
-9,Statue of William Newton,1,multiple_choice,question text,a1,a2,a3,a4,a1,
-10,Port Louis Theatre,1,multiple_choice,question text,a1,a2,a3,a4,a1,
-11,Statue de Saint Louis,1,multiple_choice,question text,a1,a2,a3,a4,a1,
-12,Photographic Museum Of Mauritius,1,multiple_choice,question text,a1,a2,a3,a4,a1,
-13,Natural History Museum,1,multiple_choice,question text,a1,a2,a3,a4,a1,
-14,Bust of Queen Victoria,1,multiple_choice,question text,a1,a2,a3,a4,a1,
-15,Caudan Arts Centre,1,multiple_choice,question text,a1,a2,a3,a4,a1,
+"2","Port Louis Casino","1","multiple_choice","how many vintage lamp posts outside the Blue Penny Museum?","2","4","6","8","4",""
+"2","Port Louis Casino","2","multiple_choice","the Nicholas Baudin bust is made from what material?","marble","stone","bronze","copper","bronze",""
+"2","Port Louis Casino","3","multiple_choice","in which country did the ""Umbrella Sky"" feature first occur?","France","Spain","Italy","Portugal","Portugal",""
+"2","Port Louis Casino","4","multiple_choice","how many sides on the fountain pool for the Millennium Lovers scupture?","5","6","7","8","7",""
+"3","SAJ Statue","1","multiple_choice","how many times did Basdeo Bissondoyal go to jail for his activism?","3","4","5","6","4",""
+"3","SAJ Statue","2","multiple_choice","what day of the month is Sir Sewoosagur Ramgaloom's birthday?","3","12","21","30","12",""
+"3","SAJ Statue","3","multiple_choice","how many cannons guard the waterfront?","2","4","6","8","2",""
+"3","SAJ Statue","4","multiple_choice","what object lies directly opposite the casino masthead?","globe","anchor","star","cannon","anchor",""
+"4","Aapravasi Ghat World Heritage Site","1","multiple_choice","question text","a1","a2","a3","a4","a1",""
+"5","Jummah Masjid","1","multiple_choice","what colour was the Mauritius 2 pence stamp?","red","green","black","blue","blue",""
+"5","Jummah Masjid","2","multiple_choice","when was the waterfront windmill built?","1716","1726","1736","1746","1736",""
+"5","Jummah Masjid","3","multiple_choice","the building that houses the Intercontinental Slavery Museum was once a what?","hospital","mill","granary","hotel","hospital",""
+"5","Jummah Masjid","4","multiple_choice","when did Aapravasi Ghat become a UNESCO world heritage site?","1986","1996","2006","2016","2006",""
+"6","Manga Street Murals","1","multiple_choice","question text","a1","a2","a3","a4","a1",""
+"7","China Town South Gate","1","multiple_choice","food stored in the Granary could feed the whole island for how many months","3","4","5","6","4",""
+"7","China Town South Gate","2","multiple_choice","what colours are the Jummah Masjid shutters?","lemon","amber","turquoise","lilac","turquoise",""
+"7","China Town South Gate","3","multiple_choice","what is the most common store type between the 2 China Town gates?","spice","book","art","hardware","hardware",""
+"7","China Town South Gate","4","multiple_choice","what distance (approx) between China Town's 2 gates? (in metres)","400","500","600","700","500",""
+"8","Central Market Port Louis","1","multiple_choice","question text","a1","a2","a3","a4","a1",""
+"9","Statue of William Newton","1","multiple_choice","question text","a1","a2","a3","a4","a1",""
+"10","Port Louis Theatre","1","multiple_choice","where was Sir John Pope Hennesy born?","England","Wales","Scotland","Ireland","Ireland",""
+"10","Port Louis Theatre","2","multiple_choice","Maurice Cure (creator of the labour party) trained as a what?","Lawyer","Vet","Doctor","Soldier","Doctor",""
+"10","Port Louis Theatre","3","multiple_choice","when did a cyclone destroy the first government house?","1697","1707","1717","1727","1727",""
+"10","Port Louis Theatre","4","multiple_choice","as well as the dodo - what animal appears on the Mauritius coat of arms?","deer","turtle","lion","dragon","deer",""
+"11","Statue de Saint Louis","1","multiple_choice","question text","a1","a2","a3","a4","a1",""
+"12","Photographic Museum Of Mauritius","1","multiple_choice","question text","a1","a2","a3","a4","a1",""
+"13","Natural History Museum","1","multiple_choice","Muhammad al-Idrisi lived in which century?","11th","12th","13th","14th","12th",""
+"13","Natural History Museum","2","multiple_choice","How many years did Raoul Rivet run the newpaper Le Mauricien?","25","30","35","40","35",""
+"13","Natural History Museum","3","multiple_choice","What year was Ti Frere born?","1900","1910","1920","1930","1900",""
+"13","Natural History Museum","4","multiple_choice","When did compensation arrive in Mauritius following slavery abolition?","1831","1834","1837","1840","1837",""
+"14","Bust of Queen Victoria","1","multiple_choice","question text","a1","a2","a3","a4","a1",""
+"15","Caudan Arts Centre","1","multiple_choice","question text","a1","a2","a3","a4","a1",""

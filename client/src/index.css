@@ -939,16 +939,20 @@ button.primary.quiz-submit {
 /* Anagram quiz format — drag-swap letter tiles, ported from design/anagram-quiz-prototype.html
    (itself ported from 6 GAME HUB's SLYDZ mechanic). Lives inside .card, same as multiple_choice. */
 /* container-type turns cqw into "% of .anagram-board's own width" — lets --tile-size be computed
-   directly from the largest row (6 tiles, 5 gaps) so that row fills the card edge-to-edge instead
-   of guessing a viewport-relative size that leaves the board looking small inside a wide card. */
+   directly from the widest row (--tile-cols, set inline per-question by AnagramBoard.jsx from the
+   real row lengths) so that row fills the card edge-to-edge instead of guessing a viewport-relative
+   size, or assuming a fixed column count that breaks for any row longer than that assumption. */
 .anagram-board {
   container-type: inline-size;
-  --tile-size: clamp(40px, calc((100cqw - 30px) / 6), 70px);
+  --tile-size: clamp(40px, calc((100cqw - (var(--tile-cols) - 1) * 6px) / var(--tile-cols)), 70px);
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
   margin-bottom: 6px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 /* grid-auto-flow: column + a shared --tile-size (not a per-count grid-template) means every tile
