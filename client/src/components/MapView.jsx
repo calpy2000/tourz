@@ -270,6 +270,7 @@ export default function MapView() {
 
             {sites.map((s) => {
               const dragging = gpsDragTarget?.kind === 'site' && gpsDragTarget.id === s.id
+              const hasPhoto = Boolean(s.imagePath)
               return (
                 <AdvancedMarker
                   key={s.id}
@@ -279,8 +280,24 @@ export default function MapView() {
                   onClick={() => openSite(s.id)}
                   zIndex={dragging ? 999999 : undefined}
                 >
-                  {showDots ? <div data-coach-id="map-poi-marker" className={dragging ? 'map-dot map-dot-site map-pin-site-dragging' : 'map-dot map-dot-site'} /> : (
-                    <div data-coach-id="map-poi-marker" className={dragging ? 'map-pin-site map-pin-site-dragging' : 'map-pin-site'}>
+                  {showDots ? (
+                    <div
+                      data-coach-id="map-poi-marker"
+                      className={
+                        'map-dot map-dot-site'
+                        + (hasPhoto ? '' : ' map-dot-site-nophoto')
+                        + (dragging ? ' map-pin-site-dragging' : '')
+                      }
+                    />
+                  ) : (
+                    <div
+                      data-coach-id="map-poi-marker"
+                      className={
+                        'map-pin-site'
+                        + (hasPhoto ? '' : ' map-pin-site-nophoto')
+                        + (dragging ? ' map-pin-site-dragging' : '')
+                      }
+                    >
                       <StarIcon />
                       {showLabels && <span className="map-pin-label">{s.title}</span>}
                     </div>

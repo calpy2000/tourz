@@ -269,7 +269,17 @@
         html += `<p class="game-card-field-label" style="font-size:13.5px;font-weight:700;color:var(--brass-deep);margin:0 0 2px;">${escapeHtml(aboutLabel)}</p>`;
         html += `<p>${escapeHtml(p.description)}</p>`;
       }
-      const facts = [p.interesting_fact_1, p.interesting_fact_2, p.interesting_fact_3].filter(Boolean);
+      const allFacts = [p.interesting_fact_1, p.interesting_fact_2, p.interesting_fact_3].filter(Boolean);
+      const factChoiceMatch = /use interesting_fact_(\d)/i.exec(p.note_text || '');
+      let facts = allFacts;
+      let usingSelectedFact = false;
+      if (factChoiceMatch) {
+        const chosen = [p.interesting_fact_1, p.interesting_fact_2, p.interesting_fact_3][parseInt(factChoiceMatch[1], 10) - 1];
+        if (chosen) { facts = [chosen]; usingSelectedFact = true; }
+      }
+      if (usingSelectedFact) {
+        html += `<p class="game-card-field-label" style="font-size:12px;font-weight:700;color:var(--brass-deep);margin:6px 0 0;">Final fact selected (fact ${factChoiceMatch[1]} of ${allFacts.length}) &mdash; this is what will show live</p>`;
+      }
       facts.forEach((f, i) => {
         html += `<p><strong>Interesting fact${facts.length > 1 ? ' ' + (i + 1) : ''}:</strong> ${escapeHtml(f)}</p>`;
       });

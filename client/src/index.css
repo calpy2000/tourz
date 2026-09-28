@@ -1351,6 +1351,12 @@ button.primary.quiz-submit {
   fill: #fff;
 }
 
+/* POI has no photo — flag it with a distinct color so it's easy to spot on the map.
+   Compound selector deliberately, not a bare modifier class — see feedback-css-specificity-traps. */
+.map-pin-site.map-pin-site-nophoto {
+  background: #22c55e;
+}
+
 /* Site name, shown alongside its pin only at icon zoom (not the zoomed-out dot form) — absolutely
    positioned off the pin's own box so it never affects the AdvancedMarker's anchor point/size.
    pointer-events: none so it never steals the pin's own click/drag target. */
@@ -1390,6 +1396,10 @@ button.primary.quiz-submit {
 
 .map-dot-site {
   background: #a855f7;
+}
+
+.map-dot-site.map-dot-site-nophoto {
+  background: #22c55e;
 }
 
 .poi-popup-address {

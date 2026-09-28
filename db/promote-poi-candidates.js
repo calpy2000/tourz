@@ -52,6 +52,19 @@ function csvField(v) {
   return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
 }
 
+// A reviewer can pin exactly one fact for promotion by writing "Use interesting_fact_N ..."
+// into note_text (see feedback_content_csv_safe_write_rule workflow / POI Reader's matching
+// "Final fact selected" banner) - honor that instead of concatenating every non-empty fact.
+function pickInterestingFact(r) {
+  const facts = [r.interesting_fact_1, r.interesting_fact_2, r.interesting_fact_3];
+  const match = /use interesting_fact_(\d)/i.exec(r.note_text || '');
+  if (match) {
+    const chosen = facts[parseInt(match[1], 10) - 1];
+    if (chosen) return chosen;
+  }
+  return facts.filter(Boolean).join(' ');
+}
+
 const newSiteRows = rows.map(r => ({
   title: r.name,
   address: r.address,
@@ -62,7 +75,7 @@ const newSiteRows = rows.map(r => ({
   about_site_text: r.description,
   about_subject_label: '',
   about_subject_text: '',
-  interesting_fact: [r.interesting_fact_1, r.interesting_fact_2, r.interesting_fact_3].filter(Boolean).join(' '),
+  interesting_fact: pickInterestingFact(r),
   image_path: r.image_path,
   external_link: r.external_link,
 }));
