@@ -138,7 +138,8 @@ export default function MapView() {
   // lastCamera so a returning player doesn't get a one-frame flash of the wrong marker style
   // before the first onCameraChanged fires.
   const [zoom, setZoom] = useState(lastCamera?.zoom ?? null)
-  const { location: liveLocation, reacquiring } = useGeolocation()
+  const { location: liveLocation, error: gpsError, reacquiring, stalled } = useGeolocation()
+  const [gpsHelpDismissed, setGpsHelpDismissed] = useState(false)
 
   function openLandmark(sequenceOrder) {
     api.getLandmarkDetail(sequenceOrder).then((data) => { if (!data.error) setLandmarkPopup(data) })
@@ -308,6 +309,14 @@ export default function MapView() {
           </Map>
         </APIProvider>
 
+        {!liveLocation && (gpsError === 'denied' || stalled) && !gpsHelpDismissed && (
+          <div className="gps-help-banner">
+            Your location isn't showing. If you opened this game from a link in WhatsApp or
+            another app, tap the <strong>&bull;&bull;&bull;</strong> or Safari icon in that
+            browser and choose <strong>Open in Safari</strong>, then reopen the link there.
+            <button type="button" className="ghost" onClick={() => setGpsHelpDismissed(true)}>Dismiss</button>
+          </div>
+        )}
         {gpsDragTarget && (
           <div className="gps-drag-banner">
             Drag the pin to its correct position

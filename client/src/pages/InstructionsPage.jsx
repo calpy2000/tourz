@@ -375,6 +375,13 @@ function sections(data, startLandmark) {
             so read them well and you will enjoy the tour much more.
           </p>
           <p>
+            If you opened this game from a link in <strong className="instructions-red">WhatsApp</strong> or
+            another messaging app, tap the <strong>&bull;&bull;&bull;</strong> or Safari icon in that
+            app's browser now and choose <strong className="instructions-red">Open in Safari</strong>, then
+            continue from there &mdash; some apps' built-in browsers block the location prompt you'll need
+            later for the map.
+          </p>
+          <p>
             The aim is to find <strong className="instructions-red">{playableCount} landmarks</strong> &mdash; some
             big, some small. For each landmark you can gain up to{' '}
             <strong className="instructions-red">10 points</strong>. Your starting landmark is{' '}
@@ -494,7 +501,8 @@ function sections(data, startLandmark) {
           <p>
             You will also see your <strong className="instructions-red">current location</strong> <LocatorVisual />. For this to work make sure you{' '}
             <strong className="instructions-red">allow location access</strong> when your phone asks
-            for it.
+            for it. If you never see that prompt and opened the game from WhatsApp or another app,
+            open the link in Safari instead (see page 1).
           </p>
           <ViewSwitchDemo active="map" ring />
           <MapPanelDemo crop="bottom20" tourCode={data?.tourCode} />
@@ -760,7 +768,8 @@ export default function InstructionsPage() {
               plus your <strong className="instructions-red">current location</strong>{' '}
               <LocatorVisual />. For this to work make sure you{' '}
               <strong className="instructions-red">allow location access</strong> when your phone
-              asks for it.
+              asks for it. If you never see that prompt and opened the game from WhatsApp or
+              another app, open the link in Safari instead.
             </p>
             <MapPanelDemo crop="bottom20" tourCode={data?.tourCode} />
 

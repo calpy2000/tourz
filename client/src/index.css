@@ -1434,6 +1434,35 @@ button.primary.quiz-submit {
   padding: 2px 10px;
 }
 
+/* Self-service recovery for the WhatsApp-in-app-browser GPS failure (see useGeolocation's
+   `stalled`) — pinned to the top since the bottom is already used by .gps-drag-banner and the
+   chat panel. Same non-modal, no-backdrop treatment as that banner. */
+.gps-help-banner {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--brick);
+  background: var(--stone-raised);
+  color: var(--ink-soft);
+  font-size: 12.5px;
+  line-height: 1.4;
+  box-shadow: 0 2px 8px rgba(35, 32, 27, 0.3);
+}
+
+.gps-help-banner button.ghost {
+  font-size: 12px;
+  padding: 2px 10px;
+  margin-left: auto;
+}
+
 /* --- Detail popup: shared format for landmarks and sites ("Interests") --- */
 /* Deliberately not anchored to whatever was tapped — at this size (image + long body text) it
    reads as a modal regardless, so it gets a plain fixed inset instead of chasing a tap position.

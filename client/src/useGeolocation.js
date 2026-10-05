@@ -15,6 +15,12 @@ export function useGeolocation() {
   // wherever the player was several minutes ago. Callers can use it to grey the marker out
   // instead of trusting a fix that's actually gone stale.
   const [reacquiring, setReacquiring] = useState(false)
+  // True once 10s have passed with no fix and no explicit error either. Covers a real case the
+  // plain `error` state can't: some in-app browsers (e.g. links opened inside WhatsApp's embedded
+  // viewer rather than full Safari) scope the permission prompt to the host app, and if the host
+  // app itself was never granted location access, watchPosition's callbacks just never fire at
+  // all — neither onFix nor onFail — instead of erroring out with PERMISSION_DENIED.
+  const [stalled, setStalled] = useState(false)
   const watchIdRef = useRef(null)
 
   useEffect(() => {
@@ -23,13 +29,18 @@ export function useGeolocation() {
       return
     }
 
+    const stallTimer = setTimeout(() => setStalled(true), 10000)
+
     function onFix(pos) {
       setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude })
       setError(null)
       setReacquiring(false)
+      setStalled(false)
+      clearTimeout(stallTimer)
     }
     function onFail(err) {
       setError(err.code === err.PERMISSION_DENIED ? 'denied' : 'unavailable')
+      clearTimeout(stallTimer)
     }
 
     watchIdRef.current = navigator.geolocation.watchPosition(onFix, onFail, {
@@ -55,8 +66,9 @@ export function useGeolocation() {
     return () => {
       navigator.geolocation.clearWatch(watchIdRef.current)
       document.removeEventListener('visibilitychange', onVisible)
+      clearTimeout(stallTimer)
     }
   }, [])
 
-  return { location, error, reacquiring }
+  return { location, error, reacquiring, stalled }
 }
