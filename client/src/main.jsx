@@ -4,8 +4,14 @@ import { BrowserRouter } from 'react-router-dom'
 import './index.css'
 import App from './App.jsx'
 import { tryEscapeToSafari } from './escapeInAppBrowser.js'
+import { runGpsPreflight } from './gpsPreflight.js'
 
-tryEscapeToSafari()
+tryEscapeToSafari().then((handedOff) => {
+  // If the handoff worked, this tab is being abandoned for a fresh Safari tab — that fresh
+  // load will run its own preflight (and won't match the in-app-browser UA check anyway), so
+  // there's nothing useful to check here.
+  if (!handedOff) runGpsPreflight()
+})
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

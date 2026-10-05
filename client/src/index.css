@@ -1463,6 +1463,36 @@ button.primary.quiz-submit {
   margin-left: auto;
 }
 
+/* Same treatment as .gps-help-banner, but `fixed` to the viewport instead of `absolute` to a
+   map container — this one renders at the App level (see GpsPreflightBanner.jsx) so it needs
+   to float above whichever page is currently mounted (registration, instructions, home...),
+   not just MapView. Higher z-index to clear every page's own stacking context. */
+.gps-preflight-banner {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--brick);
+  background: var(--stone-raised);
+  color: var(--ink-soft);
+  font-size: 12.5px;
+  line-height: 1.4;
+  box-shadow: 0 2px 8px rgba(35, 32, 27, 0.3);
+}
+
+.gps-preflight-banner button.ghost {
+  font-size: 12px;
+  padding: 2px 10px;
+  margin-left: auto;
+}
+
 /* --- Detail popup: shared format for landmarks and sites ("Interests") --- */
 /* Deliberately not anchored to whatever was tapped — at this size (image + long body text) it
    reads as a modal regardless, so it gets a plain fixed inset instead of chasing a tap position.
