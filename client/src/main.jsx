@@ -5,6 +5,9 @@ import './index.css'
 import App from './App.jsx'
 import { tryEscapeToSafari } from './escapeInAppBrowser.js'
 import { runGpsPreflight } from './gpsPreflight.js'
+import { logDebug } from './debugLog.js'
+
+logDebug('app:boot', { url: window.location.href, ua: navigator.userAgent })
 
 tryEscapeToSafari().then((handedOff) => {
   // If the handoff worked, this tab is being abandoned for a fresh Safari tab — that fresh

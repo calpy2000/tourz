@@ -11,6 +11,7 @@ import { DEV_MODE } from './devMode.js'
 import { CoachProvider } from './coach/CoachContext.jsx'
 import CoachOverlay from './coach/CoachOverlay.jsx'
 import GpsPreflightBanner from './components/GpsPreflightBanner.jsx'
+import DebugOverlay from './components/DebugOverlay.jsx'
 
 // /home, /play, /instructions all need a real registered player — without a session there's no
 // team for the API to resolve, so bounce back to registration rather than showing a broken page.
@@ -26,6 +27,7 @@ export default function App() {
     <CoachProvider>
       {DEV_MODE && <div className="app-version-badge">{APP_VERSION}</div>}
       <GpsPreflightBanner />
+      <DebugOverlay />
       <Routes>
         <Route path="/" element={<StartPage />} />
         <Route path="/welcome" element={<RequireSession><WelcomePage /></RequireSession>} />

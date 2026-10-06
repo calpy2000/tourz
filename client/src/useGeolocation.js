@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { logDebug } from './debugLog.js'
 
 // Tracks the browser's live GPS position so the map's "here" marker can follow the player as
 // they actually walk, instead of the old fixed-offset placeholder. Needs HTTPS (the deployed
@@ -26,10 +27,15 @@ export function useGeolocation() {
   useEffect(() => {
     if (!('geolocation' in navigator)) {
       setError('unsupported')
+      logDebug('geo:unsupported')
       return
     }
 
-    const stallTimer = setTimeout(() => setStalled(true), 10000)
+    logDebug('geo:watch-started')
+    const stallTimer = setTimeout(() => {
+      setStalled(true)
+      logDebug('geo:stalled', { note: 'no fix, no error, within 10s' })
+    }, 10000)
 
     function onFix(pos) {
       setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude })
@@ -37,10 +43,12 @@ export function useGeolocation() {
       setReacquiring(false)
       setStalled(false)
       clearTimeout(stallTimer)
+      logDebug('geo:fix', { lat: pos.coords.latitude, lng: pos.coords.longitude })
     }
     function onFail(err) {
       setError(err.code === err.PERMISSION_DENIED ? 'denied' : 'unavailable')
       clearTimeout(stallTimer)
+      logDebug('geo:fail', { code: err.code, message: err.message })
     }
 
     watchIdRef.current = navigator.geolocation.watchPosition(onFix, onFail, {

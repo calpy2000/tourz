@@ -7,6 +7,7 @@ import { useGeolocation } from '../useGeolocation.js'
 import { saveGpsCorrection } from '../gpsCorrections.js'
 import DetailPopup from './DetailPopup.jsx'
 import { isStartLandmark, landmarkDisplayNumber } from '../landmarkNumber.js'
+import { logDebug } from '../debugLog.js'
 
 // Used only if the team has no solved landmarks yet (map needs some center before the first find).
 const FALLBACK_CENTER = { lat: 55.9535, lng: -3.197 }
@@ -140,6 +141,10 @@ export default function MapView() {
   const [zoom, setZoom] = useState(lastCamera?.zoom ?? null)
   const { location: liveLocation, error: gpsError, reacquiring, stalled } = useGeolocation()
   const [gpsHelpDismissed, setGpsHelpDismissed] = useState(false)
+
+  useEffect(() => {
+    logDebug('map:state', { hasLiveLocation: !!liveLocation, gpsError, reacquiring, stalled })
+  }, [liveLocation, gpsError, reacquiring, stalled])
 
   function openLandmark(sequenceOrder) {
     api.getLandmarkDetail(sequenceOrder).then((data) => { if (!data.error) setLandmarkPopup(data) })

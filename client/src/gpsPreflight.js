@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { logDebug } from './debugLog.js'
 
 const ua = typeof navigator !== 'undefined' ? navigator.userAgent || '' : ''
 const isIOS = /iPhone|iPad|iPod/.test(ua)
@@ -37,27 +38,33 @@ export function useGpsPreflightStatus() {
 // because that option doesn't reliably fire either when the permission request itself never
 // resolves inside a broken in-app browser — same reason useGeolocation.js can't trust it.
 export function runGpsPreflight() {
+  logDebug('preflight:detect', { ua, isIOS, isInAppBrowser, hasGeolocation: 'geolocation' in navigator })
+
   if (!isIOS || !isInAppBrowser || !('geolocation' in navigator)) {
     setStatus('skipped')
+    logDebug('preflight:skip', { reason: 'not applicable (not iOS/in-app-browser, or no geolocation API)' })
     return
   }
 
   setStatus('checking')
+  logDebug('preflight:checking')
   let settled = false
 
   const stallTimer = setTimeout(() => {
     if (settled) return
     settled = true
     console.log('[gps] preflight stalled — no fix, no error, within 6s')
+    logDebug('preflight:stalled')
     setStatus('blocked')
   }, 6000)
 
   navigator.geolocation.getCurrentPosition(
-    () => {
+    (pos) => {
       if (settled) return
       settled = true
       clearTimeout(stallTimer)
       console.log('[gps] preflight got a fix — geolocation works here')
+      logDebug('preflight:ok', { lat: pos.coords.latitude, lng: pos.coords.longitude })
       setStatus('ok')
     },
     (err) => {
@@ -65,6 +72,7 @@ export function runGpsPreflight() {
       settled = true
       clearTimeout(stallTimer)
       console.log(`[gps] preflight failed: ${err.code === err.PERMISSION_DENIED ? 'denied' : 'unavailable'}`)
+      logDebug('preflight:failed', { code: err.code, message: err.message })
       setStatus('blocked')
     },
     { enableHighAccuracy: true, timeout: 6000, maximumAge: 0 },

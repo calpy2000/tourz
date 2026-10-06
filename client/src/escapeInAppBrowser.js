@@ -1,3 +1,5 @@
+import { logDebug } from './debugLog.js'
+
 // Best-effort attempt to bounce a player out of an iOS in-app browser (WhatsApp,
 // Facebook/Messenger, Instagram, Line) and into real Safari before the app even mounts.
 // These embedded webviews scope the geolocation permission prompt to the host app, not the
@@ -22,7 +24,10 @@ export function tryEscapeToSafari() {
   const isIOS = /iPhone|iPad|iPod/.test(ua)
   const isInAppBrowser = /WhatsApp|FBAN|FBAV|Instagram|Line\//.test(ua)
 
+  logDebug('escape:detect', { ua, isIOS, isInAppBrowser, protocol: window.location.protocol })
+
   if (window.location.protocol !== 'https:' || !isIOS || !isInAppBrowser) {
+    logDebug('escape:skip', { reason: 'not applicable (not https/iOS/in-app-browser)' })
     return Promise.resolve(false)
   }
 
@@ -30,6 +35,7 @@ export function tryEscapeToSafari() {
   // browser) doesn't retry on every reload.
   if (sessionStorage.getItem('triedSafariEscape')) {
     console.log('[gps] Safari escape already attempted this tab — skipping re-attempt')
+    logDebug('escape:skip', { reason: 'already attempted this tab' })
     return Promise.resolve(false)
   }
   sessionStorage.setItem('triedSafariEscape', '1')
@@ -42,11 +48,13 @@ export function tryEscapeToSafari() {
     document.addEventListener('visibilitychange', onVisibilityChange)
 
     console.log('[gps] attempting x-safari-https:// handoff')
+    logDebug('escape:attempting')
     window.location.href = window.location.href.replace(/^https:/, 'x-safari-https:')
 
     setTimeout(() => {
       document.removeEventListener('visibilitychange', onVisibilityChange)
       console.log(`[gps] handoff ${handedOff ? 'appears to have succeeded (tab went hidden)' : 'did not happen — still in the in-app browser'}`)
+      logDebug('escape:result', { handedOff })
       resolve(handedOff)
     }, 1500)
   })
