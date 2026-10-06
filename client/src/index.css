@@ -1463,34 +1463,59 @@ button.primary.quiz-submit {
   margin-left: auto;
 }
 
-/* Same treatment as .gps-help-banner, but `fixed` to the viewport instead of `absolute` to a
-   map container — this one renders at the App level (see GpsPreflightBanner.jsx) so it needs
-   to float above whichever page is currently mounted (registration, instructions, home...),
-   not just MapView. Higher z-index to clear every page's own stacking context. */
-.gps-preflight-banner {
+/* Replaces the whole app (see App.jsx, rendered instead of <Routes>) when gpsPreflight.js gets
+   an explicit permission denial at boot — covers the full viewport since there's deliberately no
+   way to dismiss it and see a page underneath. */
+.gps-blocked-screen {
   position: fixed;
-  top: 12px;
-  left: 12px;
-  right: 12px;
+  inset: 0;
   z-index: 1000;
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding: 10px 14px;
-  border-radius: 10px;
-  border: 1px solid var(--brick);
-  background: var(--stone-raised);
-  color: var(--ink-soft);
-  font-size: 12.5px;
-  line-height: 1.4;
-  box-shadow: 0 2px 8px rgba(35, 32, 27, 0.3);
+  justify-content: center;
+  padding: 24px;
+  background: var(--umber);
+  overflow-y: auto;
 }
 
-.gps-preflight-banner button.ghost {
-  font-size: 12px;
-  padding: 2px 10px;
-  margin-left: auto;
+.gps-blocked-card {
+  max-width: 360px;
+  padding: 28px 24px;
+  border-radius: 16px;
+  background: var(--stone-raised);
+  color: var(--ink);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.gps-blocked-card h1 {
+  margin: 0 0 12px;
+  font-size: 20px;
+  color: var(--brick);
+}
+
+.gps-blocked-card p {
+  margin: 0 0 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
+.gps-blocked-card ol {
+  margin: 0 0 16px;
+  padding-left: 20px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.gps-blocked-card button {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  background: var(--brass);
+  color: var(--stone-raised);
+  font-size: 14.5px;
+  font-weight: 600;
 }
 
 /* --- TEMPORARY debug overlay (see debugLog.js) — remove along with it once the WhatsApp
