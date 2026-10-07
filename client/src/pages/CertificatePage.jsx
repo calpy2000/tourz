@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { toPng } from 'html-to-image'
 import { api } from '../api.js'
 import { rectFromEvent } from '../rect.js'
+import { clearSession } from '../localSession.js'
 import AnchoredPopup from '../components/AnchoredPopup.jsx'
 import LoadingScreen from '../components/LoadingScreen.jsx'
 
@@ -28,6 +29,7 @@ export default function CertificatePage() {
   const [sending, setSending] = useState(false)
   const [sendError, setSendError] = useState('')
   const [sentTo, setSentTo] = useState('')
+  const [newTourAnchor, setNewTourAnchor] = useState(null)
   const cardRef = useRef(null)
 
   useEffect(() => {
@@ -57,6 +59,15 @@ export default function CertificatePage() {
     } finally {
       setSending(false)
     }
+  }
+
+  // Clearing the session is a one-way door: StartPage's ResumeRedirect decides where to send a
+  // device purely from the current session token, so once this one is gone there's no way back
+  // to this certificate (this team's progress still exists server-side, but nothing on the device
+  // points at it any more) — hence the confirmation before doing it.
+  function handleStartAnotherTour() {
+    clearSession()
+    navigate('/', { replace: true })
   }
 
   if (!data) return <LoadingScreen />
@@ -103,6 +114,10 @@ export default function CertificatePage() {
         </button>
       )}
 
+      <button className="certificate-new-tour-button" onClick={(e) => setNewTourAnchor(rectFromEvent(e))}>
+        Start another tour
+      </button>
+
       {emailAnchor && (
         <AnchoredPopup anchorRect={emailAnchor} onClose={() => !sending && setEmailAnchor(null)}>
           <h3>Email your certificate</h3>
@@ -120,6 +135,19 @@ export default function CertificatePage() {
               {sending ? 'Sending…' : 'Send'}
             </button>
           </form>
+        </AnchoredPopup>
+      )}
+
+      {newTourAnchor && (
+        <AnchoredPopup anchorRect={newTourAnchor} onClose={() => setNewTourAnchor(null)}>
+          <h3>Start another tour?</h3>
+          <p>
+            Once you do this, you won't be able to get back to this certificate on this device
+            &mdash; save or send it first if you want to keep it.
+          </p>
+          <button className="primary" onClick={handleStartAnotherTour}>
+            Yes, start another tour
+          </button>
         </AnchoredPopup>
       )}
     </div>
