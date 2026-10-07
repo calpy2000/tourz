@@ -2,17 +2,22 @@ import { useEffect, useState } from 'react'
 import { logDebug } from './debugLog.js'
 
 const ua = typeof navigator !== 'undefined' ? navigator.userAgent || '' : ''
-const isIOS = /iPhone|iPad|iPod/.test(ua)
+export const isIOS = /iPhone|iPad|iPod/.test(ua)
+const isAndroid = /Android/.test(ua)
 
-// 'unchecked': the probe hasn't run yet (or isn't applicable — not iOS, or no geolocation API).
+// 'unchecked': the probe hasn't run yet (or isn't applicable — not a phone, or no geolocation
+// API). Desktop is deliberately excluded: there's no OS-level Settings app to send a desktop
+// user to, and a denied browser permission there is trivially fixed from the address bar anyway.
 // 'checking': probe in flight.
 // 'ok': got a real fix, or merely stalled with no error — not evidence of a permission block
 // (see useGeolocation.js's own stall-kick, which recovers that case once the player reaches Map
 // view) — so this never blocks the app on a stall alone.
-// 'denied': an explicit PERMISSION_DENIED from the OS. This is the only signal available for a
-// phone-wide "Settings > Privacy & Security > Location Services > Safari Websites: Never" block
-// — an ordinary per-site "Don't Allow" produces the exact same error code, with no way to tell
-// the two apart from JS. GpsBlockedScreen's instructions cover both causes.
+// 'denied': an explicit PERMISSION_DENIED from the OS. On iOS this is the only signal available
+// for a phone-wide "Settings > Privacy & Security > Location Services > Safari Websites: Never"
+// block — an ordinary per-site "Don't Allow" produces the exact same error code, with no way to
+// tell the two apart from JS. GpsBlockedScreen's instructions cover both causes, with separate
+// wording for iOS vs Android (see its own isIOS branch — Android's Settings steps vary too much
+// by phone maker to give exact ones, so that path is deliberately more generic).
 let status = 'unchecked'
 let listeners = []
 let checking = false
@@ -44,11 +49,11 @@ export function useGpsPreflightStatus() {
 // resolves inside a broken in-app browser — same reason useGeolocation.js can't trust it.
 export function runGpsPreflight() {
   if (checking) return
-  logDebug('preflight:detect', { ua, isIOS, hasGeolocation: 'geolocation' in navigator })
+  logDebug('preflight:detect', { ua, isIOS, isAndroid, hasGeolocation: 'geolocation' in navigator })
 
-  if (!isIOS || !('geolocation' in navigator)) {
+  if (!(isIOS || isAndroid) || !('geolocation' in navigator)) {
     setStatus('ok')
-    logDebug('preflight:skip', { reason: 'not applicable (not iOS, or no geolocation API)' })
+    logDebug('preflight:skip', { reason: 'not applicable (not a phone, or no geolocation API)' })
     return
   }
 
