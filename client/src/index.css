@@ -1463,10 +1463,10 @@ button.primary.quiz-submit {
   margin-left: auto;
 }
 
-/* GpsBlockedScreen reuses .form-shell/.form-shell-body/.eyebrow/.subtitle/button.primary — the
+/* GpsGateScreen reuses .form-shell/.form-shell-body/.eyebrow/.subtitle/button.primary — the
    same shell StartPage uses — so it reads as a normal first page rather than a dialog-style
    popup, since it's the very first thing a player sees, before registration. Only the numbered
-   Settings steps need their own rule. */
+   Settings steps (its "blocked" state) need their own rule. */
 .gps-blocked-steps {
   margin: 0 0 16px;
   padding-left: 20px;

@@ -5,22 +5,35 @@ const ua = typeof navigator !== 'undefined' ? navigator.userAgent || '' : ''
 export const isIOS = /iPhone|iPad|iPod/.test(ua)
 const isAndroid = /Android/.test(ua)
 
-// 'unchecked': the probe hasn't run yet (or isn't applicable — not a phone, or no geolocation
-// API). Desktop is deliberately excluded: there's no OS-level Settings app to send a desktop
-// user to, and a denied browser permission there is trivially fixed from the address bar anyway.
-// 'checking': probe in flight.
-// 'ok': got a real fix, or merely stalled with no error — not evidence of a permission block
-// (see useGeolocation.js's own stall-kick, which recovers that case once the player reaches Map
-// view) — so this never blocks the app on a stall alone.
-// 'denied': an explicit PERMISSION_DENIED from the OS. On iOS this is the only signal available
-// for a phone-wide "Settings > Privacy & Security > Location Services > Safari Websites: Never"
-// block — an ordinary per-site "Don't Allow" produces the exact same error code, with no way to
-// tell the two apart from JS. GpsBlockedScreen's instructions cover both causes, with separate
-// wording for iOS vs Android (see its own isIOS branch — Android's Settings steps vary too much
-// by phone maker to give exact ones, so that path is deliberately more generic).
+// Status model — rewritten 2026-10-07 after a confirmed live repro: a device-wide location
+// block (iOS Settings > Privacy & Security > Location Services > Safari Websites: Never) called
+// automatically at boot, with no tap behind it, just hangs forever — neither a fix nor an error
+// ever arrives. The old model assumed any such call would reliably resolve one way or the other,
+// and only treated an explicit PERMISSION_DENIED as blocking; that assumption is false for an
+// automatic, gesture-less call specifically (per-site "Don't Allow" does still error reliably —
+// it's the no-user-gesture case that's unreliable on iOS Safari). The fix is to never call
+// getCurrentPosition automatically again — only from a real tap (see requestGpsPermission below,
+// called from GpsGateScreen's button) — and to treat a stall *after* a real tap as a genuine
+// block, since there's no good-faith reason left for it not to resolve.
+//
+// 'unchecked'/'checking': boot-time navigator.permissions.query() read in flight — fast (no OS
+// prompt involved), just reading the already-decided state if there is one.
+// 'ok': either not applicable (desktop — no OS Settings app to send a desktop user to — or no
+// geolocation API), or permissions.query() already reported 'granted'. This is also where a
+// successful requestGpsPermission() call ends up.
+// 'needs-gesture': permissions.query() reported 'prompt'/'denied', or threw/is unsupported (its
+// 'denied' state is itself documented as unreliable on iOS Safari — it can under-report, never
+// over-report — so this is also the fallback for anything it can't confidently call 'granted').
+// Nothing has asked the OS for anything yet; GpsGateScreen shows a single explanatory button.
+// 'requesting': that button (or its "check again" twin in the blocked state) was just tapped —
+// a real getCurrentPosition() call, with a real user gesture behind it, is in flight.
+// 'blocked': requestGpsPermission() got back an explicit PERMISSION_DENIED, or its own call
+// stalled past the tap-triggered timeout. GpsGateScreen's instructions cover both causes, with
+// separate wording for iOS vs Android (see its own isIOS branch — Android's Settings steps vary
+// too much by phone maker to give exact ones, so that path is deliberately more generic).
 let status = 'unchecked'
 let listeners = []
-let checking = false
+let requesting = false
 
 function setStatus(next) {
   status = next
@@ -38,17 +51,12 @@ export function useGpsPreflightStatus() {
   return s
 }
 
-// Runs at app startup, right after the Safari-escape attempt (escapeInAppBrowser.js) gives up on
-// a handoff — so the player finds out whether location is actually going to work *before*
-// registration/onboarding, instead of several screens and up to 10s later at Home > Map view.
-// Also re-run (same function) when the player comes back from the Settings app, or taps "check
-// again" on GpsBlockedScreen — safe to call repeatedly, it no-ops while already in flight.
-//
-// Uses a manual stall timer rather than trusting getCurrentPosition's own `timeout` option,
-// because that option doesn't reliably fire either when the permission request itself never
-// resolves inside a broken in-app browser — same reason useGeolocation.js can't trust it.
-export function runGpsPreflight() {
-  if (checking) return
+// Runs once at app startup, right after the Safari-escape attempt (escapeInAppBrowser.js) gives
+// up on a handoff — a read-only, promptless check, safe to run with no user gesture. Only ever
+// used to shortcut the *good* case (skip GpsGateScreen's button entirely for a player who's
+// already granted access, e.g. reopening the tab mid-tour) — never trusted to conclude "blocked"
+// on its own, since iOS Safari's implementation of this API is documented as unreliable for that.
+export function initGpsCheck() {
   logDebug('preflight:detect', { ua, isIOS, isAndroid, hasGeolocation: 'geolocation' in navigator })
 
   if (!(isIOS || isAndroid) || !('geolocation' in navigator)) {
@@ -57,40 +65,67 @@ export function runGpsPreflight() {
     return
   }
 
-  checking = true
   setStatus('checking')
-  logDebug('preflight:checking')
+
+  if (!navigator.permissions?.query) {
+    logDebug('preflight:no-permissions-api')
+    setStatus('needs-gesture')
+    return
+  }
+
+  navigator.permissions.query({ name: 'geolocation' })
+    .then((result) => {
+      logDebug('preflight:permission-state', { state: result.state })
+      setStatus(result.state === 'granted' ? 'ok' : 'needs-gesture')
+    })
+    .catch((err) => {
+      logDebug('preflight:permission-query-failed', { message: err?.message })
+      setStatus('needs-gesture')
+    })
+}
+
+// The only thing in this file allowed to call getCurrentPosition — always from a real tap
+// (GpsGateScreen's button, in either its "ask" or "blocked" state), never automatically. Safe to
+// call repeatedly, it no-ops while already in flight.
+export function requestGpsPermission() {
+  if (requesting) return
+  requesting = true
+  setStatus('requesting')
+  logDebug('preflight:requesting')
   let settled = false
 
+  // 10s, not 6s — this is a real tap now, with a real OS prompt either already answered or about
+  // to appear, so there's no good-faith "might just be a slow cold fix" reading of a stall left;
+  // it just needs enough slack for a genuinely slow GPS chip, not a snap decision.
   const stallTimer = setTimeout(() => {
     if (settled) return
     settled = true
-    checking = false
-    console.log('[gps] preflight stalled — no fix, no error, within 6s (not treated as blocked)')
+    requesting = false
+    console.log('[gps] tap-triggered request stalled — no fix, no error, within 10s — treating as blocked')
     logDebug('preflight:stalled')
-    setStatus('ok')
-  }, 6000)
+    setStatus('blocked')
+  }, 10000)
 
   navigator.geolocation.getCurrentPosition(
     (pos) => {
       if (settled) return
       settled = true
-      checking = false
+      requesting = false
       clearTimeout(stallTimer)
-      console.log('[gps] preflight got a fix — geolocation works here')
+      console.log('[gps] tap-triggered request got a fix — geolocation works here')
       logDebug('preflight:ok', { lat: pos.coords.latitude, lng: pos.coords.longitude })
       setStatus('ok')
     },
     (err) => {
       if (settled) return
       settled = true
-      checking = false
+      requesting = false
       clearTimeout(stallTimer)
       const denied = err.code === err.PERMISSION_DENIED
-      console.log(`[gps] preflight failed: ${denied ? 'denied' : 'unavailable'}`)
+      console.log(`[gps] tap-triggered request failed: ${denied ? 'denied' : 'unavailable'}`)
       logDebug('preflight:failed', { code: err.code, message: err.message })
-      setStatus(denied ? 'denied' : 'ok')
+      setStatus(denied ? 'blocked' : 'ok')
     },
-    { enableHighAccuracy: true, timeout: 6000, maximumAge: 0 },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
   )
 }

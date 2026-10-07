@@ -10,7 +10,7 @@ import { APP_VERSION } from './version.js'
 import { DEV_MODE } from './devMode.js'
 import { CoachProvider } from './coach/CoachContext.jsx'
 import CoachOverlay from './coach/CoachOverlay.jsx'
-import GpsBlockedScreen from './components/GpsBlockedScreen.jsx'
+import GpsGateScreen from './components/GpsGateScreen.jsx'
 import DebugOverlay from './components/DebugOverlay.jsx'
 import { useGpsPreflightStatus } from './gpsPreflight.js'
 
@@ -30,8 +30,8 @@ export default function App() {
     <CoachProvider>
       {DEV_MODE && <div className="app-version-badge">{APP_VERSION}</div>}
       <DebugOverlay />
-      {gpsStatus === 'denied' ? (
-        <GpsBlockedScreen />
+      {gpsStatus !== 'ok' ? (
+        <GpsGateScreen />
       ) : (
         <Routes>
           <Route path="/" element={<StartPage />} />
