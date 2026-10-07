@@ -68,11 +68,33 @@ export function initGpsCheck() {
     return
   }
 
+  // This is documented above as a fast, promptless read — but that's only true when it actually
+  // resolves. A device-wide location block can apparently wedge this query the same way it wedges
+  // a gesture-less getCurrentPosition() call (see the big comment above), and unlike
+  // requestGpsPermission()'s tap-triggered call, nothing here was guarding against that — so a
+  // stall here used to hard-block the entire app (see App.jsx) forever, even for a player
+  // mid-tour who'd already granted access before this gate existed. Falls back to the normal
+  // "nothing's been decided yet" state so the player at least gets the tap-driven ask screen
+  // instead of an infinite spinner.
+  let settled = false
+  const stallTimer = setTimeout(() => {
+    if (settled) return
+    settled = true
+    console.log('[gps] boot-time permissions.query() stalled — falling back to needs-gesture')
+    setStatus('needs-gesture')
+  }, 4000)
+
   navigator.permissions.query({ name: 'geolocation' })
     .then((result) => {
+      if (settled) return
+      settled = true
+      clearTimeout(stallTimer)
       setStatus(result.state === 'granted' ? 'ok' : 'needs-gesture')
     })
     .catch(() => {
+      if (settled) return
+      settled = true
+      clearTimeout(stallTimer)
       setStatus('needs-gesture')
     })
 }

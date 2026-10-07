@@ -5,7 +5,7 @@ export default function LoadingScreen() {
   return (
     <div className="screen center">
       <div className="loading-spinner" />
-      <p className="loading-text">The tour loading, this should only take a few moments</p>
+      <p className="loading-text">The tour is loading, this should only take a few moments</p>
     </div>
   )
 }
