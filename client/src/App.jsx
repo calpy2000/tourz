@@ -11,7 +11,6 @@ import { DEV_MODE } from './devMode.js'
 import { CoachProvider } from './coach/CoachContext.jsx'
 import CoachOverlay from './coach/CoachOverlay.jsx'
 import GpsGateScreen from './components/GpsGateScreen.jsx'
-import DebugOverlay from './components/DebugOverlay.jsx'
 import { useGpsPreflightStatus } from './gpsPreflight.js'
 
 // /home, /play, /instructions all need a real registered player — without a session there's no
@@ -29,7 +28,6 @@ export default function App() {
   return (
     <CoachProvider>
       {DEV_MODE && <div className="app-version-badge">{APP_VERSION}</div>}
-      <DebugOverlay />
       {gpsStatus !== 'ok' ? (
         <GpsGateScreen />
       ) : (

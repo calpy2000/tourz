@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { logDebug } from './debugLog.js'
 
 const ua = typeof navigator !== 'undefined' ? navigator.userAgent || '' : ''
 export const isIOS = /iPhone|iPad|iPod/.test(ua)
@@ -57,29 +56,23 @@ export function useGpsPreflightStatus() {
 // already granted access, e.g. reopening the tab mid-tour) — never trusted to conclude "blocked"
 // on its own, since iOS Safari's implementation of this API is documented as unreliable for that.
 export function initGpsCheck() {
-  logDebug('preflight:detect', { ua, isIOS, isAndroid, hasGeolocation: 'geolocation' in navigator })
-
   if (!(isIOS || isAndroid) || !('geolocation' in navigator)) {
     setStatus('ok')
-    logDebug('preflight:skip', { reason: 'not applicable (not a phone, or no geolocation API)' })
     return
   }
 
   setStatus('checking')
 
   if (!navigator.permissions?.query) {
-    logDebug('preflight:no-permissions-api')
     setStatus('needs-gesture')
     return
   }
 
   navigator.permissions.query({ name: 'geolocation' })
     .then((result) => {
-      logDebug('preflight:permission-state', { state: result.state })
       setStatus(result.state === 'granted' ? 'ok' : 'needs-gesture')
     })
-    .catch((err) => {
-      logDebug('preflight:permission-query-failed', { message: err?.message })
+    .catch(() => {
       setStatus('needs-gesture')
     })
 }
@@ -91,7 +84,6 @@ export function requestGpsPermission() {
   if (requesting) return
   requesting = true
   setStatus('requesting')
-  logDebug('preflight:requesting')
   let settled = false
 
   // 10s, not 6s — this is a real tap now, with a real OS prompt either already answered or about
@@ -102,7 +94,6 @@ export function requestGpsPermission() {
     settled = true
     requesting = false
     console.log('[gps] tap-triggered request stalled — no fix, no error, within 10s — treating as blocked')
-    logDebug('preflight:stalled')
     setStatus('blocked')
   }, 10000)
 
@@ -113,7 +104,6 @@ export function requestGpsPermission() {
       requesting = false
       clearTimeout(stallTimer)
       console.log('[gps] tap-triggered request got a fix — geolocation works here')
-      logDebug('preflight:ok', { lat: pos.coords.latitude, lng: pos.coords.longitude })
       setStatus('ok')
     },
     (err) => {
@@ -123,7 +113,6 @@ export function requestGpsPermission() {
       clearTimeout(stallTimer)
       const denied = err.code === err.PERMISSION_DENIED
       console.log(`[gps] tap-triggered request failed: ${denied ? 'denied' : 'unavailable'}`)
-      logDebug('preflight:failed', { code: err.code, message: err.message })
       setStatus(denied ? 'blocked' : 'ok')
     },
     { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
