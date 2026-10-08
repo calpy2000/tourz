@@ -257,7 +257,7 @@ button.primary:active, a.primary:active {
   border: 1px solid var(--stone-line);
   background: var(--stone-raised);
   color: var(--ink-soft);
-  font-size: 13px;
+  font-size: 11px; /* matches .stat-line/.dev-reset — the other footer pills */
   font-weight: 600;
   display: inline-flex;
   align-items: center;
@@ -342,7 +342,7 @@ button.primary:active, a.primary:active {
    link underneath, stays reachable while this is open; only the card itself catches clicks. */
 .result-popup {
   position: fixed;
-  bottom: 16px; /* near the bottom edge, deliberately overlapping the chat panel below it */
+  bottom: 16px; /* near the bottom edge of the screen */
   left: 50%;
   transform: translateX(-50%);
   width: calc(100% - 48px);
@@ -1030,33 +1030,12 @@ button.primary.quiz-submit {
 .home-header {
   flex: 0 0 auto;
   padding: 8px 13px 10px;
-  border-bottom: 1px solid var(--umber-line);
+  border-top: 1px solid var(--umber-line);
   background: var(--umber);
   color: var(--cream);
   display: flex;
   flex-direction: column;
   gap: 8px;
-}
-
-.home-header-line1 {
-  font-size: 14px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.team-name {
-  font-weight: 700;
-}
-
-.sep {
-  color: var(--cream-soft);
-}
-
-.tour-name {
-  font-weight: 500;
-  color: var(--cream-soft);
-  font-size: 13px;
 }
 
 .home-pills {
@@ -1111,13 +1090,6 @@ button.primary.quiz-submit {
   overflow-y: auto;
   overflow-x: hidden;
   background: var(--oat);
-}
-
-/* Home page only (InstructionsPage also carries .home-shell, so it's excluded here) — the view
-   switcher's gap above (this) and below (.view-switch's margin-bottom) are both 0.5x the base
-   .home-body top padding / original margin. */
-.home-shell:not(.instructions-shell) .home-body {
-  padding-top: 5px;
 }
 
 .view-switch {
@@ -1435,8 +1407,8 @@ button.primary.quiz-submit {
 }
 
 /* Self-service recovery for the WhatsApp-in-app-browser GPS failure (see useGeolocation's
-   `stalled`) — pinned to the top since the bottom is already used by .gps-drag-banner and the
-   chat panel. Same non-modal, no-backdrop treatment as that banner. */
+   `stalled`) — pinned to the top since the bottom is already used by .gps-drag-banner. Same
+   non-modal, no-backdrop treatment as that banner. */
 .gps-help-banner {
   position: absolute;
   top: 12px;
@@ -1481,16 +1453,14 @@ button.primary.quiz-submit {
 
 /* --- Detail popup: shared format for landmarks and sites ("Interests") --- */
 /* Deliberately not anchored to whatever was tapped — at this size (image + long body text) it
-   reads as a modal regardless, so it gets a plain fixed inset instead of chasing a tap position.
-   Stops 70px short of the bottom (58px .home-chat height + 12px margin) so the chat panel stays
-   visible underneath rather than being covered. */
+   reads as a modal regardless, so it gets a plain fixed inset instead of chasing a tap position. */
 .modal-card.detail-popup {
   background: var(--stone-raised);
   position: fixed;
   top: 12px;
   left: 12px;
   right: 12px;
-  bottom: 70px;
+  bottom: 12px;
   width: auto;
   max-width: none;
   max-height: none;
@@ -1620,7 +1590,7 @@ button.primary.quiz-submit {
 .detail-popup-footer {
   position: absolute;
   left: 50%;
-  bottom: 14px; /* the card itself already stops clear of the chat panel, just needs a small internal gap */
+  bottom: 14px; /* small internal gap from the card's own bottom edge */
   transform: translateX(-50%);
   z-index: 3;
   display: flex;
@@ -1707,310 +1677,6 @@ button.primary.detail-popup-setgps {
   animation: none;
 }
 
-.home-chat {
-  flex: 0 0 auto;
-  min-height: 58px; /* 0.6x the original 96px for a single-line preview; grows for a 2-line wrap */
-  border-top: 1px solid var(--umber-line);
-  background: var(--umber);
-  padding: 8px 13px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  position: relative;
-  overflow: hidden;
-}
-
-/* New-message signal — a brass shimmer sweeps across the collapsed bar once. Class is added by
-   ChatPanel for ~1s when a poll picks up a message it didn't already have, then removed. */
-.home-chat-ping::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: -60%;
-  width: 55%;
-  background: linear-gradient(100deg, transparent, rgba(184, 130, 58, 0.32), transparent);
-  animation: chatPingSweep 950ms ease-out;
-  pointer-events: none;
-}
-
-@keyframes chatPingSweep {
-  0%   { left: -60%; }
-  100% { left: 110%; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .home-chat-ping::after { animation: none; }
-}
-
-.home-chat-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.home-chat-label {
-  flex: 0 0 auto;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--cream);
-}
-
-.home-chat-msg {
-  flex: 1 1 auto;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.home-chat-msg .avatar {
-  flex: 0 0 26px;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: var(--stone);
-  border: 1px solid var(--stone-line);
-  font-size: 13px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Mirrors .chat-row-mine .chat-bubble below (border + same corner radii) so the collapsed
-   preview reads as a shrunk copy of the expanded panel's bubbles, not bare text. */
-.home-chat-bubble {
-  flex: 1 1 auto;
-  min-width: 0;
-  padding: 5px 10px;
-  background: var(--stone);
-  border: 1px solid var(--stone-line);
-  border-radius: 4px 14px 14px 14px;
-}
-
-.msg-text {
-  min-width: 0;
-  font-size: 12.5px;
-  line-height: 1.3;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.msg-text.muted {
-  color: var(--ink-soft);
-}
-
-/* --- Chat: compose controls shared by the collapsed bar and the expanded sheet --- */
-
-.chat-icon-btn {
-  border: none;
-  background: none;
-  padding: 4px;
-  margin: -4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--chevron-yellow);
-}
-
-.chat-compose-btn {
-  flex: 0 0 32px;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: 1px solid var(--stone-line);
-  background: var(--stone);
-  color: var(--ink-soft);
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.chat-send-btn {
-  flex: 0 0 32px;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: none;
-  padding: 0;
-  background: var(--brass);
-  color: #000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow:
-    0 3px 8px rgba(20, 20, 20, 0.22),
-    inset 2px 2px 4px rgba(255, 255, 255, 0.6),
-    inset -2px -3px 5px rgba(0, 0, 0, 0.25);
-}
-
-.chat-send-btn:disabled {
-  opacity: 0.5;
-}
-
-.home-chat-compose {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.home-chat-compose input {
-  flex: 1 1 auto;
-  min-width: 0;
-  height: 32px;
-  border-radius: 999px;
-  border: 1px solid var(--stone-line);
-  background: var(--stone);
-  padding: 0 14px;
-  font-size: 13px;
-  font-family: inherit;
-  color: var(--ink);
-}
-
-/* --- Chat: expanded sheet (80% viewport height, newest message at the bottom) --- */
-
-.chat-sheet {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 80vh;
-  z-index: 55;
-  background: var(--stone-raised);
-  border-radius: 20px 20px 0 0;
-  box-shadow: 0 -6px 20px rgba(35, 32, 27, 0.18);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.chat-sheet-head {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 14px 18px 12px;
-  border-bottom: 1px solid var(--toffee-line);
-  background: var(--toffee);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--cream);
-}
-
-.chat-sheet-msgs {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
-  padding: 14px 14px 6px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.chat-empty {
-  text-align: center;
-  color: var(--ink-soft);
-  font-size: 13px;
-  margin-top: 20px;
-}
-
-.chat-row {
-  display: flex;
-  align-items: flex-end;
-  gap: 8px;
-}
-
-.chat-row-mine {
-  justify-content: flex-start;
-}
-
-.chat-row-theirs {
-  justify-content: flex-end;
-}
-
-.chat-av {
-  flex: 0 0 30px;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background: var(--stone);
-  border: 1px solid var(--stone-line);
-  font-size: 15px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.chat-bubble {
-  max-width: 230px;
-  padding: 8px 12px;
-  font-size: 13.5px;
-  line-height: 1.35;
-  color: var(--ink);
-}
-
-.chat-row-mine .chat-bubble {
-  background: var(--stone-raised);
-  border: 1px solid var(--stone-line);
-  border-radius: 4px 16px 16px 16px;
-}
-
-.chat-row-theirs .chat-bubble {
-  background: var(--forest-tint);
-  border-radius: 16px 4px 16px 16px;
-}
-
-.chat-sys {
-  text-align: center;
-  margin: 2px 0;
-}
-
-.chat-sys span {
-  display: inline-block;
-  background: var(--brass-tint);
-  color: var(--brass-deep);
-  font-size: 12px;
-  font-weight: 600;
-  padding: 5px 14px;
-  border-radius: 999px;
-}
-
-.chat-sheet-compose {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 14px 16px;
-  border-top: 1px solid var(--umber-line);
-  background: var(--umber);
-}
-
-.chat-sheet-compose input {
-  flex: 1 1 auto;
-  min-width: 0;
-  height: 38px;
-  border-radius: 999px;
-  border: 1px solid var(--stone-line);
-  background: var(--stone);
-  padding: 0 16px;
-  font-size: 13.5px;
-  font-family: inherit;
-  color: var(--ink);
-}
-
-.chat-sheet-compose .chat-send-btn {
-  flex: 0 0 38px;
-  width: 38px;
-  height: 38px;
-}
 
 .icon-clock {
   display: inline-block;
@@ -2107,14 +1773,6 @@ button.primary.instructions-start-btn {
   width: 12px;
   height: 12px;
   fill: #fff;
-}
-
-.instructions-chevron-pair {
-  display: inline-flex;
-  align-items: center;
-  gap: 1px;
-  color: var(--ink-soft);
-  vertical-align: -3px;
 }
 
 /* StartPage-only heading/subtitle sizing — compound selector (not a bare class) since
@@ -2646,7 +2304,6 @@ button.primary.instructions-start-btn {
 
 .instructions-shell .home-body {
   padding-top: 14px;
-  padding-bottom: 72px;
 }
 
 .instructions-text h1 { font-weight: 700; font-size: 24px; line-height: 1.15; margin: 0 0 14px; }
@@ -2667,11 +2324,19 @@ button.primary.instructions-start-btn {
   object-fit: cover;
 }
 
-/* Live view-switch / tile-grid demos dropped inline into the instructions copy, same widget
-   styling as the real home page, just with their own vertical rhythm here. */
-.instructions-text .view-switch,
-.instructions-text .tile-grid {
+/* Live view-switch demo dropped inline into the instructions copy, same widget styling as the
+   real home page, just with its own vertical rhythm here. */
+.instructions-text .view-switch {
   margin: 6px 0 14px;
+}
+
+/* Non-interactive footer-bar echo (FooterDemo) — the real .home-header spans the full shell
+   edge-to-edge with only a top border; wrapped in a full border + radius here so it reads as a
+   contained illustration inline in the instructions copy, same treatment as .map-panel-demo. */
+.instructions-footer-demo {
+  margin: 6px 0 14px;
+  border: 1px solid var(--stone-line);
+  border-radius: 14px;
 }
 
 /* Sections ring the TILE/MAP view segment so it reads as "this is what we're pointing at" — an
@@ -2851,15 +2516,15 @@ button.primary.instructions-start-btn {
   position: absolute;
   top: 46%; left: 15%;
   width: 18px; height: 18px; border-radius: 50%;
-  background: #3d6b8c; border: 2px solid #fff;
-  box-shadow: 0 0 0 9px rgba(61, 107, 140, 0.22);
+  background: #39ff14; border: 2px solid #fff;
+  box-shadow: 0 0 0 9px rgba(57, 255, 20, 0.22);
 }
 .map-panel-here::after {
   content: '';
   position: absolute;
   inset: -9px;
   border-radius: 50%;
-  background: rgba(61, 107, 140, 0.35);
+  background: rgba(57, 255, 20, 0.35);
   animation: mapHereHaloPulse 2s ease-out infinite;
 }
 @keyframes mapHereHaloPulse {
@@ -2868,12 +2533,15 @@ button.primary.instructions-start-btn {
 }
 
 /* A small pulsing "here" locator dropped inline into section 6's copy, same idea as
-   .instructions-poi-marker — legible inline size, reusing the same halo keyframes. */
+   .instructions-poi-marker — legible inline size, reusing the same halo keyframes. Fill/halo
+   colors mirror the real .map-pin-here marker exactly (muted blue → fluorescent green,
+   2026-10-07) — border stays --oat (not #fff like the real marker) since this sits on the
+   instructions page's own background, not a map tile. */
 .instructions-locator-visual {
   position: relative;
   display: inline-block;
   width: 14px; height: 14px; border-radius: 50%;
-  background: #3d6b8c; border: 2px solid var(--oat);
+  background: #39ff14; border: 2px solid var(--oat);
   vertical-align: -3px;
   margin-left: 2px;
 }
@@ -2882,59 +2550,17 @@ button.primary.instructions-start-btn {
   position: absolute;
   inset: -6px;
   border-radius: 50%;
-  background: rgba(61, 107, 140, 0.35);
+  background: rgba(57, 255, 20, 0.35);
   animation: mapHereHaloPulse 2s ease-out infinite;
 }
 
-/* Section 10's chat panel demo. .home-chat/.chat-row/etc are the real classes from ChatPanel.jsx
-   — the only real-app rule NOT reused is .chat-sheet's position:fixed/80vh (it's meant to float
-   over the whole screen there); .chat-sheet-demo gives the same look (background, radius,
-   shadow) but sits in normal document flow at a fixed demo height, so it reads inline with the
-   rest of the instructions copy. */
-.chat-sheet-demo {
-  background: var(--stone-raised);
-  border-radius: 16px;
-  box-shadow: 0 8px 20px rgba(20, 20, 20, 0.2);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  margin: 6px 0 14px;
-  height: 220px;
-}
-.chat-sheet-demo .chat-sheet-head {
-  flex: 0 0 auto; display: flex; align-items: center; gap: 4px; padding: 10px 16px;
-  border-bottom: 1px solid var(--toffee-line); background: var(--toffee);
-  font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--cream);
-}
-.chat-sheet-demo .chat-sheet-msgs {
-  flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 14px 14px 16px;
-  display: flex; flex-direction: column; gap: 12px;
-}
-
-/* Small standalone icon references dropped inline into body copy, same idea as
-   .instructions-poi-marker — shown on a chip coloured to match the real bar it's plucked from
-   (the collapsed bar's dark umber for expand, the expanded sheet header's lighter toffee for
-   collapse), rather than a bare yellow chevron on the page's light background. */
-.instructions-chat-icon-inline {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 18px; height: 18px; border-radius: 5px; background: var(--umber);
-  color: var(--chevron-yellow); vertical-align: -3px; margin: 0 2px;
-}
-.instructions-chat-icon-inline-light {
-  background: var(--toffee);
-}
-.instructions-chat-pencil-inline {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--stone-line);
-  background: var(--stone); color: var(--ink-soft); vertical-align: -3px; margin: 0 2px;
-}
 .instructions-coach-tile {
   display: inline-flex; align-items: center; justify-content: center;
   width: 26px; height: 26px; border-radius: 7px; background: var(--forest);
   font-size: 15px; vertical-align: -7px; margin: 0 2px;
 }
 
-/* Section 11's help button + help menu demo — .help-btn/.modal-card.help-menu/.help-menu-* are
+/* Section 10's help button + help menu demo — .help-btn/.modal-card.help-menu/.help-menu-* are
    the real classes from HelpButton.jsx/HelpMenu.jsx, used non-interactively here. */
 .instructions-text .help-btn { vertical-align: middle; }
 /* zoom (not transform:scale) so the box actually shrinks and reflows at 0.8x, instead of
@@ -2944,13 +2570,13 @@ button.primary.instructions-start-btn {
   margin: 6px 0 14px;
 }
 
-/* Section 12's "final tips" checklist. Each row gets a picked icon on the left; where a tip
+/* Section 11's "final tips" checklist. Each row gets a picked icon on the left; where a tip
    references a specific real-app visual (back button, POI marker, help button) that actual
    visual is reused as the row's icon instead of a generic pick. */
 .instructions-tips-list {
   display: flex; flex-direction: column; gap: 13px; margin: 10px 0 6px;
 }
-/* Section 12 only — half the usual paragraph/list spacing, per request, so the "7 key things"
+/* Section 11 only — half the usual paragraph/list spacing, per request, so the "6 key things"
    intro, the tips list and the closing coach sentence all sit tighter together. */
 .instructions-final-tips p {
   margin-bottom: 5px;
@@ -2971,16 +2597,16 @@ button.primary.instructions-start-btn {
 }
 .instructions-tip-text { padding-top: 6px; line-height: 1.3; }
 
-/* Footer nav bar for the paginated flow: an optional "back" ghost button plus the primary
-   "I have read this - next" button, so mid-tour steps can go backwards too, not just forwards. */
+/* Nav bar for the paginated flow: an optional "back" ghost button plus the primary "I have read
+   this - next" button, so mid-tour steps can go backwards too, not just forwards. Sits in normal
+   flex flow, just above GameHeader's own footer at the very bottom of .instructions-shell. */
 .instructions-nav {
-  position: absolute;
-  left: 0; right: 0; bottom: 14px;
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  z-index: 5;
+  padding: 10px 13px;
 }
 .instructions-nav .ghost {
   font-size: 13px;
@@ -3005,9 +2631,9 @@ button.primary.instructions-next-btn {
 /* No dimmed backdrop, matching this app's popup convention — the real page stays fully visible
    and interactive underneath; the coach only blocks taps logically (see CoachOverlay's click
    gate), not visually. Positioned like AnchoredPopup (never covers the element it refers to).
-   Dark forest-green card + cream text — deliberately distinct from the umber panels used for
-   the chat bar/header elsewhere, so the coach reads as its own presence rather than blending
-   into the app's own dark chrome. */
+   Dark forest-green card + cream text — deliberately distinct from the umber panels used
+   elsewhere, so the coach reads as its own presence rather than blending into the app's own
+   dark chrome. */
 .coach-popup {
   z-index: 9999;
   background: var(--forest);
@@ -3054,6 +2680,36 @@ button.primary.instructions-next-btn {
 .coach-highlight {
   color: var(--brass);
   font-weight: 700;
+}
+/* The confirmation checkmark at the end of a panel's first line — deliberately a true yellow
+   (not the usual brass highlight) so it reads as a distinct "done" marker, not just emphasis. */
+.coach-checkmark {
+  color: var(--chevron-yellow);
+  font-weight: 700;
+}
+
+/* Centers step 1's marker image on its own line below the last sentence. */
+.coach-marker-visual-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 2px;
+}
+
+/* Echo of the real .map-pin-landmark marker — same photo, same 40px size and 3px forest ring as
+   it actually appears on the map. The coach popup's own background is ALSO --forest, so an
+   unmodified border would blend straight into it and read as borderless — a light outer halo
+   (box-shadow, so it doesn't change the circle's actual size) keeps the ring visible regardless
+   of backdrop, same purpose cartography halos/outlines serve around a map pin. */
+.coach-marker-visual {
+  display: inline-block;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 3px solid var(--forest);
+  box-shadow: 0 0 0 2px var(--stone-raised);
+  background-color: var(--stone-raised);
+  background-size: cover;
+  background-position: center;
 }
 
 /* Both lozenges share the same glowing dashed-red look — one drawn around the real target

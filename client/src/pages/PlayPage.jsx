@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronUp, ChevronDown } from 'lucide-react'
 import { api } from '../api.js'
 import { API_BASE } from '../apiBase.js'
 import { fireConfetti } from '../confetti.js'
@@ -8,16 +7,14 @@ import ResultPopup from '../components/ResultPopup.jsx'
 import AnagramBoard from '../components/AnagramBoard.jsx'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
 import WhyPopup from '../components/WhyPopup.jsx'
-import DevTools from '../components/DevTools.jsx'
-import HelpButton from '../components/HelpButton.jsx'
+import GameHeader from '../components/GameHeader.jsx'
 import DetailPopup from '../components/DetailPopup.jsx'
-import ChatPanel from '../components/ChatPanel.jsx'
 import { playScreenUpdatePing } from '../screenUpdatePing.js'
 import TourCompletePopup from '../components/TourCompletePopup.jsx'
 import LoadingScreen from '../components/LoadingScreen.jsx'
 import { rectFromEvent } from '../rect.js'
 import { isStartLandmark, landmarkDisplayNumber } from '../landmarkNumber.js'
-import { getSession } from '../localSession.js'
+import { getSession, saveSession } from '../localSession.js'
 import { DEV_MODE } from '../devMode.js'
 import { useRefreshOnResume } from '../useRefreshOnResume.js'
 import { useWakeLock } from '../useWakeLock.js'
@@ -63,23 +60,6 @@ function anagramBannerText(points) {
   return `Unlucky - not quite right 🙁 no points`
 }
 
-// Shared closing paragraph for both pageHelpText variants below (find/solve and quiz) — same
-// team-feed reminder, same chevron icons as InstructionsPage's own mention of the chat.
-function ChatHelpNote() {
-  return (
-    <p>
-      You can chat with your team in the <strong>CHAT</strong> at the bottom of the screen —
-      tap the chevron{' '}
-      <span className="instructions-chevron-pair">
-        <ChevronUp size={14} strokeWidth={3} />
-        <ChevronDown size={14} strokeWidth={3} />
-      </span>{' '}
-      to expand or collapse it.
-    </p>
-  )
-}
-
-
 // Captures just the fields that change when the captain uses a hint, reveals the clue, attempts
 // the puzzle, or submits a quiz answer — compared poll-to-poll so teammates get a ping for those
 // specific actions without also pinging on an ordinary unchanged refresh.
@@ -94,6 +74,17 @@ function actionSignal(state) {
   }
 }
 
+// Bootstrap Icons' "house-fill" — same icon/markup as HomePage's view-switch, since this page
+// carries the same switcher (just landed on its other tab).
+function HouseIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+      <path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L8 2.207l6.646 6.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293z" />
+      <path d="m8 3.293 6 6V13.5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 13.5V9.293z" />
+    </svg>
+  )
+}
+
 export default function PlayPage() {
   const navigate = useNavigate()
   const isCaptain = getSession()?.isCaptain ?? false
@@ -106,6 +97,12 @@ export default function PlayPage() {
   const [revealConfirmAnchor, setRevealConfirmAnchor] = useState(null)
   const [whyPopup, setWhyPopup] = useState(null) // { text, anchorRect } | null
   const [landmarkPopup, setLandmarkPopup] = useState(null)
+  // GameHeader's team/tour/score/clock pills — /api/game/current (polled below) never carries
+  // this, only /api/game/home does, so it's fetched+ticked here independently, same pattern as
+  // HomePage/InstructionsPage each already do on their own.
+  const [headerData, setHeaderData] = useState(null)
+  const [headerFetchedAt, setHeaderFetchedAt] = useState(null)
+  const [, setHeaderTick] = useState(0)
   // Only the captain's device ever calls the hint/reveal/puzzle/quiz endpoints (server-gated —
   // see resolveCaptain in index.js), so on a non-captain device any change here between polls is
   // by definition the captain's doing, never our own action bouncing back.
@@ -113,6 +110,7 @@ export default function PlayPage() {
   const anagramBoardRef = useRef(null)
 
   const refresh = () => api.getCurrent().then(setState)
+  const loadHeaderData = () => api.getHome().then((res) => { setHeaderData(res); setHeaderFetchedAt(Date.now()) })
 
   function openLandmark(sequenceOrder) {
     api.getLandmarkDetail(sequenceOrder).then((res) => { if (!res.error) setLandmarkPopup(res) })
@@ -120,6 +118,14 @@ export default function PlayPage() {
 
   useEffect(() => {
     refresh()
+    loadHeaderData()
+  }, [])
+
+  // elapsedSeconds is a snapshot from whenever we last fetched — tick locally so GameHeader's
+  // clock keeps moving between fetches instead of looking frozen. Same pattern as HomePage.
+  useEffect(() => {
+    const id = setInterval(() => setHeaderTick((t) => t + 1), 1000)
+    return () => clearInterval(id)
   }, [])
 
   // Team members don't trigger any of these mutations themselves (only the captain can), so
@@ -132,13 +138,13 @@ export default function PlayPage() {
     return () => clearInterval(id)
   }, [])
 
-  useRefreshOnResume(refresh)
+  useRefreshOnResume(() => { refresh(); loadHeaderData() })
   useWakeLock()
 
   // Fires the screen-update ping on a teammate's device when a poll picks up one of the captain's
   // four gated actions. Skipped entirely on the captain's own device (they see the result of their
   // own tap immediately, no ping needed) and on the very first signal for a landmark (the baseline,
-  // not a change) — same "prime before pinging" shape as ChatPanel's chat ping.
+  // not a change) — same "prime before firing" shape as the captain-sync effect below.
   useEffect(() => {
     if (isCaptain) return
     const sig = actionSignal(state)
@@ -153,6 +159,18 @@ export default function PlayPage() {
     prevSignalRef.current = sig
   }, [state, isCaptain])
 
+  // A captain handoff flips is_captain server-side only — this device's cached isCaptain flag
+  // (read live via getSession() above, and used all over this page to gate the action buttons)
+  // otherwise never learns about it until a manual refresh. GET /api/game/current now carries
+  // this device's own fresh isCaptain on every poll (see the server comment on that route), so
+  // just re-save the cached session whenever it disagrees — cheap, and correct for whichever of
+  // the two roles (or neither) this device actually holds now.
+  useEffect(() => {
+    if (!state || typeof state.isCaptain !== 'boolean') return
+    const session = getSession()
+    if (session && session.isCaptain !== state.isCaptain) saveSession({ ...session, isCaptain: state.isCaptain })
+  }, [state])
+
   useEffect(() => {
     setShowQuiz(false)
     setSelectedOptions({})
@@ -162,7 +180,7 @@ export default function PlayPage() {
     setRevealConfirmAnchor(null)
   }, [state?.sequenceOrder])
 
-  if (!state) return <LoadingScreen />
+  if (!state || !headerData) return <LoadingScreen />
 
   if (state.tourComplete) {
     return (
@@ -247,37 +265,15 @@ export default function PlayPage() {
   // whichever one is actually on screen, not always describe the find/solve flow.
   const inQuizView = (showQuiz || landmarkComplete) && quiz.unlocked
 
+  const liveElapsedSeconds = headerData.elapsedSeconds + Math.floor((Date.now() - headerFetchedAt) / 1000)
+
   return (
     <div className="home-shell">
-      <header className="landmark-header">
-        <button className="back-link" onClick={() => navigate('/home')}>&larr; back</button>
-        <span className="landmark-header-title">
-          Landmark {landmarkDisplayNumber(state.sequenceOrder)}:{' '}
-          {state.title ? <span className="landmark-name">{state.title}</span> : <span className="landmark-unsolved">Unsolved</span>}
-        </span>
-        {DEV_MODE && <DevTools onReset={refresh} />}
-        <HelpButton
-          pageHelpText={
-            inQuizView ? (
-              <>
-                <p>Answer a few quick questions about things you should have noticed along the way — points of interest, details on the route, that kind of thing.</p>
-                <p>Only your team captain can submit an answer, and each question can only be answered once, so make sure of your choice before submitting.</p>
-                <p>Once all questions are answered you'll move on to the next landmark.</p>
-                <ChatHelpNote />
-              </>
-            ) : (
-              <>
-                <p><strong>Find it:</strong> work out where the clue is pointing you and head there. Only your team captain can ask for a hint or reveal the location — each hint lowers the points you can earn here, and revealing caps this landmark at 1 point.</p>
-                <p><strong>Solve it:</strong> once you're confident, answer the question — only the captain can submit, and you only get one attempt.</p>
-                <p>After solving, you'll take a short quiz on things you should have noticed on the way, then move on to the next landmark.</p>
-                <ChatHelpNote />
-              </>
-            )
-          }
-        />
-      </header>
-
       <div className="landmark-body">
+      <div className="view-switch">
+        <button className="view-seg" onClick={() => navigate('/home')}><HouseIcon /><strong>MAP</strong> view</button>
+        <button className="view-seg view-seg-active" onClick={() => navigate('/play')}><HouseIcon /><strong>CURRENT</strong> landmark</button>
+      </div>
       {(showQuiz || landmarkComplete) && quiz.unlocked ? (
         <section className={quiz.questions[0]?.type === 'five_right' ? 'five-right-section' : 'card'}>
           {quiz.questions[0]?.type === 'anagram' ? (
@@ -573,7 +569,27 @@ export default function PlayPage() {
       )}
       </div>
 
-      <ChatPanel />
+      <GameHeader
+        data={headerData}
+        elapsedSeconds={liveElapsedSeconds}
+        onReset={() => { refresh(); loadHeaderData() }}
+        showHelp
+        pageHelpText={
+          inQuizView ? (
+            <>
+              <p>Answer a few quick questions about things you should have noticed along the way — points of interest, details on the route, that kind of thing.</p>
+              <p>Only your team captain can submit an answer, and each question can only be answered once, so make sure of your choice before submitting.</p>
+              <p>Once all questions are answered you'll move on to the next landmark.</p>
+            </>
+          ) : (
+            <>
+              <p><strong>Find it:</strong> work out where the clue is pointing you and head there. Only your team captain can ask for a hint or reveal the location — each hint lowers the points you can earn here, and revealing caps this landmark at 1 point.</p>
+              <p><strong>Solve it:</strong> once you're confident, answer the question — only the captain can submit, and you only get one attempt.</p>
+              <p>After solving, you'll take a short quiz on things you should have noticed on the way, then move on to the next landmark.</p>
+            </>
+          )
+        }
+      />
 
       {whyPopup && <WhyPopup text={whyPopup.text} anchorRect={whyPopup.anchorRect} onClose={() => setWhyPopup(null)} />}
 

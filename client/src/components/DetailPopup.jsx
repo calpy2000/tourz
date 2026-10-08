@@ -8,9 +8,9 @@ import SetGpsPanel from './SetGpsPanel.jsx'
 // Shared detail popup for landmarks, sites ("Interests"), and POI drafts — one format for all
 // three, settled after comparing this against the old two-card full-page layout (see
 // project-landmark-detail-feature memory for that earlier version). Deliberately self-positioned
-// (fixed inset, 12px margin on three sides + clearance above the chat panel) rather than anchored
-// to whatever was tapped — at this size it reads as a modal regardless, so callers don't need to
-// pass a click position the way the small amenity popup still does.
+// (fixed inset, 12px margin on all sides) rather than anchored to whatever was tapped — at this
+// size it reads as a modal regardless, so callers don't need to pass a click position the way the
+// small amenity popup still does.
 //
 // `gpsRef` (dev mode only) identifies which record a GPS correction captured here belongs to —
 // e.g. { type: 'landmark', sequenceOrder } — since landmarks/sites/POI drafts have no shared id

@@ -2,25 +2,20 @@ import DevTools from './DevTools.jsx'
 import HelpButton from './HelpButton.jsx'
 import { DEV_MODE } from '../devMode.js'
 
-function formatHms(totalSeconds) {
+function formatHm(totalSeconds) {
   const h = Math.floor(totalSeconds / 3600)
   const m = Math.floor((totalSeconds % 3600) / 60)
-  const s = totalSeconds % 60
-  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
 }
 
-// Team name / tour name / found-count / score / clock — the standard in-game header, shared by
-// HomePage and InstructionsPage (which shows it before the tile grid even exists).
-// showHelp is opt-in (HomePage passes it; InstructionsPage's normal onboarding render doesn't)
-// since the help button must not appear on the instructions page itself.
+// Found-count / score / clock — the standard in-game footer, shared by HomePage, PlayPage, and
+// InstructionsPage's onboarding flow. Sits at the bottom of .home-shell as a footer, not a
+// header — see each page's JSX for where it's placed in the flex-column order. showHelp is
+// opt-in, passed by all three (InstructionsPage's help-mode detour doesn't carry a GameHeader
+// at all, so it never shows one regardless).
 export default function GameHeader({ data, elapsedSeconds, onReset, showHelp = false, pageHelpText, helpReturnState }) {
   return (
-    <header className="home-header">
-      <div className="home-header-line1">
-        <span className="team-name">{data.teamName}</span>
-        <span className="sep"> &middot; </span>
-        <span className="tour-name">{data.tourName}</span>
-      </div>
+    <footer className="home-header">
       <div className="home-pills">
         <div className="home-pill home-pill-oat">
           {/* foundCount/totalLandmarks include the start landmark (sequence_order 1), which
@@ -28,15 +23,15 @@ export default function GameHeader({ data, elapsedSeconds, onReset, showHelp = f
           <span className="stat-line">Found {data.foundCount - 1}/{data.totalLandmarks - 1}</span>
         </div>
         <div className="home-pill home-pill-brass">
-          <span className="stat-line">{data.totalScore} / {data.maxScore} pts</span>
+          <span className="stat-line">{data.totalScore} pts</span>
         </div>
         <div className="home-pill home-pill-brick">
           <span className="icon-clock" />
-          <span className="stat-line">{formatHms(elapsedSeconds)}</span>
+          <span className="stat-line">{formatHm(elapsedSeconds)}</span>
         </div>
         {DEV_MODE && <DevTools onReset={onReset} />}
         {showHelp && <HelpButton pageHelpText={pageHelpText} returnState={helpReturnState} />}
       </div>
-    </header>
+    </footer>
   )
 }

@@ -1,11 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { ChevronUp, ChevronDown } from 'lucide-react'
 import { api } from '../api.js'
 import { API_BASE } from '../apiBase.js'
 import GameHeader from '../components/GameHeader.jsx'
 import LoadingScreen from '../components/LoadingScreen.jsx'
-import ChatPanel from '../components/ChatPanel.jsx'
 
 // One screenshot per tour (captured via scripts/dev/capture-instructions-map-screenshot.mjs), so
 // the map-view mockups below show this tour's own landmarks/markers instead of whichever tour was
@@ -42,10 +40,6 @@ function PoiMarkerIcon() {
   )
 }
 
-function BackArrowVisual() {
-  return <span className="instructions-back-visual">&larr; back</span>
-}
-
 function LocatorVisual() {
   return <span className="instructions-locator-visual" />
 }
@@ -61,8 +55,8 @@ function HouseIcon() {
   )
 }
 
-// The dashed ring called out over the TILE/MAP segment being introduced — left for the tile
-// side, right for the map side, matching each segment's own position in the switcher.
+// The dashed ring called out over the MAP/CURRENT LANDMARK segment being introduced — left for
+// the map side, right for the current-landmark side, matching each segment's own position.
 function TileRing({ side }) {
   return (
     <svg className="ring-overlay" width="100%" height="100%" preserveAspectRatio="none">
@@ -77,42 +71,22 @@ function ViewSwitchDemo({ active, ring, animate }) {
   const [animActive, setAnimActive] = useState(active)
   useEffect(() => {
     if (!animate) return
-    const id = setInterval(() => setAnimActive((a) => (a === 'tile' ? 'map' : 'tile')), 2000)
+    const id = setInterval(() => setAnimActive((a) => (a === 'map' ? 'current' : 'map')), 2000)
     return () => clearInterval(id)
   }, [animate])
   const current = animate ? animActive : active
   return (
     <div className={ring ? 'view-switch instructions-tile-ring' : 'view-switch'}>
-      <button className={current === 'tile' ? 'view-seg view-seg-active' : 'view-seg'}><HouseIcon /><strong>TILE</strong> view</button>
       <button className={current === 'map' ? 'view-seg view-seg-active' : 'view-seg'}><HouseIcon /><strong>MAP</strong> view</button>
-      {ring && <TileRing side={current === 'tile' ? 'left' : 'right'} />}
+      <button className={current === 'current' ? 'view-seg view-seg-active' : 'view-seg'}><HouseIcon /><strong>CURRENT</strong> landmark</button>
+      {ring && <TileRing side={current === 'map' ? 'left' : 'right'} />}
     </div>
   )
 }
 
-function TileGridDemo({ startLandmark }) {
-  return (
-    <div className="tile-grid">
-      <button className="landmark-tile">
-        {startLandmark?.imagePath && <img src={`${API_BASE}/content-photos/${startLandmark.imagePath}`} alt="" />}
-        <span className="tile-number">start</span>
-        <div className="tile-scrim"><span className="tile-name">{startLandmark?.title || 'Your starting landmark'}</span></div>
-      </button>
-      <button className="landmark-tile landmark-tile-current">
-        <span className="tile-number">1</span>
-        <div className="tile-scrim tile-scrim-current"><span className="tile-name">In progress</span></div>
-      </button>
-      <div className="landmark-tile landmark-tile-future">
-        <span className="tile-number">2</span>
-        <span className="tile-unknown">?</span>
-      </div>
-    </div>
-  )
-}
-
-// Section 4 and 7's "tap a tile/marker -> details card" callout, the real DetailPopup markup
-// built at its real phone-fill dimensions then shrunk with a single transform: scale so it
-// keeps the exact real shape/proportions.
+// "Tap a marker/found landmark -> details card" callout, the real DetailPopup markup built at
+// its real phone-fill dimensions then shrunk with a single transform: scale so it keeps the
+// exact real shape/proportions.
 function MiniDetailCardDemo({ startLandmark }) {
   const aboutSections = [
     { label: startLandmark?.aboutLandmarkLabel, text: startLandmark?.aboutLandmarkText },
@@ -153,17 +127,18 @@ function MiniDetailCardDemo({ startLandmark }) {
   )
 }
 
-// Section 5's "tap the in-progress tile -> Find it / Solve it page" callout — same shrink-the-
-// real-thing technique, scaled to the full shell's own aspect ratio.
+// Section 3's "tap CURRENT LANDMARK -> Find it / Solve it page" callout — same shrink-the-
+// real-thing technique, scaled to the full shell's own aspect ratio. No header/back button here,
+// matching the real PlayPage — the switcher itself is the only way back to Map view.
 function MiniPlayPageDemo() {
   return (
     <div className="mini-play-frame">
       <div className="mini-play-page">
-        <header className="landmark-header">
-          <button className="ghost back-link" tabIndex={-1}>&larr; back</button>
-          <span className="landmark-header-title">Landmark 1: <span className="landmark-unsolved">Unsolved</span></span>
-        </header>
         <div className="landmark-body">
+          <div className="view-switch">
+            <button className="view-seg" tabIndex={-1}><HouseIcon /><strong>MAP</strong> view</button>
+            <button className="view-seg view-seg-active" tabIndex={-1}><HouseIcon /><strong>CURRENT</strong> landmark</button>
+          </div>
           <section className="card">
             <h2>Find it</h2>
             <p>follow the clue to find your next landmark - it might send you down a side street or point out a small detail - dont forget to note what you see on the way, you will need it for the quiz</p>
@@ -226,55 +201,6 @@ function MapToCardVisual({ tourCode }) {
   )
 }
 
-function ChatBarDemo() {
-  return (
-    <div className="home-chat">
-      <div className="home-chat-row">
-        <button className="chat-icon-btn" aria-label="Expand chat" tabIndex={-1}>
-          <ChevronUp size={20} strokeWidth={3} />
-        </button>
-        <span className="home-chat-label">Chat</span>
-        <div className="home-chat-msg">
-          <div className="avatar">🐝</div>
-          <div className="home-chat-bubble"><div className="msg-text"><strong>Priya</strong>&nbsp;&mdash; On my way, 2 mins!</div></div>
-        </div>
-        <button className="chat-compose-btn" aria-label="New message" tabIndex={-1}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" /><path d="m15 5 4 4" /></svg>
-        </button>
-      </div>
-    </div>
-  )
-}
-
-function ChatSheetDemo() {
-  return (
-    <div className="chat-sheet-demo">
-      <div className="chat-sheet-head">
-        <button className="chat-icon-btn" aria-label="Collapse chat" tabIndex={-1}>
-          <ChevronDown size={18} strokeWidth={3} />
-        </button>
-        <span>Chat</span>
-      </div>
-      <div className="chat-sheet-msgs">
-        <div className="chat-row chat-row-mine">
-          <div className="chat-bubble"><b>Me</b> &mdash; Nice one, see you there</div>
-          <div className="chat-av">🐢</div>
-        </div>
-        <div className="chat-row chat-row-theirs">
-          <div className="chat-av">🐝</div>
-          <div className="chat-bubble"><b>Priya</b> &mdash; On my way, 2 mins!</div>
-        </div>
-      </div>
-      <div className="chat-sheet-compose">
-        <input placeholder="Message your team…" disabled />
-        <button className="chat-send-btn" aria-label="Send" tabIndex={-1}>
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z" /><path d="m21.854 2.147-10.94 10.939" /></svg>
-        </button>
-      </div>
-    </div>
-  )
-}
-
 // Same dark forest-green as the real coach popup background (see .coach-popup in index.css) —
 // shown here so the "navigation coach" callout in the final tips uses the same colour cue the
 // player is about to see for real.
@@ -286,6 +212,22 @@ function CoachTileDemo() {
 // for the source of the six items and their icons.
 function HelpButtonDemo() {
   return <button className="help-btn" tabIndex={-1}>💡 Help</button>
+}
+
+// Real GameHeader footer markup/classes, rendered non-interactively with sample numbers — used
+// in "final things to know" to show where the points, timer and help button actually live now
+// (the bottom of the screen, not the top). No Dev button here — real players never see that one.
+function FooterDemo() {
+  return (
+    <footer className="home-header instructions-footer-demo">
+      <div className="home-pills">
+        <div className="home-pill home-pill-oat"><span className="stat-line">Found 3/14</span></div>
+        <div className="home-pill home-pill-brass"><span className="stat-line">40 pts</span></div>
+        <div className="home-pill home-pill-brick"><span className="icon-clock" /><span className="stat-line">01:12</span></div>
+        <HelpButtonDemo />
+      </div>
+    </footer>
+  )
 }
 
 function HelpMenuDemo() {
@@ -330,28 +272,20 @@ function TipsList() {
         <span className="instructions-tip-text">Be sure all team members are <strong className="instructions-red">registered</strong></span>
       </div>
       <div className="instructions-tip-item">
-        <span className="instructions-tip-icon-wrap"><BackArrowVisual /></span>
-        <span className="instructions-tip-text">If in doubt, use the <strong className="instructions-red">back button</strong> to go back to the home page</span>
-      </div>
-      <div className="instructions-tip-item">
         <span className="instructions-tip-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="7" height="7" x="3" y="3" rx="1" /><rect width="7" height="7" x="14" y="3" rx="1" /><rect width="7" height="7" x="14" y="14" rx="1" /><rect width="7" height="7" x="3" y="14" rx="1" /></svg></span>
-        <span className="instructions-tip-text">The home page has 2 views -<br />
-          <strong className="instructions-red">Tile view</strong> and <strong className="instructions-red">Map view</strong>
+        <span className="instructions-tip-text">The home page has 2 options -<br />
+          <strong className="instructions-red">Map view</strong> and <strong className="instructions-red">Current landmark</strong>
         </span>
       </div>
       <div className="instructions-tip-item">
         <span className="instructions-tip-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" /><circle cx="12" cy="10" r="3" /></svg></span>
-        <span className="instructions-tip-text">Use <strong>Tile view</strong> to open the <strong className="instructions-red">in progress</strong> landmark. Use <strong>Map view</strong> to see and tap on <strong className="instructions-red">points of interest cards</strong></span>
+        <span className="instructions-tip-text">Use <strong>Current landmark</strong> to open the landmark you're working on. Use <strong>Map view</strong> to see and tap on <strong className="instructions-red">the landmarks you have found</strong> and <strong className="instructions-red">points of interest</strong></span>
       </div>
       <div className="instructions-tip-item">
         <span className="instructions-tip-icon-wrap"><PoiMarkerIcon /></span>
         <span className="instructions-tip-text">Take the time to review the <strong className="instructions-red">points of interest cards</strong> as you pass them &mdash; this will help you learn more and gain quiz points<br />
           <strong className="instructions-red">Top hint</strong> &mdash; share this across the team
         </span>
-      </div>
-      <div className="instructions-tip-item">
-        <span className="instructions-tip-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719" /></svg></span>
-        <span className="instructions-tip-text"><strong className="instructions-red">Chat</strong> with your team mates</span>
       </div>
       <div className="instructions-tip-item">
         <span className="instructions-tip-icon">💡</span>
@@ -361,8 +295,10 @@ function TipsList() {
   )
 }
 
-// The 12-step onboarding sequence, finalised in design/instructions-pagination-mockup.html and
-// ported here verbatim. Section 1 gets the page's only <h1>; the rest open with an <h2>.
+// The paginated onboarding sequence. Section 1 gets the page's only <h1>; the rest open with an
+// <h2>. Updated 2026-10-08 when Tile view was removed in favour of a 2-option Map view / Current
+// landmark switcher, and the GameHeader moved from a top header to a bottom footer — see
+// project-tileview-removal-archive and this session's footer-redesign work for the history.
 function sections(data, startLandmark) {
   const playableCount = (data?.totalLandmarks || 1) - 1
   return [
@@ -373,13 +309,6 @@ function sections(data, startLandmark) {
           <p>
             Welcome to the tour. These instructions are <strong className="instructions-red">IMPORTANT</strong>{' '}
             so read them well and you will enjoy the tour much more.
-          </p>
-          <p>
-            If you opened this game from a link in <strong className="instructions-red">WhatsApp</strong> or
-            another messaging app, tap the <strong>&bull;&bull;&bull;</strong> or Safari icon in that
-            app's browser now and choose <strong className="instructions-red">Open in Safari</strong>, then
-            continue from there &mdash; some apps' built-in browsers block the location prompt you'll need
-            later for the map.
           </p>
           <p>
             The aim is to find <strong className="instructions-red">{playableCount} landmarks</strong> &mdash; some
@@ -402,22 +331,18 @@ function sections(data, startLandmark) {
         <>
           <p>
             The app is simple, there is a <strong className="instructions-red">home page</strong> that
-            shows the landmarks that you have found, so to begin with you will see just the starting
+            shows what you've found so far on a map, so to begin with you'll just see your starting
             landmark.
           </p>
           <p>
-            There are 2 views in the home page, a <strong className="instructions-red">Tile view</strong>{' '}
-            and a <strong className="instructions-red">Map view</strong>. You can switch between them
-            using a switcher bar at the top of the screen.
+            At the top of the home page is a switcher with 2 options &mdash;{' '}
+            <strong className="instructions-red">Map view</strong> and{' '}
+            <strong className="instructions-red">Current landmark</strong>.
           </p>
-          <ViewSwitchDemo active="tile" animate />
+          <ViewSwitchDemo active="map" animate />
           <p>
-            You can <strong className="instructions-red">always</strong> go back to the home page by
-            tapping the <BackArrowVisual /> button at the top left of any page.
-          </p>
-          <p>
-            Next we will take a look at the <strong className="instructions-red">Tile view</strong> and
-            then the <strong className="instructions-red">Map view</strong>.
+            Next we will take a look at <strong className="instructions-red">Current landmark</strong>{' '}
+            and then <strong className="instructions-red">Map view</strong>.
           </p>
         </>
       ),
@@ -425,66 +350,18 @@ function sections(data, startLandmark) {
     {
       body: (
         <>
-          <h2>Tile view</h2>
+          <h2>Current landmark</h2>
           <p>
-            In the <strong className="instructions-red">tile view</strong> you will see a tile for each
-            landmark.
+            Tap <strong className="instructions-red">CURRENT LANDMARK</strong> in the switcher and
+            you'll jump straight to the landmark you're working on now.
           </p>
           <p>
-            <strong className="instructions-red">Found</strong> landmarks will show with the image (see
-            below left).
+            If you haven't cracked it yet, you'll see the <strong className="instructions-red">Find it</strong>{' '}
+            (the clue to its location) and <strong className="instructions-red">Solve it</strong> (prove
+            you're there) page, shown below. If you've already solved it, you'll see its{' '}
+            <strong className="instructions-red">quiz</strong> instead.
           </p>
-          <p>
-            The <strong className="instructions-red">current</strong> landmark you are trying to find
-            will show as <strong className="instructions-red">in progress</strong> (see below centre).
-          </p>
-          <p>
-            <strong className="instructions-red">Future</strong> landmarks will show as{' '}
-            <strong>?</strong> &mdash; to be found (see below right).
-          </p>
-          <ViewSwitchDemo active="tile" ring />
-          <TileGridDemo startLandmark={startLandmark} />
-        </>
-      ),
-    },
-    {
-      body: (
-        <>
-          <h2>Tile view continued</h2>
-          <p>
-            When you tap on a tile for a <strong className="instructions-red">found landmark</strong>, you see a
-            details card for the landmark (see below).
-          </p>
-          <ViewSwitchDemo active="tile" ring />
-          <TileGridDemo startLandmark={startLandmark} />
-          <div className="tile-to-card-arrow">
-            <svg width="100%" height="36" viewBox="0 0 454 36" preserveAspectRatio="none" fill="none">
-              <path d="M72 2 C 72 20, 227 12, 227 24" stroke="#b33f2e" strokeWidth="2.5" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
-              <polygon points="220,24 234,24 227,34" fill="#b33f2e" />
-            </svg>
-          </div>
-          <MiniDetailCardDemo startLandmark={startLandmark} />
-        </>
-      ),
-    },
-    {
-      body: (
-        <>
-          <h2>Tile view continued</h2>
-          <p>
-            When you click on the <strong className="instructions-red">in progress</strong> tile, you
-            see the <strong className="instructions-red">Find it</strong> (the clue to landmark
-            location) and the <strong className="instructions-red">Solve it</strong> (prove that you
-            are there) page.
-          </p>
-          <ViewSwitchDemo active="tile" ring />
-          <TileGridDemo startLandmark={startLandmark} />
-          <div className="tile-to-card-arrow center">
-            <svg width="16" height="36" viewBox="0 0 16 36" fill="none">
-              <path d="M8 2 L8 26" stroke="#b33f2e" strokeWidth="2.5" strokeLinecap="round" />
-              <polygon points="1,24 15,24 8,34" fill="#b33f2e" />
-            </svg>
-          </div>
+          <ViewSwitchDemo active="current" ring />
           <MiniPlayPageDemo />
         </>
       ),
@@ -499,10 +376,7 @@ function sections(data, startLandmark) {
             for <strong className="instructions-red">points of interest</strong> <PoiMarkerIcon />.
           </p>
           <p>
-            You will also see your <strong className="instructions-red">current location</strong> <LocatorVisual />. For this to work make sure you{' '}
-            <strong className="instructions-red">allow location access</strong> when your phone asks
-            for it. If you never see that prompt and opened the game from WhatsApp or another app,
-            open the link in Safari instead (see page 1).
+            You will also see your <strong className="instructions-red">current location</strong> <LocatorVisual />.
           </p>
           <ViewSwitchDemo active="map" ring />
           <MapPanelDemo crop="bottom20" tourCode={data?.tourCode} />
@@ -528,7 +402,7 @@ function sections(data, startLandmark) {
       body: (
         <>
           <h2>Finding landmarks</h2>
-          <p>Click on the <strong className="instructions-red">in progress</strong> tile in the tile view.</p>
+          <p>Tap <strong className="instructions-red">CURRENT LANDMARK</strong> in the switcher.</p>
           <p>
             You will see a <strong className="instructions-red">Find it clue</strong> to locate the
             landmark. If you can&rsquo;t find it from the clue you can have up to{' '}
@@ -542,8 +416,7 @@ function sections(data, startLandmark) {
             you only get one go.
           </p>
           <p>
-            Once revealed or solved, the landmark is now visible on the tile view and map view home
-            page.
+            Once revealed or solved, the landmark is now visible on the map view home page.
           </p>
           <p>
             You will then take a <strong className="instructions-red">quiz</strong> to earn more
@@ -583,46 +456,6 @@ function sections(data, startLandmark) {
             read - so it is a <strong className="instructions-red">VERY</strong> good idea to{' '}
             <strong className="instructions-red">share</strong> this across the team.
           </p>
-          <p>
-            Team members can also communicate via the{' '}
-            <strong className="instructions-red">chat function</strong>. We will cover this next.
-          </p>
-        </>
-      ),
-    },
-    {
-      body: (
-        <>
-          <h2>Chat</h2>
-          <p>
-            You will see the <strong className="instructions-red">chat panel</strong> at the bottom of
-            the screen.
-          </p>
-          <ChatBarDemo />
-          <p>
-            It shows the last chat. To enter a chat, tap on the{' '}
-            <strong className="instructions-red">pencil icon</strong>
-            <span className="instructions-chat-pencil-inline">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" /><path d="m15 5 4 4" /></svg>
-            </span>{' '}
-            on the right hand side.
-          </p>
-          <p>
-            To <strong className="instructions-red">expand</strong> the chat panel, tap the expand icon
-            <span className="instructions-chat-icon-inline">
-              <ChevronUp size={14} strokeWidth={3} />
-            </span>{' '}
-            on the left hand side. This will then reveal the chat history, like this:
-          </p>
-          <ChatSheetDemo />
-          <p>
-            To <strong className="instructions-red">collapse</strong> the chat panel, tap the collapse
-            icon
-            <span className="instructions-chat-icon-inline instructions-chat-icon-inline-light">
-              <ChevronDown size={14} strokeWidth={3} />
-            </span>{' '}
-            at the top.
-          </p>
         </>
       ),
     },
@@ -631,15 +464,14 @@ function sections(data, startLandmark) {
         <>
           <h2>Final things to know</h2>
           <p>
-            The tour has a time limit of <strong className="instructions-red">6 hours</strong> - you
-            will see a timer at the top of the page.
+            The tour has a time limit of <strong className="instructions-red">6 hours</strong>. Your{' '}
+            <strong className="instructions-red">points</strong> and <strong className="instructions-red">timer</strong>{' '}
+            live in a bar at the <strong className="instructions-red">bottom</strong> of every page, along
+            with the <strong className="instructions-red">help function</strong> (see below):
           </p>
+          <FooterDemo />
           <p>
-            There is a <strong className="instructions-red">help function</strong> at the top right of the
-            page: <HelpButtonDemo />
-          </p>
-          <p>
-            Use this if you ever get stuck - it has the following{' '}
+            Tap <HelpButtonDemo /> if you ever get stuck - it has the following{' '}
             <strong className="instructions-red">options</strong>:
           </p>
           <HelpMenuDemo />
@@ -650,7 +482,7 @@ function sections(data, startLandmark) {
       body: (
         <div className="instructions-final-tips">
           <h2>Final tips</h2>
-          <p><strong className="instructions-red">7 key things</strong> to remember:</p>
+          <p><strong className="instructions-red">5 key things</strong> to remember:</p>
           <TipsList />
           <p>
             When you tap on let&rsquo;s start the tour below you will see a green panel with your
@@ -668,15 +500,14 @@ export default function InstructionsPage() {
   // Reached two different ways: the required onboarding step before /home (no state — full
   // GameHeader, paginated flow, "let's start the tour" as the final step), or opened later from
   // HelpButton's "Show instructions" option (helpMode — simple back button instead, no
-  // pagination footer, chat panel visible so the team feed stays reachable). returnTo is
-  // wherever the help button was tapped from.
+  // pagination footer). returnTo is wherever the help button was tapped from.
   const helpMode = Boolean(location.state?.helpMode)
   const returnTo = location.state?.returnTo || '/home'
   const returnState = location.state?.returnState
   const [data, setData] = useState(null)
   const [fetchedAt, setFetchedAt] = useState(null)
   const [, setTick] = useState(0)
-  const [step, setStep] = useState(0)
+  const [step, setStep] = useState(location.state?.step ?? 0)
   // The real starting landmark's full detail (image/about-text/interesting-fact included) — used
   // by the tile/detail-card demo mockups below so they show this tour's actual start landmark
   // instead of a fixed Edinburgh example. sequence_order 1 is always the start landmark.
@@ -715,50 +546,24 @@ export default function InstructionsPage() {
               <strong className="instructions-red">{data.totalLandmarks - 1} landmarks</strong> &mdash; some big, some
               small. For each landmark you can gain up to{' '}
               <strong className="instructions-red">10 points</strong>. You&rsquo;ll have{' '}
-              <strong className="instructions-red">6 hours</strong> from the moment you start, so
-              keep an eye on the timer at the top of the screen.
+              <strong className="instructions-red">6 hours</strong> from the moment you start &mdash;
+              your points and timer live in a bar at the bottom of every page.
             </p>
 
             <p>
-              You can <strong className="instructions-red">always</strong> go back to the home
-              page by tapping the <BackArrowVisual /> button at the top left of any page. The home
-              page has 2 views, switched using the bar below:
+              The home page has a switcher with 2 options, <strong className="instructions-red">Map view</strong>{' '}
+              and <strong className="instructions-red">Current landmark</strong>:
             </p>
-            <ViewSwitchDemo active="tile" animate />
+            <ViewSwitchDemo active="map" animate />
 
-            <h2>Tile view</h2>
+            <h2>Current landmark</h2>
             <p>
-              <strong className="instructions-red">Found</strong> landmarks show with their image
-              (below left). The <strong className="instructions-red">current</strong> landmark
-              you&rsquo;re trying to find shows as{' '}
-              <strong className="instructions-red">in progress</strong> (below centre).{' '}
-              <strong className="instructions-red">Future</strong> landmarks show as{' '}
-              <strong>?</strong> (below right).
+              Tap <strong className="instructions-red">CURRENT LANDMARK</strong> to jump straight to
+              the landmark you're working on now &mdash; its{' '}
+              <strong className="instructions-red">Find it</strong> /{' '}
+              <strong className="instructions-red">Solve it</strong> page if you haven&rsquo;t cracked
+              it yet, or its <strong className="instructions-red">quiz</strong> if you have:
             </p>
-            <TileGridDemo startLandmark={startLandmark} />
-
-            <p>
-              Tap a <strong className="instructions-red">found</strong> tile to see its details
-              card:
-            </p>
-            <div className="tile-to-card-arrow center">
-              <svg width="16" height="36" viewBox="0 0 16 36" fill="none">
-                <path d="M8 2 L8 26" stroke="#b33f2e" strokeWidth="2.5" strokeLinecap="round" />
-                <polygon points="1,24 15,24 8,34" fill="#b33f2e" />
-              </svg>
-            </div>
-            <MiniDetailCardDemo startLandmark={startLandmark} />
-
-            <p>
-              Tap the <strong className="instructions-red">in progress</strong> tile to see the
-              Find it / Solve it page:
-            </p>
-            <div className="tile-to-card-arrow center">
-              <svg width="16" height="36" viewBox="0 0 16 36" fill="none">
-                <path d="M8 2 L8 26" stroke="#b33f2e" strokeWidth="2.5" strokeLinecap="round" />
-                <polygon points="1,24 15,24 8,34" fill="#b33f2e" />
-              </svg>
-            </div>
             <MiniPlayPageDemo />
 
             <h2>Map view</h2>
@@ -766,10 +571,7 @@ export default function InstructionsPage() {
               Map view shows the location of landmarks found so far and markers for{' '}
               <strong className="instructions-red">points of interest</strong> <PoiMarkerIcon />,
               plus your <strong className="instructions-red">current location</strong>{' '}
-              <LocatorVisual />. For this to work make sure you{' '}
-              <strong className="instructions-red">allow location access</strong> when your phone
-              asks for it. If you never see that prompt and opened the game from WhatsApp or
-              another app, open the link in Safari instead.
+              <LocatorVisual />.
             </p>
             <MapPanelDemo crop="bottom20" tourCode={data?.tourCode} />
 
@@ -815,45 +617,16 @@ export default function InstructionsPage() {
               members see these updates on their phone.
             </p>
 
-            <h2>Chat</h2>
-            <p>
-              The <strong className="instructions-red">chat panel</strong> sits at the bottom of
-              the screen and shows the last message.
-            </p>
-            <ChatBarDemo />
-            <p>
-              Tap the <strong className="instructions-red">pencil icon</strong>
-              <span className="instructions-chat-pencil-inline">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" /><path d="m15 5 4 4" /></svg>
-              </span>{' '}
-              on the right to send a message, or the expand icon
-              <span className="instructions-chat-icon-inline">
-                <ChevronUp size={14} strokeWidth={3} />
-              </span>{' '}
-              on the left to see the full chat history:
-            </p>
-            <ChatSheetDemo />
-            <p>
-              Tap the collapse icon
-              <span className="instructions-chat-icon-inline instructions-chat-icon-inline-light">
-                <ChevronDown size={14} strokeWidth={3} />
-              </span>{' '}
-              at the top to close it again.
-            </p>
-
             <h2>Final tips</h2>
-            <p><strong className="instructions-red">7 key things</strong> to remember:</p>
+            <p><strong className="instructions-red">5 key things</strong> to remember:</p>
             <TipsList />
 
             <p>
               Good luck &mdash; the clock is ticking, so you had better get on with it. Don&rsquo;t
-              forget, if in doubt, tap the <BackArrowVisual /> button and head to{' '}
-              <strong className="instructions-red">tile view</strong>.
+              forget, if in doubt, tap <strong className="instructions-red">MAP view</strong>.
             </p>
           </div>
         </div>
-
-        <ChatPanel />
       </div>
     )
   }
@@ -864,8 +637,6 @@ export default function InstructionsPage() {
 
   return (
     <div className="home-shell instructions-shell">
-      <GameHeader data={data} elapsedSeconds={liveElapsedSeconds} onReset={loadHome} />
-
       <div className="instructions-progress">
         <span className="instructions-progress-label">Instructions {step + 1}/{allSections.length}</span>
         <span className="instructions-progress-dots">
@@ -892,6 +663,20 @@ export default function InstructionsPage() {
           {isLast ? "let's start the tour »" : 'i have read this - next »'}
         </button>
       </div>
+
+      <GameHeader
+        data={data}
+        elapsedSeconds={liveElapsedSeconds}
+        onReset={loadHome}
+        showHelp
+        helpReturnState={{ step }}
+        pageHelpText={
+          <>
+            <p>Use <strong>« back</strong> and <strong>next »</strong> to move through these instructions at your own pace.</p>
+            <p>Once you've read everything, tap <strong>let's start the tour »</strong> to begin.</p>
+          </>
+        }
+      />
     </div>
   )
 }

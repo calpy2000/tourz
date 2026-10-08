@@ -54,7 +54,7 @@ function quizAnswerPayload(row) {
 }
 
 // Deletes everything belonging to one tour — its own content AND the instance data (games/
-// teams/players/progress/messages/location_pings) hanging off its own game codes — in FK-safe
+// teams/players/progress/location_pings) hanging off its own game codes — in FK-safe
 // order. Every table is scoped by tour id via a subquery/join, so no other tour is touched.
 async function wipeTour(client, tourId) {
   await client.query(`
@@ -64,11 +64,6 @@ async function wipeTour(client, tourId) {
       JOIN games g ON t.game_id = g.id
       JOIN game_codes gc ON g.game_code_id = gc.id
       WHERE gc.tour_id = $1
-    )`, [tourId]);
-  await client.query(`
-    DELETE FROM messages WHERE team_id IN (
-      SELECT t.id FROM teams t JOIN games g ON t.game_id = g.id
-      JOIN game_codes gc ON g.game_code_id = gc.id WHERE gc.tour_id = $1
     )`, [tourId]);
   await client.query(`
     DELETE FROM progress_events WHERE team_id IN (

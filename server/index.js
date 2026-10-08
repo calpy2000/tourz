@@ -184,18 +184,6 @@ function readableAnswer(type, payload) {
   return JSON.stringify(payload);
 }
 
-function formatMessage(row) {
-  return {
-    id: row.id,
-    type: row.type,
-    text: row.text,
-    createdAt: row.created_at,
-    playerId: row.player_id,
-    playerName: row.player_name,
-    playerAvatar: row.player_avatar,
-  };
-}
-
 // Shared shape for "what does this player's registration status look like right now" — used by
 // both the response of POST /api/register and GET /api/game/session (the latter lets the welcome
 // page re-fetch live state, e.g. after a refresh, or once a captain registers after a member).
@@ -270,10 +258,6 @@ app.post('/api/register', async (req, res) => {
     `INSERT INTO players (team_id, name, avatar, is_captain, session_token) VALUES ($1, $2, $3, $4, $5) RETURNING *`,
     [team.id, name.trim(), avatar, role === 'captain', sessionToken]
   );
-  await db.query(
-    `INSERT INTO messages (team_id, type, text) VALUES ($1, 'player_joined', $2)`,
-    [team.id, `🎉 ${player.name} has joined the team`]
-  );
 
   res.json(await registrationStatus(player, team));
 });
@@ -320,9 +304,9 @@ app.get('/api/game/team/players', async (req, res) => {
 // POST /api/game/team/captain — captain-only: hands the captaincy to another team member.
 // Session tokens never change — is_captain is checked fresh by requireCaptain on every
 // captain-gated request, so flipping it here takes effect immediately for both players on their
-// next action, with no need to reissue or invalidate anything. Posts a system chat message so
-// the whole team sees the change (picked up by ChatPanel's poll, which also refreshes every
-// client's own isCaptain flag — see HelpButton.jsx/ChatPanel.jsx).
+// next action, with no need to reissue or invalidate anything. The OTHER device's cached
+// isCaptain flag catches up next time its own gameplay poll sees the new value on
+// GET /api/game/current (see PlayPage.jsx's captain-sync effect).
 app.post('/api/game/team/captain', async (req, res) => {
   const session = await resolveSession(req, res);
   if (!session) return;
@@ -338,55 +322,8 @@ app.post('/api/game/team/captain', async (req, res) => {
 
   await db.query('UPDATE players SET is_captain = false WHERE id = $1', [player.id]);
   await db.query('UPDATE players SET is_captain = true WHERE id = $1', [newCaptain.id]);
-  await db.query(
-    `INSERT INTO messages (team_id, type, text) VALUES ($1, 'captain_changed', $2)`,
-    [team.id, `👑 ${newCaptain.name} is now the team captain`]
-  );
 
   res.json({ newCaptainId: newCaptain.id, newCaptainName: newCaptain.name });
-});
-
-// GET /api/game/messages?after=<id> — polled from the client (see ChatPanel.jsx), same simple
-// interval-poll pattern already used for gameplay sync rather than sockets. `after` omitted (or
-// 0) returns the most recent page for the initial load; `after` set returns only newer rows,
-// using `messages.id` as the replay cursor per the schema's append-only design.
-app.get('/api/game/messages', async (req, res) => {
-  const session = await resolveSession(req, res);
-  if (!session) return;
-  const after = Number(req.query.after) || 0;
-
-  const { rows } = after > 0
-    ? await db.query(
-        `SELECT m.id, m.type, m.text, m.created_at, m.player_id, p.name AS player_name, p.avatar AS player_avatar
-         FROM messages m LEFT JOIN players p ON p.id = m.player_id
-         WHERE m.team_id = $1 AND m.id > $2 ORDER BY m.id`,
-        [session.team.id, after]
-      )
-    : await db.query(
-        `SELECT m.id, m.type, m.text, m.created_at, m.player_id, p.name AS player_name, p.avatar AS player_avatar
-         FROM messages m LEFT JOIN players p ON p.id = m.player_id
-         WHERE m.team_id = $1 ORDER BY m.id DESC LIMIT 30`,
-        [session.team.id]
-      );
-
-  if (after === 0) rows.reverse();
-  res.json({ messages: rows.map(formatMessage) });
-});
-
-// POST /api/game/messages — any player may send (not captain-gated, unlike scoring actions —
-// chat has no real-world value to protect). 500-char cap is a sanity limit, not a design decision.
-app.post('/api/game/messages', async (req, res) => {
-  const session = await resolveSession(req, res);
-  if (!session) return;
-  const text = String(req.body.text || '').trim();
-  if (!text) return res.status(400).json({ error: 'Message text is required.' });
-  if (text.length > 500) return res.status(400).json({ error: 'Message is too long.' });
-
-  const { rows: [row] } = await db.query(
-    `INSERT INTO messages (team_id, player_id, type, text) VALUES ($1, $2, 'chat', $3) RETURNING *`,
-    [session.team.id, session.player.id, text]
-  );
-  res.json(formatMessage({ ...row, player_name: session.player.name, player_avatar: session.player.avatar }));
 });
 
 // GET /api/game/home — header stats + the tile/list view's solved-landmark data.
@@ -477,14 +414,16 @@ app.get('/api/game/home', async (req, res) => {
 });
 
 // GET /api/game/current — the only landmark data ever sent: whichever one the team is on now.
+// isCaptain rides along on every poll (not just /api/game/session) so a captain-handoff by a
+// teammate is picked up by this device's own next poll — see PlayPage.jsx's captain-sync effect.
 app.get('/api/game/current', async (req, res) => {
   const session = await resolveSession(req, res);
   if (!session) return;
-  const { team } = session;
+  const { player, team } = session;
   const landmark = await getCurrentLandmark(team);
 
   if (!landmark) {
-    return res.json({ tourComplete: true, totalScore: team.total_score });
+    return res.json({ tourComplete: true, totalScore: team.total_score, isCaptain: player.is_captain });
   }
 
   const events = await eventsFor(team.id, landmark.id);
@@ -583,6 +522,7 @@ app.get('/api/game/current', async (req, res) => {
     sequenceOrder: landmark.sequence_order,
     title: puzzleSolvedEvent ? landmark.title : null, // withheld until attempted — never reveal the name in advance
     totalScore: team.total_score,
+    isCaptain: player.is_captain,
     clue: {
       type: landmark.clue_type,
       text: landmark.clue_text,

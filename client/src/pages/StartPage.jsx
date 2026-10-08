@@ -27,9 +27,12 @@ import LoadingScreen from '../components/LoadingScreen.jsx'
 function ResumeRedirect({ fallback = '/home' }) {
   const [destination, setDestination] = useState(null)
   const [state, setState] = useState(null)
+  // DEV_MODE-only readout of what this fetch is doing — see LoadingScreen's debugInfo comment.
+  const [debugInfo, setDebugInfo] = useState('checking /api/game/certificate…')
   useEffect(() => {
     api.getCertificateStatus()
       .then((res) => {
+        setDebugInfo(`got response: ${JSON.stringify(res)}`)
         if (res?.tourComplete) return setDestination('/certificate')
         if (!res?.instructionsComplete) return setDestination('/instructions')
         if (fallback === '/home' && !res?.coachComplete) {
@@ -38,9 +41,12 @@ function ResumeRedirect({ fallback = '/home' }) {
         }
         setDestination(fallback)
       })
-      .catch(() => setDestination(fallback))
+      .catch((err) => {
+        setDebugInfo(`/api/game/certificate threw: ${err?.message || err}`)
+        setDestination(fallback)
+      })
   }, [fallback])
-  return destination ? <Navigate to={destination} state={state} replace /> : <LoadingScreen />
+  return destination ? <Navigate to={destination} state={state} replace /> : <LoadingScreen debugInfo={DEV_MODE ? debugInfo : undefined} />
 }
 
 export default function StartPage() {
@@ -64,28 +70,43 @@ export default function StartPage() {
   // every mount (not once-only) so flipping dev mode on for a device that already holds a normal
   // registered session still switches over to the dev identity instead of resuming the old one.
   const [devSessionReady, setDevSessionReady] = useState(false)
+  // DEV_MODE-only readout of what this effect is doing — see LoadingScreen's debugInfo comment.
+  // Added after a real report of this screen hanging forever with nothing visible anywhere: the
+  // devLogin() call below had no .catch(), so a failed/errored request just silently left
+  // devSessionReady false forever with zero trace of why.
+  const [devDebug, setDevDebug] = useState('starting…')
   useEffect(() => {
     if (!DEV_MODE) return
     if (getSession()?.name === 'Calvin') {
+      setDevDebug('existing Calvin session found in localStorage — skipping dev login')
       setDevSessionReady(true)
       return
     }
-    api.devLogin().then((result) => {
-      if (result.error) return
-      saveSession({
-        sessionToken: result.sessionToken,
-        playerId: result.player.id,
-        teamId: result.team.id,
-        name: result.player.name,
-        avatar: result.player.avatar,
-        isCaptain: result.player.isCaptain,
+    setDevDebug('calling POST /api/dev/login…')
+    api.devLogin()
+      .then((result) => {
+        if (result.error) {
+          setDevDebug(`/api/dev/login returned an error: ${result.error}`)
+          return
+        }
+        saveSession({
+          sessionToken: result.sessionToken,
+          playerId: result.player.id,
+          teamId: result.team.id,
+          name: result.player.name,
+          avatar: result.player.avatar,
+          isCaptain: result.player.isCaptain,
+        })
+        setDevDebug('dev login OK, session saved')
+        setDevSessionReady(true)
       })
-      setDevSessionReady(true)
-    })
+      .catch((err) => {
+        setDevDebug(`/api/dev/login threw: ${err?.message || err}`)
+      })
   }, [])
 
   if (DEV_MODE) {
-    return devSessionReady ? <ResumeRedirect fallback="/instructions" /> : <LoadingScreen />
+    return devSessionReady ? <ResumeRedirect fallback="/instructions" /> : <LoadingScreen debugInfo={devDebug} />
   }
 
   // Already registered on this device — no need to go through this again.

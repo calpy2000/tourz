@@ -1,4 +1,4 @@
-// Deletes LIVE GAME DATA (games/teams/players/progress/messages/location pings) from the prod
+// Deletes LIVE GAME DATA (games/teams/players/progress/location pings) from the prod
 // database for one or more game codes — or every game code if none are given. The game_codes
 // row itself is never deleted; its status is reset to 'unused' so the code stays reusable (see
 // reference_render_production_db / project_registration_feature memory: codes are reusable).
@@ -31,10 +31,9 @@ async function deleteGameDataForCode(client, gameCode) {
       [team.id]
     );
     const { rowCount: events } = await client.query('DELETE FROM progress_events WHERE team_id = $1', [team.id]);
-    const { rowCount: msgs } = await client.query('DELETE FROM messages WHERE team_id = $1', [team.id]);
     const { rowCount: players } = await client.query('DELETE FROM players WHERE team_id = $1', [team.id]);
     await client.query('DELETE FROM teams WHERE id = $1', [team.id]);
-    console.log(`  ${gameCode.code}: deleted 1 team, ${players} players, ${events} progress events, ${msgs} messages, ${pings} location pings`);
+    console.log(`  ${gameCode.code}: deleted 1 team, ${players} players, ${events} progress events, ${pings} location pings`);
   } else {
     console.log(`  ${gameCode.code}: game existed with no team`);
   }

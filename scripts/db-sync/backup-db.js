@@ -6,7 +6,7 @@
 // (e.g. scripts/db-sync/sync-content.js, or db/seed.js) goes wrong, the CSVs are fine but the
 // live DB content is damaged with no way back. This script closes that gap: a read-only,
 // point-in-time export of every CONTENT table (never INSTANCE tables - game_codes/games/teams/
-// players/progress_events/messages/location_pings are live player data, not content, and are
+// players/progress_events/location_pings are live player data, not content, and are
 // deliberately left untouched and unexported) to a timestamped JSON snapshot on disk.
 //
 // This is a snapshot, not a comparison - see reference_db_sync_tools for diff-content.js, which

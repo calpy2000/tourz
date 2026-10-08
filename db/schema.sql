@@ -223,17 +223,6 @@ CREATE TABLE progress_events (
     created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- The team message feed (a log, not two-way chat). Same replay pattern as progress_events —
--- `id` is the cursor a reconnecting client uses to fetch what it missed.
-CREATE TABLE messages (
-    id          BIGSERIAL PRIMARY KEY,
-    team_id     BIGINT NOT NULL REFERENCES teams(id),
-    player_id   BIGINT REFERENCES players(id),      -- null for system-generated messages
-    type        TEXT NOT NULL,                      -- e.g. 'system', 'player_joined'
-    text        TEXT NOT NULL,
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
 -- Post-MVP feature (GPS proximity), schema included now per the "cheap now, painful to
 -- retrofit" principle. Unused until that feature is built.
 CREATE TABLE location_pings (

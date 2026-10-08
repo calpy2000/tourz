@@ -48,10 +48,6 @@ async function main() {
         JOIN games g ON t.game_id = g.id WHERE g.game_code_id = $1
       )`, [gameCode.id]);
     await client.query(`
-      DELETE FROM messages WHERE team_id IN (
-        SELECT t.id FROM teams t JOIN games g ON t.game_id = g.id WHERE g.game_code_id = $1
-      )`, [gameCode.id]);
-    await client.query(`
       DELETE FROM progress_events WHERE team_id IN (
         SELECT t.id FROM teams t JOIN games g ON t.game_id = g.id WHERE g.game_code_id = $1
       )`, [gameCode.id]);

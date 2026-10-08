@@ -11,8 +11,8 @@ import ReportProblemPopup from './ReportProblemPopup.jsx'
 // The "💡 Help" control shown on every in-game page except registration, instructions and the
 // certificate (see App.jsx/pages for where this is and isn't wired in). Tapping it opens a menu:
 // reopen the same instructions page shown at tour start (in "help mode" — see InstructionsPage's
-// helpMode branch: back button instead of the start-tour flow, chat panel still visible), a
-// per-page help popup, the real "change team captain" flow (below), or one of several
+// helpMode branch: back button instead of the start-tour flow), a per-page help popup, the real
+// "change team captain" flow (below), or one of several
 // not-yet-built items (report a problem, about this tour, add player) that land on a generic "to
 // be built" placeholder for now. pageHelpText is per-page real copy to be written in later; until
 // a page passes one, the popup shows a placeholder. returnState is whatever the calling page needs
@@ -75,7 +75,7 @@ export default function HelpButton({ pageHelpText, returnState }) {
 
   function handleCaptainChanged() {
     // The old captain (this device — only the captain can trigger this) loses the role
-    // immediately, rather than waiting for ChatPanel's next poll to pick up the system message.
+    // immediately, rather than waiting for the next gameplay poll to pick it up.
     const session = getSession()
     if (session) saveSession({ ...session, isCaptain: false })
     setCaptainPickerAnchor(null)

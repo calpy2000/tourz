@@ -1,12 +1,12 @@
 // Three-note ascending "marimba" ping for a teammate's screen updating because the captain used a
-// hint, revealed the clue, attempted the puzzle, or submitted a quiz answer — distinct in timbre
-// from the chat ping (chatPing.js) so the two are never confused by ear.
+// hint, revealed the clue, attempted the puzzle, or submitted a quiz answer.
 let audioCtx = null
 
 export function playScreenUpdatePing() {
   try {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)()
-    // Same suspended-context caveat as chatPing.js — by the time a poll picks up a captain action
+    // Browsers suspend a fresh/backgrounded AudioContext until a user gesture unlocks it — by the
+    // time a poll picks up a captain action
     // the player has almost always already interacted with the page, so resume() is enough.
     if (audioCtx.state === 'suspended') audioCtx.resume()
     const now = audioCtx.currentTime

@@ -90,9 +90,7 @@ export default function WelcomePage() {
               You have registered as the team captain &mdash; this is a special role. Each team
               member has their own version of the app on their phone and each can use it
               independently &mdash; however you, and only you, can submit answers into the app to
-              solve the walk. So work out how you and the team are going to work together &mdash;
-              you can exchange messages on the app itself using the chat function at the bottom of
-              the screen.
+              solve the walk. So work out how you and the team are going to work together.
             </p>
           ) : (
             <p>
@@ -100,8 +98,7 @@ export default function WelcomePage() {
               <strong>{captainName || 'yet to register'}</strong>. As a team member you have your
               own version of the app and can use it independently &mdash; however only the team
               captain can submit answers into the app to solve the walk, so work out how you and
-              the team are going to work together &mdash; you can exchange messages on the app
-              itself using the chat function at the bottom of the screen.
+              the team are going to work together.
             </p>
           )}
         </section>

@@ -14,7 +14,7 @@ function authHeaders() {
 // to read fields that were never there. Clearing the session and hard-navigating to "/" (not
 // react-router, since api.js has no router context) re-triggers registration/dev-login cleanly
 // instead of a blank page. Unconditional on the 401 status alone (not gated on getSession()
-// still being set) because HomePage/ChatPanel/GameHeader all fire their own authenticated
+// still being set) because HomePage/GameHeader/PlayPage all fire their own authenticated
 // requests independently on mount — the first 401 to resolve already clears the session, so a
 // gate would let every other in-flight request fall through and hand its raw error body to
 // whatever called it. clearSession() and the redirect are both idempotent, so firing them again
@@ -69,8 +69,6 @@ export const api = {
   markInstructionsComplete: () => post(`${BASE}/instructions-complete`),
   markCoachComplete: () => post(`${BASE}/coach-complete`),
   sendCertificate: (email, imageDataUrl) => post(`${BASE}/certificate/send`, { email, imageDataUrl }),
-  getMessages: (after) => get(`${BASE}/messages${after ? `?after=${after}` : ''}`),
-  sendMessage: (text) => post(`${BASE}/messages`, { text }),
   getLandmarkDetail: (sequenceOrder) => get(`${BASE}/landmark/${sequenceOrder}`),
   getSiteDetail: (id) => get(`${BASE}/site/${id}`),
   getMap: () => get(`${BASE}/map`),

@@ -2,7 +2,7 @@
 // landmarks, landmark_images, clues, clue_hints, puzzles, quiz_questions, sites) between the
 // local dev DB and the live prod DB, row by row, keyed by a natural key (never by `id`, since
 // ids are assigned independently by each DB's own sequence). Never touches INSTANCE tables
-// (game_codes, games, teams, players, progress_events, messages, location_pings) — those are
+// (game_codes, games, teams, players, progress_events, location_pings) — those are
 // expected to differ and reseeding/syncing them would destroy real player data.
 //
 // Read-only. Run with: node scripts/db-sync/diff-content.js

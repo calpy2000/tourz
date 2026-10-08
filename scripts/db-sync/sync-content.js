@@ -1,7 +1,7 @@
 // Pushes one tour's CONTENT tables (landmarks, landmark_images, clues, clue_hints, puzzles,
 // quiz_questions, sites) from its local db/content/<tour-folder>/*.csv files to a target
 // database - WITHOUT touching that tour's row, its game_codes, or any instance data (games,
-// teams, players, progress_events, messages, location_pings). This is the missing piece
+// teams, players, progress_events, location_pings). This is the missing piece
 // referenced in diff-content.js's comment, and exists specifically because db/seed.js's
 // wipeTour() deletes ALL of that instance data as part of reseeding a tour - fine for local
 // dev, unsafe for prod once a tour has live game codes with real players registered under them
@@ -73,7 +73,7 @@ function quizAnswerPayload(row) {
 // Deletes everything downstream of landmarks (images/clues/hints/puzzles/quiz) plus sites, for
 // this tour - none of these are referenced by any instance table, so delete+reinsert is safe.
 // Deliberately does NOT touch landmarks itself (see upsertLandmarks) or any instance data
-// (tours, game_codes, games, teams, players, progress_events, messages, location_pings).
+// (tours, game_codes, games, teams, players, progress_events, location_pings).
 async function deleteDownstreamContentForTour(client, tourId) {
   await client.query(`
     DELETE FROM quiz_questions WHERE landmark_id IN (SELECT id FROM landmarks WHERE tour_id = $1)`, [tourId]);

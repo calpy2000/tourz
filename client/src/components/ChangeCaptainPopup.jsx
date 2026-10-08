@@ -4,9 +4,8 @@ import { api } from '../api.js'
 
 // The captain picks whoever they're handing the role to from their teammates (players is the
 // roster HelpButton already fetched to decide whether to show this menu item at all — self is
-// excluded server-side). Submitting calls the real captain-swap endpoint; the server posts the
-// "X is now the team captain" chat message itself, so this popup only needs to report success
-// back up to HelpButton (which updates this device's own isCaptain) and close.
+// excluded server-side). Submitting calls the real captain-swap endpoint; this popup only needs
+// to report success back up to HelpButton (which updates this device's own isCaptain) and close.
 export default function ChangeCaptainPopup({ anchorRect, players, onClose, onChanged }) {
   const [selectedId, setSelectedId] = useState(null)
   const [submitting, setSubmitting] = useState(false)

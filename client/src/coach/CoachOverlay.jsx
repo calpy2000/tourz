@@ -1,8 +1,22 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useCoach } from './CoachContext.jsx'
+import { API_BASE } from '../apiBase.js'
 
 const MARGIN = 12
 const DRAG_THRESHOLD = 20 // px — how far a pointer has to move to count as a "swipe", not a tap
+
+// Echoes the real .map-pin-landmark marker — same photo, same size/forest ring (the start
+// landmark is always pre-solved) — shown on its own line below step 1's last sentence. Hardcoded
+// to the Port Louis start landmark's real photo, same tour-specific level as the rest of step 1's
+// copy (it already names "Blue Penny Museum" directly).
+function StartLandmarkMarkerVisual() {
+  return (
+    <span
+      className="coach-marker-visual"
+      style={{ backgroundImage: `url(${API_BASE}/content-photos/port-louis-blue-penny-museum.jpg)` }}
+    />
+  )
+}
 
 function findTargetEls(coachId) {
   if (!coachId || coachId === '__anywhere__') return []
@@ -25,11 +39,16 @@ function renderCoachText(text, trailing) {
   const lines = (text || '').replace(/\r\n?/g, '\n').split('\n')
   return lines.map((line, li) => (
     <p key={li} className="coach-popup-text">
-      {line.split(/(\*\*[^*]+\*\*)/g).map((part, i) =>
-        part.startsWith('**') && part.endsWith('**')
-          ? <strong key={i} className="coach-highlight">{part.slice(2, -2)}</strong>
-          : part,
-      )}
+      {line.split(/(\*\*[^*]+\*\*)/g).map((part, i) => {
+        if (!(part.startsWith('**') && part.endsWith('**'))) return part
+        const inner = part.slice(2, -2)
+        // The confirmation checkmark gets its own bold-yellow treatment, distinct from the
+        // usual bold-brass highlight used for everything else (element names, etc.) — see
+        // .coach-checkmark in index.css.
+        return inner.trim() === '✓'
+          ? <strong key={i} className="coach-checkmark">{inner}</strong>
+          : <strong key={i} className="coach-highlight">{inner}</strong>
+      })}
       {li === lines.length - 1 ? trailing : null}
     </p>
   ))
@@ -57,7 +76,6 @@ export default function CoachOverlay() {
   const lockedTopRef = useRef(null)
   const lockedStepRef = useRef(null)
   const anchorRef = useRef(null)
-  const [disabledBlockerRect, setDisabledBlockerRect] = useState(null)
 
   useLayoutEffect(() => {
     if (!active || !currentStep) return
@@ -121,17 +139,35 @@ export default function CoachOverlay() {
             (acc, r) => ({ top: Math.min(acc.top, r.top), bottom: Math.max(acc.bottom, r.bottom) }),
             { top: Infinity, bottom: -Infinity },
           )
-          const spaceBelow = viewportHeight - union.bottom - MARGIN
-          const spaceAbove = union.top - MARGIN
-          anchorRef.current = { mode: spaceBelow >= cardHeight || spaceBelow >= spaceAbove ? 'below' : 'above', top: union.top, bottom: union.bottom }
+          // A target spanning most of the viewport (e.g. "map navigation" steps, whose target is
+          // the whole map panel) can't be meaningfully dodged above/below — there's no position
+          // that both clears it and stays on-screen. Forcing a side anyway (as the fix below's
+          // no-clamp behavior now allows) pushes the popup almost entirely off-screen instead of
+          // just overlapping it — found via a real user report right after that fix shipped.
+          // Falling back to the plain centered position for a target this large is the better
+          // trade: still readable, even if it sits over part of a background-sized element.
+          if (union.bottom - union.top > viewportHeight / 2) {
+            anchorRef.current = { mode: 'none' }
+          } else {
+            const spaceBelow = viewportHeight - union.bottom - MARGIN
+            const spaceAbove = union.top - MARGIN
+            anchorRef.current = { mode: spaceBelow >= cardHeight || spaceBelow >= spaceAbove ? 'below' : 'above', top: union.top, bottom: union.bottom }
+          }
         } else {
           anchorRef.current = { mode: 'none' }
         }
       }
+      // Real bug, found via a user report/screenshot on a tall step-1 popup (4 lines of text plus
+      // the marker image): clamping `top` back into "fits fully within the viewport" territory
+      // silently defeated the whole point of this block whenever the popup was taller than the
+      // room available on its chosen side — it pulled the popup back toward (and over) the exact
+      // target it was supposed to avoid. Not clamping here can let the popup's far edge run past
+      // the opposite side of the screen in a genuinely tight fit, but that's strictly better than
+      // the one thing this block exists to prevent: covering the real target.
       if (anchorRef.current.mode === 'below') {
-        top = Math.max(MARGIN, Math.min(anchorRef.current.bottom + MARGIN, viewportHeight - cardHeight - MARGIN))
+        top = Math.max(MARGIN, anchorRef.current.bottom + MARGIN)
       } else if (anchorRef.current.mode === 'above') {
-        top = Math.max(MARGIN, Math.min(anchorRef.current.top - MARGIN - cardHeight, viewportHeight - cardHeight - MARGIN))
+        top = Math.min(anchorRef.current.top - MARGIN - cardHeight, viewportHeight - cardHeight - MARGIN)
       }
     }
 
@@ -161,6 +197,25 @@ export default function CoachOverlay() {
   // ancestor, always runs before any listener on the marker itself, a descendant) — so a wrong
   // tap is stopped before it can ever reach the marker. `wrongAtRef` just stops the same physical
   // tap's later `click` from counting as a second wrong attempt.
+  //
+  // Real-device follow-up: a real phone tap still got through to a wrong marker (user report,
+  // 2026-10-08) even with the mousedown/touchstart gate above. Per the Pointer/Touch Events specs,
+  // `pointerdown` actually fires *before* `touchstart` (and before `mousedown` too, for mouse/
+  // trackpad input) — if the marker library listens on `pointerdown` rather than the legacy events
+  // this file already gated, the exact same race reopens one event earlier. Headless CDP touch
+  // simulation didn't reproduce this (its synthesized event order may not match a real touchscreen
+  // exactly), so it couldn't be re-confirmed live the way the original bug was — gating
+  // `pointerdown` too is the defensive fix, same reasoning as the mousedown/touchstart one above.
+  //
+  // Second real bug, found immediately after the fix above (user report, same day): one wrong tap
+  // started showing BOTH the error and help text at once, instead of error-then-help across two
+  // separate tries. Cause: `pointerdown` doesn't suppress the `mousedown`/`touchstart` that follow
+  // it for the very same physical tap (pointerdown and mousedown are independent event streams for
+  // mouse/trackpad input; preventDefault on pointerdown doesn't cancel touchstart either) — so one
+  // tap now fired `onEarlyEvent` twice (pointerdown, then mousedown or touchstart), each call
+  // incrementing `wrongAttempts`, jumping 0 straight to 2. Fixed with the same debounce `onClick`
+  // already used for its own click-after-earlyevent case: only the first of a cluster of early
+  // events within 500ms actually counts as a wrong attempt.
   useEffect(() => {
     if (!active || !currentStep || currentStep.interaction !== 'tap') return
 
@@ -176,8 +231,9 @@ export default function CoachOverlay() {
       if (isHit(e)) return
       e.preventDefault()
       e.stopPropagation()
-      wrongAtRef.current = Date.now()
-      registerWrongAttempt()
+      const now = Date.now()
+      if (now - wrongAtRef.current > 500) registerWrongAttempt()
+      wrongAtRef.current = now
     }
 
     function onClick(e) {
@@ -193,84 +249,24 @@ export default function CoachOverlay() {
       if (Date.now() - wrongAtRef.current > 500) registerWrongAttempt()
     }
 
+    document.addEventListener('pointerdown', onEarlyEvent, true)
     document.addEventListener('mousedown', onEarlyEvent, true)
     document.addEventListener('touchstart', onEarlyEvent, { capture: true, passive: false })
     document.addEventListener('click', onClick, true)
     return () => {
+      document.removeEventListener('pointerdown', onEarlyEvent, true)
       document.removeEventListener('mousedown', onEarlyEvent, true)
       document.removeEventListener('touchstart', onEarlyEvent, true)
       document.removeEventListener('click', onClick, true)
     }
   }, [active, currentStep, advance, registerWrongAttempt])
 
-  // "type" steps (currently just the chat draft box): satisfied once the target input actually
-  // has text in it, not by a tap. While active, any tap outside the input is blocked at
-  // mousedown/touchstart — before the browser's default focus-shift happens — so the compose box
-  // can't lose focus and collapse from a stray tap elsewhere on the page. The chat send button is
-  // a deliberate exception: it's disabled while the draft is empty (so it never fires a real
-  // click at all), but a tap on it here is still caught and treated as a wrong attempt, same as
-  // a mis-tap on a `tap` step, so the player gets the "try again" escalation instead of the tap
-  // just silently doing nothing.
+  // Non-tap steps (currently just "expand and swipe" on the map): satisfied by any real gesture
+  // on the target — a drag past DRAG_THRESHOLD, or any wheel/pinch-zoom event — rather than a
+  // specific tap. No wrong-attempt tracking here since there's no meaningful "wrong" gesture to
+  // correct.
   useEffect(() => {
-    if (!active || !currentStep || currentStep.interaction !== 'type') return
-    const els = findTargetEls(currentStep.coachId)
-    if (els.length === 0) return
-
-    function onInput(e) {
-      if (e.target.value && e.target.value.trim().length > 0) advance()
-    }
-    els.forEach((el) => el.addEventListener('input', onInput))
-
-    // mousedown/touchstart fire (and can be prevented) before the browser's default focus-shift
-    // — that's what stops an outside tap from blurring the input. Click fires afterward as an
-    // independent event, so it needs its own block too, or a tap on something like the Help
-    // button would still open it even with the input never losing focus.
-    function onDown(e) {
-      if (els.some((el) => el.contains(e.target))) return
-      e.preventDefault()
-      e.stopPropagation()
-      if (e.target.closest('[data-coach-id="chat-send-btn"]')) registerWrongAttempt()
-    }
-    function onClick(e) {
-      if (els.some((el) => el.contains(e.target))) return
-      e.preventDefault()
-      e.stopPropagation()
-    }
-    document.addEventListener('mousedown', onDown, true)
-    document.addEventListener('touchstart', onDown, { capture: true, passive: false })
-    document.addEventListener('click', onClick, true)
-
-    return () => {
-      els.forEach((el) => el.removeEventListener('input', onInput))
-      document.removeEventListener('mousedown', onDown, true)
-      document.removeEventListener('touchstart', onDown, true)
-      document.removeEventListener('click', onClick, true)
-    }
-  }, [active, currentStep, advance, registerWrongAttempt])
-
-  // A `disabled` button never dispatches mousedown/click at all in Chrome (not even to
-  // ancestors) — the browser drops the event entirely rather than just skipping the button's own
-  // handler — so the "tap send while empty = wrong attempt" logic above can never see a tap that
-  // actually lands on the real (disabled) send button. Fix: while on a `type` step, track that
-  // button's rect and render an invisible, non-disabled, real-DOM-order-topmost overlay exactly
-  // over it (below), tagged with the same data-coach-id — a tap there hits the overlay instead,
-  // which DOES dispatch normal events the onDown/onClick handlers above can catch.
-  useEffect(() => {
-    if (!active || !currentStep || currentStep.interaction !== 'type') return
-    function measure() {
-      const el = document.querySelector('[data-coach-id="chat-send-btn"]')
-      setDisabledBlockerRect(el ? el.getBoundingClientRect() : null)
-    }
-    measure()
-    const id = setInterval(measure, 300)
-    return () => { clearInterval(id); setDisabledBlockerRect(null) }
-  }, [active, currentStep])
-
-  // Non-tap, non-type steps: satisfied by any real gesture on the target — a drag past
-  // DRAG_THRESHOLD, or any wheel/pinch-zoom event — rather than a specific tap. No wrong-attempt
-  // tracking here since there's no meaningful "wrong" gesture to correct.
-  useEffect(() => {
-    if (!active || !currentStep || currentStep.interaction === 'tap' || currentStep.interaction === 'type') return
+    if (!active || !currentStep || currentStep.interaction === 'tap') return
     const els = findTargetEls(currentStep.coachId)
     if (els.length === 0) return
 
@@ -307,9 +303,11 @@ export default function CoachOverlay() {
   useEffect(() => {
     if (!active || !currentStep || currentStep.coachId !== 'map-navigation-area') return
 
-    // Same touchstart/mousedown-fires-before-click issue as the general tap gate above — gate on
-    // those too, or a marker tap here can still open its real DetailPopup underneath (see the
-    // general gate's comment for the full explanation).
+    // Same pointerdown/touchstart/mousedown-fires-before-click issue as the general tap gate
+    // above — gate on those too, or a marker tap here can still open its real DetailPopup
+    // underneath (see the general gate's comment for the full explanation, including the
+    // debounce below, which stops one physical tap's pointerdown+mousedown/touchstart pair from
+    // double-counting as two wrong attempts).
     const wrongAtRef = { current: 0 }
 
     function isMarkerTap(e) {
@@ -320,8 +318,9 @@ export default function CoachOverlay() {
       if (!isMarkerTap(e)) return
       e.preventDefault()
       e.stopPropagation()
-      wrongAtRef.current = Date.now()
-      registerWrongAttempt()
+      const now = Date.now()
+      if (now - wrongAtRef.current > 500) registerWrongAttempt()
+      wrongAtRef.current = now
     }
 
     function onClick(e) {
@@ -331,10 +330,12 @@ export default function CoachOverlay() {
       if (Date.now() - wrongAtRef.current > 500) registerWrongAttempt()
     }
 
+    document.addEventListener('pointerdown', onEarlyEvent, true)
     document.addEventListener('mousedown', onEarlyEvent, true)
     document.addEventListener('touchstart', onEarlyEvent, { capture: true, passive: false })
     document.addEventListener('click', onClick, true)
     return () => {
+      document.removeEventListener('pointerdown', onEarlyEvent, true)
       document.removeEventListener('mousedown', onEarlyEvent, true)
       document.removeEventListener('touchstart', onEarlyEvent, true)
       document.removeEventListener('click', onClick, true)
@@ -348,19 +349,6 @@ export default function CoachOverlay() {
 
   return (
     <>
-      {disabledBlockerRect && (
-        <div
-          data-coach-id="chat-send-btn"
-          style={{
-            position: 'fixed',
-            top: disabledBlockerRect.top,
-            left: disabledBlockerRect.left,
-            width: disabledBlockerRect.width,
-            height: disabledBlockerRect.height,
-            zIndex: 9998,
-          }}
-        />
-      )}
       {showHelp && targetRects.map((rect, i) => (
         <div
           key={i}
@@ -381,6 +369,9 @@ export default function CoachOverlay() {
         {/* Each attempt adds a line rather than replacing the last one, so the player never
             loses the original instruction while they're being corrected. */}
         {renderCoachText(currentStep.first_message)}
+        {/* Step 1 (index 0) gets the start landmark's real marker image on its own line, right
+            below the last sentence (which ends with a colon leading into it). */}
+        {stepIndex === 0 && <div className="coach-marker-visual-row"><StartLandmarkMarkerVisual /></div>}
         {showError && currentStep.error_message && renderCoachText(currentStep.error_message)}
         {showHelp && currentStep.help_message &&
           renderCoachText(currentStep.help_message, <> tap where you see this <span className="coach-inline-lozenge" /></>)}
