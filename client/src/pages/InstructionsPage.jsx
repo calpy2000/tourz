@@ -4,6 +4,7 @@ import { api } from '../api.js'
 import { API_BASE } from '../apiBase.js'
 import GameHeader from '../components/GameHeader.jsx'
 import LoadingScreen from '../components/LoadingScreen.jsx'
+import { NarrationSpeakerIcon } from '../components/NarrationPlayer.jsx'
 
 // One screenshot per tour (captured via scripts/dev/capture-instructions-map-screenshot.mjs), so
 // the map-view mockups below show this tour's own landmarks/markers instead of whichever tour was
@@ -30,9 +31,11 @@ function mapViewMetaFor(tourCode) {
 
 // Same star mark as MapView's site pins (StarIcon there isn't exported) — shown inline here so
 // the "points-of-interest" callout in the instructions text matches the real map marker.
-function PoiMarkerIcon() {
+// `large` renders at the real .map-pin-site's own 26px size (used in the Map view legend, where
+// icons need to match the map graphic directly above them) instead of the usual shrunk-for-text 18px.
+function PoiMarkerIcon({ large }) {
   return (
-    <span className="instructions-poi-marker">
+    <span className={large ? 'instructions-poi-marker instructions-poi-marker-lg' : 'instructions-poi-marker'}>
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M12 2 15 9 22 9.5 16.8 14.2 18.3 21 12 17.3 5.7 21 7.2 14.2 2 9.5 9 9Z" />
       </svg>
@@ -42,6 +45,63 @@ function PoiMarkerIcon() {
 
 function LocatorVisual() {
   return <span className="instructions-locator-visual" />
+}
+
+// Echoes the real .map-pin-landmark marker (40px circle, forest border, landmark photo fill) for
+// the Map view legend's "landmarks you've found" bullet — same "mirror the real component, don't
+// invent an icon" convention as PoiMarkerIcon above.
+function LandmarkMarkerIcon({ startLandmark }) {
+  return (
+    <span
+      className="instructions-landmark-marker"
+      style={startLandmark?.imagePath ? { backgroundImage: `url(${API_BASE}/content-photos/${startLandmark.imagePath})` } : undefined}
+    />
+  )
+}
+
+// Echoes .map-panel-here (the map graphic's own "current location" dot, including its pulsing
+// halo) as a static inline bullet icon rather than the map graphic's absolutely-positioned one.
+function HereMarkerIcon() {
+  return <span className="instructions-here-marker" />
+}
+
+// Section 4's "what the map shows" legend — one row per marker type, each icon sized to match
+// that marker's real size in the map graphic shown just above (see each icon component's own
+// comment for which real CSS rule it mirrors), reusing the same icon+text grid row pattern as
+// TipsList's .instructions-tip-item further down.
+function MapLegendList({ startLandmark }) {
+  return (
+    <div className="instructions-map-legend">
+      <div className="instructions-map-legend-item">
+        <span className="instructions-map-legend-icon"><LandmarkMarkerIcon startLandmark={startLandmark} /></span>
+        <span className="instructions-map-legend-text">
+          the <strong className="instructions-red">landmarks</strong> you have found so far (including the starting landmark)
+        </span>
+      </div>
+      <div className="instructions-map-legend-item">
+        <span className="instructions-map-legend-icon"><PoiMarkerIcon large /></span>
+        <span className="instructions-map-legend-text">
+          <strong className="instructions-red">points of interest</strong> markers
+        </span>
+      </div>
+      <div className="instructions-map-legend-item">
+        <span className="instructions-map-legend-icon"><HereMarkerIcon /></span>
+        <span className="instructions-map-legend-text">
+          your own <strong className="instructions-red">current location</strong>
+        </span>
+      </div>
+    </div>
+  )
+}
+
+// Inline echo of the real narration entry button (.narration-entry-icon) — same brass circle +
+// speaker glyph, shrunk for use inline within a sentence, same convention as PoiMarkerIcon above.
+function NarrationIconInline() {
+  return (
+    <span className="instructions-narration-icon">
+      <NarrationSpeakerIcon />
+    </span>
+  )
 }
 
 // Same Bootstrap Icons "house-fill" glyph as HomePage's real switcher, so this demo matches
@@ -116,11 +176,19 @@ function MiniDetailCardDemo({ startLandmark }) {
             <p><strong>Interesting fact:</strong> {startLandmark.interestingFact}</p>
           )}
         </div>
-        <div className="detail-popup-footer">
-          <a className="primary detail-popup-link" href="#" onClick={(e) => e.preventDefault()} tabIndex={-1}>
-            Read more
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#23201b" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg>
-          </a>
+        <div className="detail-popup-bottom-row">
+          <div className="detail-popup-footer">
+            <a className="primary detail-popup-link" href="#" onClick={(e) => e.preventDefault()} tabIndex={-1}>
+              Read more
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#23201b" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg>
+            </a>
+          </div>
+          <div className="narration-entry">
+            <span className="narration-entry-label">Listen here &raquo;</span>
+            <button type="button" className="narration-entry-icon" tabIndex={-1} aria-label="Listen to narration">
+              <NarrationSpeakerIcon />
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -272,7 +340,7 @@ function TipsList() {
         <span className="instructions-tip-text">Be sure all team members are <strong className="instructions-red">registered</strong></span>
       </div>
       <div className="instructions-tip-item">
-        <span className="instructions-tip-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="7" height="7" x="3" y="3" rx="1" /><rect width="7" height="7" x="14" y="3" rx="1" /><rect width="7" height="7" x="14" y="14" rx="1" /><rect width="7" height="7" x="3" y="14" rx="1" /></svg></span>
+        <span className="instructions-tip-icon"><HouseIcon /></span>
         <span className="instructions-tip-text">The home page has 2 options -<br />
           <strong className="instructions-red">Map view</strong> and <strong className="instructions-red">Current landmark</strong>
         </span>
@@ -285,6 +353,12 @@ function TipsList() {
         <span className="instructions-tip-icon-wrap"><PoiMarkerIcon /></span>
         <span className="instructions-tip-text">Take the time to review the <strong className="instructions-red">points of interest cards</strong> as you pass them &mdash; this will help you learn more and gain quiz points<br />
           <strong className="instructions-red">Top hint</strong> &mdash; share this across the team
+        </span>
+      </div>
+      <div className="instructions-tip-item">
+        <span className="instructions-tip-icon-wrap"><NarrationIconInline /></span>
+        <span className="instructions-tip-text">Don&rsquo;t forget, you can <strong className="instructions-red">read</strong> the card details or{' '}
+          <strong className="instructions-red">listen to them</strong>, which will earn your team a point
         </span>
       </div>
       <div className="instructions-tip-item">
@@ -371,15 +445,12 @@ function sections(data, startLandmark) {
         <>
           <h2>Map view</h2>
           <p>
-            Switch to <strong className="instructions-red">Map view</strong> using the switcher bar
-            below. You will see a map that shows the location of <strong className="instructions-red">landmarks</strong> found so far and markers
-            for <strong className="instructions-red">points of interest</strong> <PoiMarkerIcon />.
-          </p>
-          <p>
-            You will also see your <strong className="instructions-red">current location</strong> <LocatorVisual />.
+            Switch to <strong className="instructions-red">Map view</strong> using the switcher bar.
           </p>
           <ViewSwitchDemo active="map" ring />
           <MapPanelDemo crop="bottom20" tourCode={data?.tourCode} />
+          <p>You will see a map that shows the following things:</p>
+          <MapLegendList startLandmark={startLandmark} />
         </>
       ),
     },
@@ -395,6 +466,16 @@ function sections(data, startLandmark) {
           <ViewSwitchDemo active="map" ring />
           <MapToCardVisual tourCode={data?.tourCode} />
           <MiniDetailCardDemo startLandmark={startLandmark} />
+          <p>
+            Each card has lots of interesting information.<br /><br />
+            You can either <strong className="instructions-red">read it</strong> as you go or{' '}
+            <strong className="instructions-red">listen to it</strong> by tapping the{' '}
+            <NarrationIconInline /> button.
+          </p>
+          <p>
+            By the way, when you listen to the full details of a card, you will earn an{' '}
+            <strong className="instructions-red">extra point</strong> for your team 🤩
+          </p>
         </>
       ),
     },
@@ -422,7 +503,7 @@ function sections(data, startLandmark) {
             You will then take a <strong className="instructions-red">quiz</strong> to earn more
             points. <strong className="instructions-red instructions-underline">BE AWARE</strong>{' '}
             &mdash; this might include questions about what you saw on the way &mdash; so keep your
-            eyes peeled 👀 and be sure to read the{' '}
+            eyes peeled 👀 and be sure to read or listen to the{' '}
             <strong className="instructions-red">point of interest cards</strong> along the way &mdash;
             these hold loads on interesting info, which will{' '}
             <strong className="instructions-red">greatly enrich your tour and help in the quizzes 🤩</strong>
@@ -453,7 +534,7 @@ function sections(data, startLandmark) {
           </p>
           <p>
             There are lots of <strong className="instructions-red">points of interest cards</strong> to
-            read - so it is a <strong className="instructions-red">VERY</strong> good idea to{' '}
+            read or listen to - so it is a <strong className="instructions-red">VERY</strong> good idea to{' '}
             <strong className="instructions-red">share</strong> this across the team.
           </p>
         </>
@@ -482,11 +563,11 @@ function sections(data, startLandmark) {
       body: (
         <div className="instructions-final-tips">
           <h2>Final tips</h2>
-          <p><strong className="instructions-red">5 key things</strong> to remember:</p>
+          <p><strong className="instructions-red">6 key things</strong> to remember:</p>
           <TipsList />
           <p>
-            When you tap on let&rsquo;s start the tour below you will see a green panel with your
-            navigation coach - do what they say <CoachTileDemo />
+            When you tap on <strong className="instructions-red">let&rsquo;s start the tour</strong> below
+            you will see a green panel with your navigation coach - do what they say <CoachTileDemo />
           </p>
         </div>
       ),
@@ -618,7 +699,7 @@ export default function InstructionsPage() {
             </p>
 
             <h2>Final tips</h2>
-            <p><strong className="instructions-red">5 key things</strong> to remember:</p>
+            <p><strong className="instructions-red">6 key things</strong> to remember:</p>
             <TipsList />
 
             <p>

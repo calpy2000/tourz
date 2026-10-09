@@ -334,6 +334,7 @@ export default function MapView() {
           title={landmarkPopup.title}
           address={landmarkPopup.address}
           imagePath={landmarkPopup.imagePath}
+          audioPath={landmarkPopup.audioPath}
           sections={[
             { label: landmarkPopup.aboutLandmarkLabel, text: landmarkPopup.aboutLandmarkText },
             { label: landmarkPopup.aboutSubjectLabel, text: landmarkPopup.aboutSubjectText },
@@ -351,6 +352,7 @@ export default function MapView() {
           title={sitePopup.title}
           address={sitePopup.address}
           imagePath={sitePopup.imagePath}
+          audioPath={sitePopup.audioPath}
           sections={[
             { label: sitePopup.aboutSiteLabel, text: sitePopup.aboutSiteText },
             { label: sitePopup.aboutSubjectLabel, text: sitePopup.aboutSubjectText },

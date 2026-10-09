@@ -1458,9 +1458,16 @@ button.primary.quiz-submit {
   background: var(--stone-raised);
   position: fixed;
   top: 12px;
-  left: 12px;
+  left: 12px; /* same inset as top/bottom — was 20px, wider than the rest, to keep the narration
+                 entry button clear of the card's own edge; that clearance now comes from
+                 .detail-popup-bottom-row's own left/right inset instead (see that rule), so this
+                 could go back to matching the other three sides. */
   right: 12px;
-  bottom: 12px;
+  bottom: 59px; /* clears .home-header (the real bottom game footer, measured 47px tall on
+                   /home) with the same 12px gap the top inset uses, instead of sitting flush
+                   against it — was plain 12px, which put the card's own bottom edge deep inside
+                   the footer's own area, so the footer visibly showed through/got covered by
+                   whatever popup content sat near the card's bottom */
   width: auto;
   max-width: none;
   max-height: none;
@@ -1585,17 +1592,29 @@ button.primary.quiz-submit {
   font-weight: 600;
 }
 
-/* Wraps Read more (+ the dev-only Set GPS button beside it) so the pair centers as one unit —
-   was just .detail-popup-link's own absolute positioning before Set GPS needed to sit next to it. */
-.detail-popup-footer {
-  position: absolute;
-  left: 50%;
-  bottom: 14px; /* small internal gap from the card's own bottom edge */
-  transform: translateX(-50%);
+/* Shared row for everything that floats over the card's bottom edge — Read more/Set GPS on the
+   left, Listen here/the narration icon pushed to the right via margin-left:auto below. One fixed
+   container (not each half self-positioning) so they share one bottom offset and can't silently
+   overlap when both are wide (Read more + Set GPS + Listen here, dev mode) — wraps to a second
+   line instead. bottom:71 = .modal-card.detail-popup's own bottom:59 plus the same 12px gap that
+   inset itself keeps above the footer. left/right:24 = the card's own 12px side inset plus that
+   same 12px gap, so the row sits exactly 12px in from the card's edge on all three sides it
+   floats near. */
+.detail-popup-bottom-row {
+  position: fixed;
+  left: max(24px, calc((100vw - 480px) / 2 + 24px));
+  right: max(24px, calc((100vw - 480px) / 2 + 24px));
+  bottom: 71px;
   z-index: 3;
   display: flex;
   align-items: center;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.detail-popup-footer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 /* Compound selector — a.primary's own margin: 20px auto 0 would otherwise throw off vertical
@@ -1604,10 +1623,16 @@ button.primary.quiz-submit {
 a.primary.detail-popup-link {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   white-space: nowrap;
-  padding: 10px 18px;
+  padding: 8px 10px;
   margin: 0;
+  font-size: 13px; /* matches .narration-entry-label's own 13px (see that rule) so "Read more"
+                       and "Listen here »" read as one equally-weighted pair, not .primary's
+                       usual 14px — also trims width (along with Set GPS's/the label's own
+                       padding) so the full row (Read more + Set GPS + Listen here, dev mode)
+                       fits on one line within the row's narrower 32px side insets instead of
+                       wrapping */
 }
 
 /* Compound selector, not a bare class — button.primary (element+class) otherwise wins the tie on
@@ -1616,9 +1641,9 @@ a.primary.detail-popup-link {
    not a primary action competing for attention next to it. Off-palette brick outline, same
    "not game content" language already used for the Dev-tools menu/POI-draft markers. */
 button.primary.detail-popup-setgps {
-  padding: 7px 12px;
+  padding: 6px 7px;
   margin: 0;
-  font-size: 12px;
+  font-size: 11px;
   background: var(--stone-raised);
   border: 1px solid var(--brick);
   color: var(--brick);
@@ -1773,6 +1798,36 @@ button.primary.instructions-start-btn {
   width: 12px;
   height: 12px;
   fill: #fff;
+}
+
+/* Real .map-pin-site size (26px circle / 18px star) — used in the Map view legend, where icons
+   need to match the map graphic's own marker sizes exactly, not the smaller inline-text size above. */
+.instructions-poi-marker-lg {
+  width: 26px;
+  height: 26px;
+  vertical-align: middle;
+}
+.instructions-poi-marker-lg svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Inline echo of the real .narration-entry-icon button (brass circle + speaker glyph), shrunk
+   to sit inside a sentence the same way .instructions-poi-marker does for the map pin. */
+.instructions-narration-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--brass);
+  color: #211603;
+  vertical-align: -7px;
+}
+.instructions-narration-icon svg {
+  width: 17px;
+  height: 17px;
 }
 
 /* StartPage-only heading/subtitle sizing — compound selector (not a bare class) since
@@ -2404,9 +2459,14 @@ button.primary.instructions-start-btn {
 .mini-detail-card .detail-popup-body p.poi-popup-address { font-size: 13px; color: var(--ink-soft); margin: 0 0 10px; }
 .mini-detail-card .detail-popup-body p { font-size: 14px; line-height: 1.4; color: var(--ink-soft); margin: 0 0 12px; }
 .mini-detail-card .detail-popup-body p.field-label { font-size: 13.5px; font-weight: 700; color: var(--brass-deep); margin: 0 0 2px; }
-.mini-detail-card .detail-popup-footer {
-  position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 3;
+/* .detail-popup-bottom-row is position:fixed on the real popup (see that rule) — that would
+   escape this card's own transform:scale box entirely, so it's overridden to sit absolute within
+   the card instead, same spirit as the old single-button override this replaced. */
+.mini-detail-card .detail-popup-bottom-row {
+  position: absolute; left: 0; right: 0; bottom: 14px; z-index: 3;
+  display: flex; align-items: center; justify-content: center; gap: 14px;
 }
+.mini-detail-card .narration-entry { margin-left: 0; }
 .mini-detail-card a.primary.detail-popup-link {
   display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
   padding: 10px 18px; margin: 0; font-size: 14px; font-weight: 500; color: #000;
@@ -2514,7 +2574,8 @@ button.primary.instructions-start-btn {
 
 .map-panel-here {
   position: absolute;
-  top: 46%; left: 15%;
+  top: 67%; left: 76.5%; /* on land (checked against Port Louis/Edinburgh/default screenshots) —
+                            was 46%/15%, which sat in open water on every tour's map */
   width: 18px; height: 18px; border-radius: 50%;
   background: #39ff14; border: 2px solid #fff;
   box-shadow: 0 0 0 9px rgba(57, 255, 20, 0.22);
@@ -2527,6 +2588,50 @@ button.primary.instructions-start-btn {
   background: rgba(57, 255, 20, 0.35);
   animation: mapHereHaloPulse 2s ease-out infinite;
 }
+
+/* Section 4's "what the map shows" legend — each icon mirrors a real map marker's own size
+   (.map-pin-landmark/.map-pin-site/.map-panel-here, see each icon component's own comment in
+   InstructionsPage.jsx) so the list reads as "these exact things, just labelled" rather than a
+   generic bullet list. Grid, not flex, for the icon column — same reasoning as
+   .instructions-tip-item below (fixed track keeps every row's text starting at the same x
+   regardless of that row's own icon size), just a wider 44px track to fit the largest (40px)
+   landmark icon without clipping. */
+.instructions-map-legend {
+  display: flex; flex-direction: column; gap: 10px; margin: 10px 0 14px;
+}
+.instructions-map-legend-item { display: grid; grid-template-columns: 44px 1fr; column-gap: 12px; align-items: center; }
+.instructions-map-legend-icon { height: 44px; display: flex; align-items: center; justify-content: center; }
+.instructions-map-legend-text { line-height: 1.35; }
+
+/* Mirrors .map-pin-landmark exactly (40px circle, forest border, photo fill) — see that rule. */
+.instructions-landmark-marker {
+  display: inline-block;
+  width: 40px; height: 40px; border-radius: 50%;
+  border: 3px solid var(--forest);
+  background-color: var(--stone-raised);
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 2px 6px rgba(35, 32, 27, 0.35);
+}
+
+/* Static (non-absolute) twin of .map-panel-here, for use as an inline/grid bullet icon rather
+   than overlaid on the map graphic — same size, color and pulsing halo. */
+.instructions-here-marker {
+  position: relative;
+  display: inline-block;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: #39ff14; border: 2px solid #fff;
+  box-shadow: 0 0 0 9px rgba(57, 255, 20, 0.22);
+}
+.instructions-here-marker::after {
+  content: '';
+  position: absolute;
+  inset: -9px;
+  border-radius: 50%;
+  background: rgba(57, 255, 20, 0.35);
+  animation: mapHereHaloPulse 2s ease-out infinite;
+}
+
 @keyframes mapHereHaloPulse {
   0% { transform: scale(1); opacity: 0.55; }
   100% { transform: scale(2.4); opacity: 0; }
@@ -2556,8 +2661,9 @@ button.primary.instructions-start-btn {
 
 .instructions-coach-tile {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 26px; height: 26px; border-radius: 7px; background: var(--forest);
-  font-size: 15px; vertical-align: -7px; margin: 0 2px;
+  width: 39px; height: 39px; border-radius: 10.5px; background: var(--forest); /* 1.5x the
+    original 26px/7px */
+  font-size: 22.5px; vertical-align: -10.5px; margin: 0 2px;
 }
 
 /* Section 10's help button + help menu demo — .help-btn/.modal-card.help-menu/.help-menu-* are
@@ -2736,3 +2842,258 @@ button.primary.instructions-next-btn {
   0%, 100% { box-shadow: 0 0 0 2px rgba(179, 63, 46, 0.2), 0 0 10px 2px rgba(179, 63, 46, 0.35); }
   50% { box-shadow: 0 0 0 2px rgba(179, 63, 46, 0.35), 0 0 20px 6px rgba(179, 63, 46, 0.7); }
 }
+
+/* ===================== Narration player ("Dock Bar") =====================
+   Entry button lives on DetailPopup (.narration-entry); the player itself (NarrationPlayer.jsx)
+   is mounted once at the App root so it survives route changes — closing/leaving the detail
+   popup must never stop playback. Positioned fixed, pinned above the game-header footer, width
+   capped to match .home-shell's 480px game column (not full viewport on a wider screen). See
+   project_poi_narration_feature memory for the three-concept mockup this design came from. */
+/* A normal flex child of .detail-popup-bottom-row now, not its own position:fixed element —
+   margin-left:auto pushes it to the row's right edge (matching .narration-mini's own right:24
+   inside the 480px-capped player box) while still sharing the row's wrap behavior with
+   .detail-popup-footer instead of being able to silently overlap it. */
+.narration-entry {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.narration-entry-label {
+  /* Matches a.primary.detail-popup-link's own size/weight (13px/500, see that rule) — the two
+     sit in the same bottom row and need to read as one pair of equally-weighted labels, not one
+     bold and one not. Padding trimmed along with Read more/Set GPS's own so the full row (Read
+     more + Set GPS + Listen here, dev mode) fits on one line instead of wrapping. */
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+  background: var(--stone-raised);
+  border: 1px solid var(--stone-line);
+  padding: 7px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+  box-shadow: 0 3px 8px rgba(20, 20, 20, 0.15);
+}
+/* Same circle as .narration-mini below, deliberately kept identical — this button IS the
+   minimised player icon, just before any track is loaded. */
+.narration-entry-icon,
+.narration-mini {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--brass);
+  color: #211603;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 16px -6px rgba(0, 0, 0, 0.5);
+}
+.narration-entry-icon {
+  border: none;
+  cursor: pointer;
+  /* Without this, a global base button rule's own padding (11px 15px) survives here since this
+     selector never contested it, and with box-sizing:border-box that padding eats into the 42px
+     box down to ~12px of usable width — squeezing the svg flex item horizontally while its height
+     stays uncompressed (cross-axis, unaffected by flex-shrink). That's what was making this one
+     icon look visibly narrower/distorted next to .narration-mini/.narration-wave, which are plain
+     divs and never hit a button's padding in the first place. */
+  padding: 0;
+}
+.narration-entry-icon svg,
+.narration-mini svg,
+.narration-wave svg {
+  width: 26px;
+  height: 26px;
+}
+
+.narration-player {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 47px; /* clears .home-header — measured 47px tall on /home, same footer the mockup
+                   floats above */
+  z-index: 80;  /* above .modal-overlay (70) so it stays usable while a DetailPopup is open */
+  width: 100%;
+  max-width: 480px;
+}
+.narration-player audio { display: none; }
+.narration-icon-btn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+}
+.narration-icon-btn svg { width: 20px; height: 20px; }
+
+.narration-panel {
+  background: var(--brass);
+  border-radius: 24px;
+  margin: 0 24px 10px; /* matches .narration-mini/.narration-entry's own right:24 inset — see
+                           .detail-popup-bottom-row */
+  box-shadow: 0 14px 30px -12px rgba(0, 0, 0, 0.5);
+  padding: 10px 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.narration-top-row { display: flex; align-items: center; gap: 10px; }
+.narration-meta { flex: 1; min-width: 0; }
+.narration-title {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--umber);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.narration-min-btn, .narration-close-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--cream);
+  flex-shrink: 0;
+}
+.narration-min-btn svg, .narration-close-btn svg { width: 11px; height: 11px; }
+.narration-wave {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--brass);
+  color: #211603;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.narration-time-row { display: flex; align-items: center; gap: 8px; }
+.narration-time {
+  font-size: 10px;
+  color: var(--umber);
+  opacity: 0.8;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.narration-progress {
+  position: relative;
+  height: 4px;
+  border-radius: 4px;
+  background: rgba(61, 42, 19, 0.3);
+  cursor: pointer;
+  flex: 1;
+}
+.narration-progress-fill {
+  position: absolute;
+  inset: 0;
+  width: 0%;
+  border-radius: 4px;
+  background: var(--umber);
+}
+.narration-progress-thumb {
+  position: absolute;
+  top: 50%;
+  left: 0%;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--stone-raised);
+  border: 2.5px solid var(--umber);
+  transform: translate(-50%, -50%);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+}
+
+.narration-ctrl-row { display: flex; align-items: center; justify-content: center; gap: 10px; }
+.narration-skip-btn { color: var(--umber); flex-direction: column; gap: 1px; }
+.narration-skip-btn svg { width: 19px; height: 19px; }
+.narration-skip-btn span { font-size: 8px; font-weight: 800; line-height: 1; }
+.narration-play-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--umber);
+  color: var(--brass-tint);
+  flex-shrink: 0;
+}
+.narration-play-btn svg { width: 18px; height: 18px; }
+
+.narration-speed-pills { display: flex; justify-content: center; gap: 6px; }
+.narration-speed-pill {
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 10.5px;
+  color: var(--umber);
+  background: var(--stone-raised);
+  border: 1px solid rgba(61, 42, 19, 0.25);
+  border-radius: 999px;
+  width: 50px;
+  padding: 4px 0;
+  text-align: center;
+  cursor: pointer;
+}
+.narration-speed-pill.active {
+  color: var(--brass-tint);
+  background: var(--umber);
+  border-color: var(--umber);
+}
+
+.narration-mini {
+  position: absolute;
+  right: 24px; /* matches .narration-entry's right inset — see .detail-popup-bottom-row */
+  bottom: 10px;
+  cursor: pointer;
+}
+.narration-mini-close {
+  /* Visual placement unchanged (tight badge on the icon's corner) — the "close vs expand"
+     precision is handled in JS (see NarrationPlayer.jsx), which only treats a tap as a close when
+     it lands near the glyph's own center, and otherwise lets it fall through to expand. Moving
+     this badge further off the icon to fix mis-taps just left a visible gap that looked wrong. */
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--cream);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.35);
+}
+.narration-mini-close svg { width: 8px; height: 8px; }
+
+/* Cross-device "someone on your team fully listened" toast — see NarrationPlayer.jsx's poll
+   loop. Fixed near the top (the bottom is already busy with the player/footer), centered and
+   capped the same 480px width as .narration-player so it lines up with the rest of this game
+   column on a wider screen instead of stretching edge to edge. Forest, not brass/umber — this is
+   the app's existing "success" color (see design_visual_identity), deliberately distinct from the
+   player's own brass so a toast reads as "something good just happened", not "the player again". */
+.narration-bonus-toast {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 90; /* above .narration-player itself (80) — this is rarer and more important */
+  width: calc(100% - 24px);
+  max-width: 456px; /* 480px column minus 12px gutter each side, matching the rest of this file */
+  background: var(--forest);
+  color: var(--cream);
+  border-radius: 999px;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  box-shadow: 0 10px 24px -8px rgba(0, 0, 0, 0.5);
+}
+.narration-bonus-toast svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+.narration-bonus-toast strong { font-weight: 800; }

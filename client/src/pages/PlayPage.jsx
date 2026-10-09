@@ -141,6 +141,16 @@ export default function PlayPage() {
   useRefreshOnResume(() => { refresh(); loadHeaderData() })
   useWakeLock()
 
+  // NarrationPlayerProvider (mounted at the App root) fires this when its own poll detects a
+  // teammate just earned the narration bonus — refetch the header data here so the score pill
+  // updates without waiting for this page's own next 4s poll tick (that poll only covers `state`/
+  // getCurrent, not headerData/getHome, which is what actually carries totalScore on this page).
+  useEffect(() => {
+    const onScoreChanged = () => loadHeaderData()
+    window.addEventListener('tourz:score-changed', onScoreChanged)
+    return () => window.removeEventListener('tourz:score-changed', onScoreChanged)
+  }, [])
+
   // Fires the screen-update ping on a teammate's device when a poll picks up one of the captain's
   // four gated actions. Skipped entirely on the captain's own device (they see the result of their
   // own tap immediately, no ping needed) and on the very first signal for a landmark (the baseline,
@@ -599,6 +609,7 @@ export default function PlayPage() {
           title={landmarkPopup.title}
           address={landmarkPopup.address}
           imagePath={landmarkPopup.imagePath}
+          audioPath={landmarkPopup.audioPath}
           sections={[
             { label: landmarkPopup.aboutLandmarkLabel, text: landmarkPopup.aboutLandmarkText },
             { label: landmarkPopup.aboutSubjectLabel, text: landmarkPopup.aboutSubjectText },

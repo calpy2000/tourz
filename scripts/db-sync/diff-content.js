@@ -18,12 +18,12 @@ const TABLES = [
     name: 'landmarks',
     query: `SELECT sequence_order, title, address, latitude, longitude,
                     about_landmark_label, about_landmark_text, about_subject_label,
-                    about_subject_text, interesting_fact, external_link, quiz_format
+                    about_subject_text, interesting_fact, external_link, quiz_format, audio_path
              FROM landmarks ORDER BY sequence_order`,
     key: (r) => `${r.sequence_order}`,
     fields: ['title', 'address', 'latitude', 'longitude', 'about_landmark_label',
       'about_landmark_text', 'about_subject_label', 'about_subject_text',
-      'interesting_fact', 'external_link', 'quiz_format'],
+      'interesting_fact', 'external_link', 'quiz_format', 'audio_path'],
   },
   {
     name: 'landmark_images',
@@ -74,11 +74,12 @@ const TABLES = [
     name: 'sites',
     query: `SELECT title, address, type, latitude, longitude,
                     about_site_label, about_site_text, about_subject_label, about_subject_text,
-                    interesting_fact, image_path, external_link
+                    interesting_fact, image_path, audio_path, external_link
              FROM sites ORDER BY title`,
     key: (r) => r.title,
     fields: ['address', 'type', 'latitude', 'longitude', 'about_site_label', 'about_site_text',
-      'about_subject_label', 'about_subject_text', 'interesting_fact', 'image_path', 'external_link'],
+      'about_subject_label', 'about_subject_text', 'interesting_fact', 'image_path', 'audio_path',
+      'external_link'],
   },
 ];
 

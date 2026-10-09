@@ -12,6 +12,7 @@ export default defineConfig({
     proxy: {
       '/api': 'http://localhost:3001',
       '/content-photos': 'http://localhost:3001',
+      '/content-audio': 'http://localhost:3001',
     },
   },
 })

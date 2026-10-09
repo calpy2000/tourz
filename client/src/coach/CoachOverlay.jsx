@@ -70,7 +70,15 @@ function renderCoachText(text, trailing) {
 // by any real drag or wheel/pinch gesture on the target element.
 export default function CoachOverlay() {
   const { active, currentStep, stepIndex, wrongAttempts, advance, registerWrongAttempt } = useCoach()
-  const [targetRects, setTargetRects] = useState([])
+  // Tagged with the coachId it was measured for, not just a bare array — on the very first render
+  // after a step change, this state still holds the PREVIOUS step's rects (its own effect hasn't
+  // re-measured yet), and the positioning effect below runs in that same commit. Real bug this
+  // caused: the overlap-avoidance decision locked itself in using the old step's (irrelevant,
+  // already-hidden) target rects, picked a position that happened to clear THOSE, then froze there
+  // — permanently overlapping the new step's real target with no way to recover, since the lock is
+  // intentionally never revisited (see the effect below for why). Tagging with coachId lets the
+  // positioning effect tell "stale" from "fresh" and simply wait one tick for the real thing.
+  const [targetRects, setTargetRects] = useState({ coachId: null, rects: [] })
   const popupRef = useRef(null)
   const [popupStyle, setPopupStyle] = useState({ visibility: 'hidden' })
   const lockedTopRef = useRef(null)
@@ -80,7 +88,7 @@ export default function CoachOverlay() {
   useLayoutEffect(() => {
     if (!active || !currentStep) return
     function measure() {
-      setTargetRects(findTargetEls(currentStep.coachId).map((el) => el.getBoundingClientRect()))
+      setTargetRects({ coachId: currentStep.coachId, rects: findTargetEls(currentStep.coachId).map((el) => el.getBoundingClientRect()) })
     }
     measure()
     window.addEventListener('resize', measure)
@@ -126,14 +134,21 @@ export default function CoachOverlay() {
     // this step, check whether the default centered position overlaps it; if so, pin the popup
     // above or below the target instead (decided once per step so it doesn't jump around as the
     // popup grows with extra attempt lines).
-    if (targetRects.length > 0) {
+    // Ignore a still-stale measurement (tagged with the PREVIOUS step's coachId — this state's own
+    // effect hasn't re-measured for the new step yet in this same commit). Using it here would let
+    // the lock below commit to a position that only clears a target that isn't even on screen
+    // anymore; waiting one tick for the real rects costs nothing visible since the popup is at its
+    // same centered default either way.
+    const freshTargetRects = targetRects.coachId === currentStep.coachId ? targetRects.rects : []
+
+    if (freshTargetRects.length > 0) {
       // Keep re-checking for overlap on every measurement until one is actually found and
       // committed to (mode 'above'/'below') — the target can still be settling into its final
       // position (e.g. the map panning to center on a marker) when it first appears, so a single
       // early "doesn't overlap yet" reading must not be treated as final.
       if (anchorRef.current === null || anchorRef.current.mode === 'none') {
         const defaultRect = { top, bottom: top + cardHeight, left, right: left + cardWidth }
-        const overlapping = targetRects.filter((r) => rectsOverlap(defaultRect, r, MARGIN))
+        const overlapping = freshTargetRects.filter((r) => rectsOverlap(defaultRect, r, MARGIN))
         if (overlapping.length > 0) {
           const union = overlapping.reduce(
             (acc, r) => ({ top: Math.min(acc.top, r.top), bottom: Math.max(acc.bottom, r.bottom) }),
@@ -349,7 +364,7 @@ export default function CoachOverlay() {
 
   return (
     <>
-      {showHelp && targetRects.map((rect, i) => (
+      {showHelp && targetRects.coachId === currentStep.coachId && targetRects.rects.map((rect, i) => (
         <div
           key={i}
           className="coach-target-lozenge"

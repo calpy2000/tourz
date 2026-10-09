@@ -8,22 +8,43 @@ you are now in the landmark **details page** where you can find out lots more ab
 to get back to the map view click on the **back button**",same,same
 ,map view,map navigation,expand and swipe,"Well done **✓**
 you're back on the MAP view
-expand the map a little and move around, just like google maps",same,same
+**expand the map** a little and move around, just like google maps",same,same
 ,map view,any POI marker marker,tap,"Well done **✓**
 you're still in the MAP view
 tap on any **point of interest marker**",same,same
-,POI pop up,back button,tap,"Well done **✓**
+,POI pop up,listen button,tap,"Well done **✓**
 you're now in the **details page**
-tap on the **back button**",same,same
-,map view,help button,tap,"you're back on the MAP view **✓**
+you can either **read** the details or **listen** to them
+tap on the **listen here** button to play the audio",same,same
+,POI pop up,pause button,tap,"Well done **✓**
+you have opened the audio player
+the audio should now be playing
+tap on the **pause** button",same,same
+,POI pop up,back button,tap,"Well done **✓**
+now tap on the **back button** to return to the MAP view",same,same
+,map view,play button,tap,"Well done **✓**
+you are now back on the MAP view
+you can still listen to the audio
+press the **play** button",same,same
+,map view,minimise button,tap,"Well done **✓**
+you have restarted the audio
+now **minimise** the audio player",same,same
+,map view,close button,tap,"Well done **✓**
+now close the audio player",same,same
+,map view,help button,tap,"Well done **✓**
+you're still on the MAP view
 tap on the **HELP** button",same,same
-,help panel,see instructions option,tap,"the help menu is now open **✓**
+,help panel,see instructions option,tap,"Well done **✓**
+the help menu is now open
 tap on **SHOW INSTRUCTIONS**",same,same
-,help see instructions,back button,tap,"you're in the show instructions page **✓**
+,help see instructions,back button,tap,"Well done **✓**
+you're in the show instructions help page
 tap on the **back button**",same,same
-,map view,current landmark,tap,"you're back on the MAP view **✓**
-tap on **CURRENT LANDMARK**",same,same
-,Find It Solve It,end,tap,"well done - you are now in the current landmark page **✓**
+,map view,current landmark,tap,"Well done **✓**
+you're back on the MAP view
+tap on **CURRENT Landmark** in the toggle bar",same,same
+,Find It Solve It,end,tap,"Well done **✓**
+you are now in the current landmark page
 start by trying to solve the clue and use hints only if you have to
 once solved, you will move onto the landmark quiz
 don't forget to keep an eagle eye out as you walk

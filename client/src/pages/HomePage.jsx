@@ -45,6 +45,15 @@ export default function HomePage() {
   useRefreshOnResume(loadHome)
   useWakeLock()
 
+  // NarrationPlayerProvider (mounted at the App root, so it's present regardless of which page
+  // is showing) fires this when its own poll detects a teammate just earned the narration bonus
+  // — refetch here so this page's score pill updates without waiting for the next mount/resume.
+  useEffect(() => {
+    const onScoreChanged = () => loadHome()
+    window.addEventListener('tourz:score-changed', onScoreChanged)
+    return () => window.removeEventListener('tourz:score-changed', onScoreChanged)
+  }, [])
+
   // elapsedSeconds is a snapshot from whenever we last fetched — tick locally so the clock
   // keeps moving between fetches instead of looking frozen.
   useEffect(() => {

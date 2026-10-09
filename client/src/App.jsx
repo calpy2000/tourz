@@ -12,6 +12,7 @@ import { CoachProvider } from './coach/CoachContext.jsx'
 import CoachOverlay from './coach/CoachOverlay.jsx'
 import GpsGateScreen from './components/GpsGateScreen.jsx'
 import { useGpsPreflightStatus } from './gpsPreflight.js'
+import { NarrationPlayerProvider } from './components/NarrationPlayer.jsx'
 
 // /home, /play, /instructions all need a real registered player — without a session there's no
 // team for the API to resolve, so bounce back to registration rather than showing a broken page.
@@ -31,14 +32,16 @@ export default function App() {
       {gpsStatus !== 'ok' ? (
         <GpsGateScreen />
       ) : (
-        <Routes>
-          <Route path="/" element={<StartPage />} />
-          <Route path="/welcome" element={<RequireSession><WelcomePage /></RequireSession>} />
-          <Route path="/instructions" element={<RequireSession><InstructionsPage /></RequireSession>} />
-          <Route path="/home" element={<RequireSession><HomePage /></RequireSession>} />
-          <Route path="/play" element={<RequireSession><PlayPage /></RequireSession>} />
-          <Route path="/certificate" element={<RequireSession><CertificatePage /></RequireSession>} />
-        </Routes>
+        <NarrationPlayerProvider>
+          <Routes>
+            <Route path="/" element={<StartPage />} />
+            <Route path="/welcome" element={<RequireSession><WelcomePage /></RequireSession>} />
+            <Route path="/instructions" element={<RequireSession><InstructionsPage /></RequireSession>} />
+            <Route path="/home" element={<RequireSession><HomePage /></RequireSession>} />
+            <Route path="/play" element={<RequireSession><PlayPage /></RequireSession>} />
+            <Route path="/certificate" element={<RequireSession><CertificatePage /></RequireSession>} />
+          </Routes>
+        </NarrationPlayerProvider>
       )}
       <CoachOverlay />
     </CoachProvider>

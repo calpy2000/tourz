@@ -43,6 +43,10 @@ CREATE TABLE landmarks (
     about_subject_text    TEXT,      -- facts about the person/history behind the landmark
     interesting_fact      TEXT,      -- one standout callout shown at the end of about_subject_text
     external_link         TEXT,      -- e.g. Wikipedia, same idea as sites.external_link
+    audio_path            TEXT,      -- pre-generated Chirp3-HD narration MP3, static file path/URL
+                                     -- under server/content-audio/, same convention as
+                                     -- landmark_images.image_path under content-photos/. NULL means
+                                     -- no narration exists yet for this landmark (button hidden).
     quiz_format           TEXT NOT NULL DEFAULT 'multiple_choice',
                                      -- which quiz_questions rows (by `type`) are actually served/scored
                                      -- for this landmark. Lets a landmark keep a full backup set of
@@ -138,6 +142,8 @@ CREATE TABLE sites (
     about_subject_text    TEXT,
     interesting_fact      TEXT,
     image_path            TEXT,
+    audio_path            TEXT,                -- pre-generated Chirp3-HD narration MP3, same
+                                                 -- convention as landmarks.audio_path above
     external_link         TEXT,                -- e.g. Wikipedia
     created_at            TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -222,6 +228,29 @@ CREATE TABLE progress_events (
     payload       JSONB,
     created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Narration "fully listened" bonus (+1 team point) — separate from progress_events because that
+-- table's landmark_id is NOT NULL (no way to represent a site there), and any team member (not
+-- just the captain) can trigger this, unlike every progress_events-recorded action. Exactly one
+-- of landmark_id/site_id is set per row. A team can only ever earn this once per landmark/site,
+-- regardless of which player (or how many times) triggers it — enforced by the two partial unique
+-- indexes below, not just application logic, so a race between two team members listening at once
+-- can't double-award. player_id records who actually completed the listen, for the "<name>
+-- listened all the way through" cross-device toast (see client/src/components/NarrationPlayer.jsx).
+CREATE TABLE narration_listens (
+    id            BIGSERIAL PRIMARY KEY,
+    team_id       BIGINT NOT NULL REFERENCES teams(id),
+    landmark_id   BIGINT REFERENCES landmarks(id),
+    site_id       BIGINT REFERENCES sites(id),
+    player_id     BIGINT NOT NULL REFERENCES players(id),
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CHECK (
+        (landmark_id IS NOT NULL AND site_id IS NULL) OR
+        (landmark_id IS NULL AND site_id IS NOT NULL)
+    )
+);
+CREATE UNIQUE INDEX narration_listens_team_landmark_uq ON narration_listens(team_id, landmark_id) WHERE landmark_id IS NOT NULL;
+CREATE UNIQUE INDEX narration_listens_team_site_uq ON narration_listens(team_id, site_id) WHERE site_id IS NOT NULL;
 
 -- Post-MVP feature (GPS proximity), schema included now per the "cheap now, painful to
 -- retrofit" principle. Unused until that feature is built.

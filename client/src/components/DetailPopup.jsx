@@ -4,6 +4,7 @@ import { API_BASE } from '../apiBase.js'
 import { rectFromEvent } from '../rect.js'
 import { saveGpsCorrection } from '../gpsCorrections.js'
 import SetGpsPanel from './SetGpsPanel.jsx'
+import { useNarrationPlayer, NarrationSpeakerIcon } from './NarrationPlayer.jsx'
 
 // Shared detail popup for landmarks, sites ("Interests"), and POI drafts — one format for all
 // three, settled after comparing this against the old two-card full-page layout (see
@@ -20,9 +21,10 @@ import SetGpsPanel from './SetGpsPanel.jsx'
 // paste-a-coordinate panel below to closing this popup and making the POI's own map pin
 // draggable — dragging the pin to its correct spot is far more precise than typing what you read
 // off a phone's Maps app. Landmarks/sites (no callback passed) keep the paste-text flow.
-export default function DetailPopup({ eyebrow, title, address, imagePath, sections, interestingFact, warning, externalLink, gpsRef, onDragToSetGps, onClose }) {
+export default function DetailPopup({ eyebrow, title, address, imagePath, audioPath, sections, interestingFact, warning, externalLink, gpsRef, onDragToSetGps, onClose }) {
   const [gpsPanelAnchor, setGpsPanelAnchor] = useState(null)
   const [gpsSaved, setGpsSaved] = useState(false)
+  const narration = useNarrationPlayer()
 
   function handleGpsSubmit(enteredGps) {
     saveGpsCorrection({ ...gpsRef, name: title, enteredGps, capturedAt: new Date().toISOString() })
@@ -72,22 +74,49 @@ export default function DetailPopup({ eyebrow, title, address, imagePath, sectio
           {warning && <p className="detail-popup-warning">{warning}</p>}
         </div>
 
-        {(externalLink || (DEV_MODE && gpsRef)) && (
-          <div className="detail-popup-footer">
-            {externalLink && (
-              <a className="primary detail-popup-link" href={externalLink} target="_blank" rel="noreferrer">
-                Read more
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#23201b" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg>
-              </a>
+        {(audioPath || externalLink || (DEV_MODE && gpsRef)) && (
+          <div className="detail-popup-bottom-row">
+            {(externalLink || (DEV_MODE && gpsRef)) && (
+              <div className="detail-popup-footer">
+                {externalLink && (
+                  <a className="primary detail-popup-link" href={externalLink} target="_blank" rel="noreferrer">
+                    Read more
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#23201b" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg>
+                  </a>
+                )}
+                {DEV_MODE && gpsRef && (
+                  <button
+                    type="button"
+                    className="primary detail-popup-setgps"
+                    onClick={handleSetGpsClick}
+                  >
+                    {gpsSaved ? 'Saved ✓' : 'Set GPS'}
+                  </button>
+                )}
+              </div>
             )}
-            {DEV_MODE && gpsRef && (
-              <button
-                type="button"
-                className="primary detail-popup-setgps"
-                onClick={handleSetGpsClick}
-              >
-                {gpsSaved ? 'Saved ✓' : 'Set GPS'}
-              </button>
+
+            {audioPath && (
+              <div className="narration-entry">
+                <span className="narration-entry-label">Listen here &raquo;</span>
+                <button
+                  type="button"
+                  data-coach-id="narration-entry-icon"
+                  className="narration-entry-icon"
+                  onClick={() => narration.open({
+                    src: `${API_BASE}/content-audio/${audioPath}`,
+                    title,
+                    // gpsRef already carries exactly this identity ({type:'landmark',sequenceOrder}
+                    // or {type:'site',id}) for every real landmark/site popup — reused here instead
+                    // of a new prop so the narration bonus knows what it's crediting.
+                    kind: gpsRef?.type,
+                    refId: gpsRef?.type === 'landmark' ? gpsRef.sequenceOrder : gpsRef?.id,
+                  })}
+                  aria-label="Listen to narration"
+                >
+                  <NarrationSpeakerIcon />
+                </button>
+              </div>
             )}
           </div>
         )}

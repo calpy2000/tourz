@@ -25,6 +25,7 @@ app.use(cors());
 // data URL, which runs several hundred KB even for a small card.
 app.use(express.json({ limit: '10mb' }));
 app.use('/content-photos', express.static(path.join(__dirname, 'content-photos')));
+app.use('/content-audio', express.static(path.join(__dirname, 'content-audio')));
 
 // Unauthenticated, no DB query — pinged every few minutes by the Cloudflare Worker's cron
 // trigger (see client/worker.js) purely to keep this Render free-tier service from spinning down
@@ -933,6 +934,15 @@ app.get('/api/game/landmark/:sequenceOrder', async (req, res) => {
     }
   }
 
+  let audioBonusEarned = false;
+  if (landmark.audio_path) {
+    const { rows: bonusRows } = await db.query(
+      'SELECT 1 FROM narration_listens WHERE team_id = $1 AND landmark_id = $2',
+      [team.id, landmark.id]
+    );
+    audioBonusEarned = bonusRows.length > 0;
+  }
+
   res.json({
     sequenceOrder: landmark.sequence_order,
     isCurrent: sequenceOrder === team.current_landmark_sequence,
@@ -945,6 +955,8 @@ app.get('/api/game/landmark/:sequenceOrder', async (req, res) => {
     aboutSubjectText: landmark.about_subject_text,
     interestingFact: landmark.interesting_fact,
     externalLink: landmark.external_link,
+    audioPath: landmark.audio_path,
+    audioBonusEarned,
   });
 });
 
@@ -1036,6 +1048,15 @@ app.get('/api/game/site/:id', async (req, res) => {
   );
   if (!site) return res.status(404).json({ error: 'No such site.' });
 
+  let audioBonusEarned = false;
+  if (site.audio_path) {
+    const { rows: bonusRows } = await db.query(
+      'SELECT 1 FROM narration_listens WHERE team_id = $1 AND site_id = $2',
+      [team.id, site.id]
+    );
+    audioBonusEarned = bonusRows.length > 0;
+  }
+
   res.json({
     title: site.title,
     address: site.address,
@@ -1047,6 +1068,96 @@ app.get('/api/game/site/:id', async (req, res) => {
     aboutSubjectText: site.about_subject_text,
     interestingFact: site.interesting_fact,
     externalLink: site.external_link,
+    audioPath: site.audio_path,
+    audioBonusEarned,
+  });
+});
+
+// Narration "fully listened" bonus — any team member (not just the captain) can trigger this, so
+// deliberately not gated by requireCaptain the way the scoring/progress routes above are. Exactly
+// one of landmarkSequenceOrder/siteId must be given. The "was this genuinely listened to end to
+// end, not skipped" judgment is made client-side (see NarrationPlayer.jsx's coverage tracking) —
+// this endpoint's job is just idempotent award-once-per-team enforcement, via narration_listens'
+// own partial unique indexes (ON CONFLICT DO NOTHING below), which also makes it race-safe if two
+// teammates finish listening at nearly the same moment.
+app.post('/api/game/narration/complete', async (req, res) => {
+  const session = await resolveSession(req, res);
+  if (!session) return;
+  const { team, player } = session;
+  const { landmarkSequenceOrder, siteId } = req.body || {};
+
+  let landmarkId = null;
+  let siteRowId = null;
+
+  if (landmarkSequenceOrder != null) {
+    const { rows: [tourRow] } = await db.query(
+      `SELECT t.id FROM teams tm
+       JOIN games g ON g.id = tm.game_id
+       JOIN game_codes gc ON gc.id = g.game_code_id
+       JOIN tours t ON t.id = gc.tour_id
+       WHERE tm.id = $1`,
+      [team.id]
+    );
+    const { rows: [landmark] } = await db.query(
+      'SELECT id, audio_path FROM landmarks WHERE tour_id = $1 AND sequence_order = $2',
+      [tourRow.id, Number(landmarkSequenceOrder)]
+    );
+    if (!landmark) return res.status(404).json({ error: 'No such landmark.' });
+    if (!landmark.audio_path) return res.status(400).json({ error: 'This landmark has no narration.' });
+    landmarkId = landmark.id;
+  } else if (siteId != null) {
+    const { rows: [site] } = await db.query('SELECT id, audio_path FROM sites WHERE id = $1', [siteId]);
+    if (!site) return res.status(404).json({ error: 'No such site.' });
+    if (!site.audio_path) return res.status(400).json({ error: 'This site has no narration.' });
+    siteRowId = site.id;
+  } else {
+    return res.status(400).json({ error: 'landmarkSequenceOrder or siteId required.' });
+  }
+
+  const { rows: inserted } = await db.query(
+    `INSERT INTO narration_listens (team_id, landmark_id, site_id, player_id)
+     VALUES ($1, $2, $3, $4)
+     ON CONFLICT DO NOTHING
+     RETURNING id`,
+    [team.id, landmarkId, siteRowId, player.id]
+  );
+
+  const awarded = inserted.length > 0;
+  let totalScore = team.total_score;
+  if (awarded) {
+    const { rows: [updated] } = await db.query(
+      'UPDATE teams SET total_score = total_score + 1 WHERE id = $1 RETURNING total_score',
+      [team.id]
+    );
+    totalScore = updated.total_score;
+  }
+
+  res.json({ awarded, totalScore });
+});
+
+// Polled (every few seconds, see NarrationPlayer.jsx) by every team member's device so a bonus
+// point earned on one phone — and who earned it — shows up as a toast + ping on everyone else's,
+// the same lightweight interval-poll approach PlayPage already uses for syncing the captain's
+// gated actions to teammates (see that file's own comment on why: no sockets, fine at this scale).
+app.get('/api/game/narration/latest', async (req, res) => {
+  const session = await resolveSession(req, res);
+  if (!session) return;
+  const { team } = session;
+
+  const { rows: [latest] } = await db.query(
+    `SELECT nl.id, p.name AS player_name
+     FROM narration_listens nl
+     JOIN players p ON p.id = nl.player_id
+     WHERE nl.team_id = $1
+     ORDER BY nl.id DESC
+     LIMIT 1`,
+    [team.id]
+  );
+
+  res.json({
+    id: latest ? latest.id : null,
+    playerName: latest ? latest.player_name : null,
+    totalScore: team.total_score,
   });
 });
 
