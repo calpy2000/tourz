@@ -2,7 +2,8 @@
 // Usage: node db/seed.js [tour-folder]   (defaults to 'edinburgh-tour', so plain `npm run seed`
 // keeps working unchanged for the existing content-authoring workflow)
 //
-// Each tour folder needs a tour.json manifest ({ tourCode, cityName, tourName }). The tour is
+// Each tour folder needs a tour.json manifest ({ tourCode, cityName, tourName }, plus optional
+// timeLimitMinutes — defaults to 180). The tour is
 // looked up by tourCode (not by folder name or a numeric id) — if a tour with that code already
 // exists, ONLY that tour's own content and instance data (games/teams/players/etc for its own
 // game codes) is wiped and rebuilt. Every other tour in the database is left completely untouched
@@ -100,7 +101,7 @@ async function wipeTour(client, tourId) {
 }
 
 async function main() {
-  const { tourCode, cityName, tourName } = readManifest();
+  const { tourCode, cityName, tourName, timeLimitMinutes = 180 } = readManifest();
   if (!tourCode || !cityName || !tourName) {
     throw new Error(`${TOUR_FOLDER}/tour.json must have tourCode, cityName and tourName.`);
   }
@@ -141,8 +142,8 @@ async function main() {
       ({ rows: [city] } = await client.query('INSERT INTO cities (name) VALUES ($1) RETURNING id', [cityName]));
     }
     const { rows: [tour] } = await client.query(
-      'INSERT INTO tours (city_id, name, tour_code, total_landmarks) VALUES ($1, $2, $3, $4) RETURNING id',
-      [city.id, tourName, tourCode, landmarks.length]
+      'INSERT INTO tours (city_id, name, tour_code, total_landmarks, time_limit_minutes) VALUES ($1, $2, $3, $4, $5) RETURNING id',
+      [city.id, tourName, tourCode, landmarks.length, timeLimitMinutes]
     );
 
     const landmarkIdBySequence = {};

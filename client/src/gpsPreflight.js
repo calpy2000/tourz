@@ -43,6 +43,11 @@ export function useGpsPreflightStatus() {
   const [s, setS] = useState(status)
   useEffect(() => {
     listeners.push(setS)
+    // initGpsCheck() starts before React mounts, so its result can land between this hook's
+    // first render (which captured the old status) and this effect subscribing — a fast
+    // permissions.query() (e.g. a hard refresh of an already-granted tab) did exactly that and
+    // left the app on the loading spinner forever. Re-read once now that we're listening.
+    setS(status)
     return () => {
       listeners = listeners.filter((fn) => fn !== setS)
     }

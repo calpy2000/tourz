@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../api.js'
 import LoadingScreen from '../components/LoadingScreen.jsx'
+import { formatTimeLimit } from '../gameClock.jsx'
 
 function ordinal(n) {
   const suffixes = ['th', 'st', 'nd', 'rd']
@@ -22,7 +23,8 @@ export default function WelcomePage() {
 
   if (!status) return <LoadingScreen />
 
-  const { player, team, registrationNumber, maxPlayers, captainName } = status
+  const { player, team, registrationNumber, maxPlayers, captainName, timeLimitMinutes } = status
+  const limitText = formatTimeLimit(timeLimitMinutes || 180)
   const remaining = Math.max(0, maxPlayers - registrationNumber)
   const isFirst = registrationNumber === 1
 
@@ -86,20 +88,35 @@ export default function WelcomePage() {
 
         <section className="card">
           {player.isCaptain ? (
-            <p>
-              You have registered as the team captain &mdash; this is a special role. Each team
-              member has their own version of the app on their phone and each can use it
-              independently &mdash; however you, and only you, can submit answers into the app to
-              solve the walk. So work out how you and the team are going to work together.
-            </p>
+            <>
+              <p>
+                You have registered as the team captain &mdash; this is a special role. Each team
+                member has their own version of the app on their phone and each can use it
+                independently &mdash; however you, and only you, can submit answers into the app to
+                solve the walk. So work out how you and the team are going to work together.
+              </p>
+              <p>
+                You have <strong>{limitText}</strong> to complete the tour. The clock starts when{' '}
+                <strong>you</strong> finish the instructions and the short app walkthrough that follows.
+                If the team needs a break, e.g. for lunch, you can stop the clock twice from the help
+                menu &mdash; the app pauses for everyone until you restart it.
+              </p>
+            </>
           ) : (
-            <p>
-              You have registered as a team member, your team captain is{' '}
-              <strong>{captainName || 'yet to register'}</strong>. As a team member you have your
-              own version of the app and can use it independently &mdash; however only the team
-              captain can submit answers into the app to solve the walk, so work out how you and
-              the team are going to work together.
-            </p>
+            <>
+              <p>
+                You have registered as a team member, your team captain is{' '}
+                <strong>{captainName || 'yet to register'}</strong>. As a team member you have your
+                own version of the app and can use it independently &mdash; however only the team
+                captain can submit answers into the app to solve the walk, so work out how you and
+                the team are going to work together.
+              </p>
+              <p>
+                You have <strong>{limitText}</strong> to complete the tour. The clock starts when your
+                captain finishes the instructions and the short app walkthrough. If they stop the clock
+                for a break, the app pauses for everyone until they restart it.
+              </p>
+            </>
           )}
         </section>
       </div>

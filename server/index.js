@@ -124,6 +124,114 @@ function requireCaptain(player, res) {
   return true;
 }
 
+// The tour clock. Counts only running time: nothing before the captain starts it (by finishing
+// the guided walkthrough), and nothing while the captain has it stopped. Computed on every read
+// from games' clock columns rather than stored as a deadline, so stop/restart never rewrites one.
+// Once every landmark is completed the clock freezes at that moment — a finished team can't run
+// out of time afterwards, however long they take to tap through to their certificate.
+const MAX_CLOCK_STOPS = 2;
+
+function clockState(game, allCompleted, completedAt) {
+  const limitSeconds = game.time_limit_minutes * 60;
+  if (!game.clock_started_at) {
+    return { started: false, paused: false, timeUp: false, elapsedSeconds: 0, remainingSeconds: limitSeconds, limitSeconds };
+  }
+  const endPoint = allCompleted && completedAt ? new Date(completedAt) : game.clock_paused_at ? new Date(game.clock_paused_at) : new Date();
+  const elapsed = Math.max(0, Math.floor((endPoint - new Date(game.clock_started_at)) / 1000) - game.paused_seconds);
+  const remaining = Math.max(0, limitSeconds - elapsed);
+  return {
+    started: true,
+    paused: Boolean(game.clock_paused_at),
+    timeUp: !allCompleted && remaining <= 0,
+    elapsedSeconds: Math.min(elapsed, limitSeconds),
+    remainingSeconds: remaining,
+    limitSeconds,
+  };
+}
+
+// Everything clock-related for one team in one place: the game row, the computed clock, and
+// landmark completion ("12/14") — which the clock needs too, since finishing stops it.
+// playableCount counts landmarks that actually have a puzzle, i.e. excludes the start landmark,
+// matching the "Found x/14" footer pill.
+async function gameClockFor(team) {
+  const { rows: [game] } = await db.query('SELECT * FROM games WHERE id = $1', [team.game_id]);
+  const { rows: [counts] } = await db.query(
+    `SELECT
+       (SELECT COUNT(*) FROM landmarks l JOIN puzzles p ON p.landmark_id = l.id
+        JOIN game_codes gc ON gc.tour_id = l.tour_id WHERE gc.id = $2) AS playable_count,
+       (SELECT COUNT(*) FROM progress_events WHERE team_id = $1 AND event_type = 'landmark_completed') AS completed_count,
+       (SELECT MAX(created_at) FROM progress_events WHERE team_id = $1 AND event_type = 'landmark_completed') AS last_completed_at`,
+    [team.id, game.game_code_id]
+  );
+  const playableCount = Number(counts.playable_count);
+  const completedCount = Number(counts.completed_count);
+  const allCompleted = playableCount > 0 && completedCount >= playableCount;
+  return {
+    game,
+    clock: clockState(game, allCompleted, counts.last_completed_at),
+    allCompleted,
+    completedCount,
+    playableCount,
+    lastCompletedAt: counts.last_completed_at,
+  };
+}
+
+// The clock starts the moment the team's CURRENT captain has finished the guided walkthrough —
+// called from every place that can make that true (the captain finishing it, a captain handoff to
+// someone who already has, and the clock poll itself as a self-heal). Idempotent and atomic: the
+// WHERE clause only ever lets the first caller set clock_started_at.
+async function maybeStartClock(team) {
+  await db.query(
+    `UPDATE games SET clock_started_at = now()
+     WHERE id = $1 AND clock_started_at IS NULL
+       AND EXISTS (SELECT 1 FROM players WHERE team_id = $2 AND is_captain AND coach_complete)`,
+    [team.game_id, team.id]
+  );
+}
+
+// Gate for every scoring/progress-mutating route: no play before the clock starts, while it's
+// stopped, or once time is up. Enforced here, not just by the frozen screen client-side, per this
+// project's rule that anything with real value is enforced server-side. A team that has completed
+// every landmark is let through (the clock has frozen at completion) so the final "Head to next
+// landmark" tap still works. 423 Locked, so the client can tell this apart from a real error.
+async function requireClockRunning(team, res) {
+  const { clock, allCompleted } = await gameClockFor(team);
+  if (allCompleted) return true;
+  let error = null;
+  if (!clock.started) error = "The tour clock hasn't started yet — it starts when your captain finishes the app walkthrough.";
+  else if (clock.timeUp) error = "Time's up — your tour has ended.";
+  else if (clock.paused) error = 'The clock is stopped — your captain needs to restart it before you can carry on.';
+  if (!error) return true;
+  res.status(423).json({ error, clockBlocked: true });
+  return false;
+}
+
+// Shape of GET /api/game/clock (and the stop/restart responses) — the one payload the client's
+// GameClockProvider runs everything off: footer countdown, frozen screen, banners, warnings, the
+// time's-up popup and the Help menu's stop/restart items.
+async function clockPayload(player, team) {
+  const { game, clock, allCompleted, completedCount, playableCount } = await gameClockFor(team);
+  const { rows: [captain] } = await db.query('SELECT name FROM players WHERE team_id = $1 AND is_captain', [team.id]);
+  const { rows: [freshTeam] } = await db.query('SELECT total_score FROM teams WHERE id = $1', [team.id]);
+  return {
+    gameId: game.id,
+    started: clock.started,
+    paused: clock.paused,
+    timeUp: clock.timeUp,
+    tourComplete: allCompleted,
+    remainingSeconds: clock.remainingSeconds,
+    limitSeconds: clock.limitSeconds,
+    pausesUsed: game.pauses_used,
+    maxStops: MAX_CLOCK_STOPS,
+    isCaptain: player.is_captain,
+    captainName: captain ? captain.name : null,
+    coachComplete: player.coach_complete,
+    landmarksCompleted: completedCount,
+    totalLandmarks: playableCount,
+    totalScore: freshTeam.total_score,
+  };
+}
+
 async function getCurrentLandmark(team) {
   const { rows: [landmark] } = await db.query(
     `SELECT l.*, c.id AS clue_id, c.type AS clue_type, c.clue_text,
@@ -194,7 +302,7 @@ async function registrationStatus(player, team) {
     [team.id]
   );
   const { rows: [gameCode] } = await db.query(
-    `SELECT gc.max_players FROM game_codes gc JOIN games g ON g.game_code_id = gc.id WHERE g.id = $1`,
+    `SELECT gc.max_players, g.time_limit_minutes FROM game_codes gc JOIN games g ON g.game_code_id = gc.id WHERE g.id = $1`,
     [team.game_id]
   );
   const captain = teamPlayers.find((p) => p.is_captain);
@@ -207,6 +315,7 @@ async function registrationStatus(player, team) {
     registrationNumber,
     maxPlayers: gameCode.max_players,
     captainName: captain ? captain.name : null,
+    timeLimitMinutes: gameCode.time_limit_minutes,
   };
 }
 
@@ -226,9 +335,12 @@ app.post('/api/register', async (req, res) => {
 
   let team;
   if (gameCode.status === 'unused') {
+    // Activation does NOT start the tour clock — that waits for the captain to finish the guided
+    // walkthrough (see maybeStartClock). The tour's time limit is copied onto the game here.
     const { rows: [game] } = await db.query(
-      `INSERT INTO games (game_code_id, expires_at) VALUES ($1, now() + interval '6 hours') RETURNING *`,
-      [gameCode.id]
+      `INSERT INTO games (game_code_id, time_limit_minutes)
+       VALUES ($1, (SELECT time_limit_minutes FROM tours WHERE id = $2)) RETURNING *`,
+      [gameCode.id, gameCode.tour_id]
     );
     const minSequence = await firstPlayableSequence(gameCode.tour_id);
     const { rows: [newTeam] } = await db.query(
@@ -239,10 +351,10 @@ app.post('/api/register', async (req, res) => {
     team = newTeam;
   } else {
     const { rows: [game] } = await db.query('SELECT * FROM games WHERE game_code_id = $1', [gameCode.id]);
-    if (new Date(game.expires_at) < new Date()) {
-      return res.status(400).json({ error: 'This game has expired — its 6-hour window is over.' });
-    }
     const { rows: [existingTeam] } = await db.query('SELECT * FROM teams WHERE game_id = $1', [game.id]);
+    if ((await gameClockFor(existingTeam)).clock.timeUp) {
+      return res.status(400).json({ error: 'This game has finished — its time limit is up.' });
+    }
     team = existingTeam;
   }
 
@@ -320,6 +432,16 @@ app.post('/api/game/team/captain', async (req, res) => {
   );
   if (!newCaptain) return res.status(400).json({ error: 'That player is not on your team.' });
   if (newCaptain.id === player.id) return res.status(400).json({ error: 'You are already the captain.' });
+  // Only the captain can restart a stopped clock — handing the role over mid-stop would leave the
+  // team frozen behind a banner naming the wrong person. Nor before the clock has started — the
+  // captain is still reading the instructions / doing the walkthrough, which is what starts it.
+  const { clock } = await gameClockFor(team);
+  if (!clock.started) {
+    return res.status(423).json({ error: "You can't change captain until the tour clock has started." });
+  }
+  if (clock.paused) {
+    return res.status(423).json({ error: "You can't change captain while the clock is stopped — restart it first." });
+  }
 
   await db.query('UPDATE players SET is_captain = false WHERE id = $1', [player.id]);
   await db.query('UPDATE players SET is_captain = true WHERE id = $1', [newCaptain.id]);
@@ -335,7 +457,7 @@ app.get('/api/game/home', async (req, res) => {
   const { team } = session;
 
   const { rows: [tourRow] } = await db.query(
-    `SELECT t.id, t.name, t.tour_code, t.total_landmarks, g.activated_at
+    `SELECT t.id, t.name, t.tour_code, t.total_landmarks, g.activated_at, g.clock_started_at, g.time_limit_minutes
      FROM teams tm
      JOIN games g ON g.id = tm.game_id
      JOIN game_codes gc ON gc.id = g.game_code_id
@@ -380,7 +502,7 @@ app.get('/api/game/home', async (req, res) => {
 
   const revealed = await currentRevealedLandmark(team, tourRow.id);
 
-  let previousTime = new Date(tourRow.activated_at);
+  let previousTime = new Date(tourRow.clock_started_at || tourRow.activated_at);
   const landmarks = solved.map((l) => {
     const completedEvent = completedEvents.find((e) => e.landmark_id === l.id);
     const completedAt = completedEvent ? new Date(completedEvent.created_at) : null;
@@ -405,7 +527,9 @@ app.get('/api/game/home', async (req, res) => {
     currentSequence: team.current_landmark_sequence,
     totalScore: team.total_score,
     maxScore: Number(totals.max_score) || 0,
-    elapsedSeconds: Math.round((Date.now() - new Date(tourRow.activated_at)) / 1000),
+    // The live clock itself comes from GET /api/game/clock — this is just for copy that quotes
+    // the limit (e.g. the Instructions page's "you have 3 hours").
+    timeLimitMinutes: tourRow.time_limit_minutes,
     landmarks,
     // The current landmark once its puzzle is solved but before the quiz/advance — title and
     // photo only (no points/secondsTaken, those aren't final yet, and it deliberately isn't
@@ -557,46 +681,46 @@ app.get('/api/game/current', async (req, res) => {
   });
 });
 
-// GET /api/game/certificate — completion summary for the confetti popup and the certificate page.
-// Deliberately built on resolveSession alone, with no game/game-code expiry check anywhere in this
-// route (unlike /api/register) — a completed team must still be able to reach their certificate
-// after the 6-hour game window and the 30-day code both expire. Also doubles as the resume-check
-// StartPage's ResumeRedirect uses to decide between /certificate, /instructions and /home — hence
-// instructionsComplete riding along on the tourComplete: false early return too.
+// GET /api/game/certificate — the summary behind the confetti popup and the certificate page.
+// A team gets a certificate either way the tour can end: by completing every landmark, or by
+// running out of time (timeUp — landmarksCompleted then shows how far they got, e.g. 12/14).
+// Deliberately built on resolveSession alone, with no game-code expiry check anywhere in this
+// route (unlike /api/register) — a finished team must still be able to reach their certificate
+// long after the 30-day code expires. Also doubles as the resume-check StartPage's ResumeRedirect
+// uses to decide between /certificate, /instructions and /home — hence instructionsComplete
+// riding along on the not-finished early return too.
 app.get('/api/game/certificate', async (req, res) => {
   const session = await resolveSession(req, res);
   if (!session) return;
   const { player, team } = session;
 
-  const landmark = await getCurrentLandmark(team);
-  if (landmark) return res.json({ tourComplete: false, instructionsComplete: player.instructions_complete, coachComplete: player.coach_complete });
+  const tourComplete = !(await getCurrentLandmark(team));
+  const { game, clock, completedCount, playableCount, lastCompletedAt } = await gameClockFor(team);
+  if (!tourComplete && !clock.timeUp) {
+    return res.json({ tourComplete: false, timeUp: false, instructionsComplete: player.instructions_complete, coachComplete: player.coach_complete });
+  }
 
   const { rows: [row] } = await db.query(
-    `SELECT t.name AS tour_name, g.activated_at
-     FROM teams tm
-     JOIN games g ON g.id = tm.game_id
-     JOIN game_codes gc ON gc.id = g.game_code_id
-     JOIN tours t ON t.id = gc.tour_id
-     WHERE tm.id = $1`,
-    [team.id]
+    `SELECT t.name AS tour_name FROM game_codes gc JOIN tours t ON t.id = gc.tour_id WHERE gc.id = $1`,
+    [game.game_code_id]
   );
-  const { rows: [completedEvent] } = await db.query(
-    `SELECT created_at FROM progress_events
-     WHERE team_id = $1 AND event_type = 'landmark_completed'
-     ORDER BY created_at DESC LIMIT 1`,
-    [team.id]
-  );
-  const completedAt = completedEvent ? new Date(completedEvent.created_at) : new Date();
-  const elapsedSeconds = Math.round((completedAt - new Date(row.activated_at)) / 1000);
+  // When the tour ended: the final landmark's completion, or the moment the clock ran out (its
+  // start + every stop's length + the limit — fixed, since a stopped clock can't run out).
+  const finishedAt = tourComplete
+    ? new Date(lastCompletedAt || Date.now())
+    : new Date(new Date(game.clock_started_at).getTime() + (game.paused_seconds + clock.limitSeconds) * 1000);
 
   res.json({
-    tourComplete: true,
+    tourComplete,
+    timeUp: !tourComplete,
     playerName: player.name,
     teamName: team.name,
     tourName: row.tour_name,
     totalScore: team.total_score,
-    elapsedSeconds,
-    completedAt: completedAt.toISOString(),
+    elapsedSeconds: clock.elapsedSeconds,
+    landmarksCompleted: completedCount,
+    totalLandmarks: playableCount,
+    completedAt: finishedAt.toISOString(),
   });
 });
 
@@ -615,12 +739,67 @@ app.post('/api/game/instructions-complete', async (req, res) => {
 // POST /api/game/coach-complete — called once, when this player reaches the end of the guided
 // navigation "coach" walkthrough. Per-player, same reasoning as instructions-complete above: a
 // player who quits partway through gets shown the whole thing again on their next session,
-// while one who finished it doesn't see it auto-launch again.
+// while one who finished it doesn't see it auto-launch again. When the captain is the one
+// finishing, this is also what starts the team's tour clock (see maybeStartClock).
 app.post('/api/game/coach-complete', async (req, res) => {
   const session = await resolveSession(req, res);
   if (!session) return;
   await db.query('UPDATE players SET coach_complete = true WHERE id = $1', [session.player.id]);
+  await maybeStartClock(session.team);
   res.json({ ok: true });
+});
+
+// GET /api/game/clock — polled every few seconds by every in-game device (GameClockProvider in
+// client/src/gameClock.jsx) for the countdown, stop/restart state, warnings and time's up. Also
+// runs maybeStartClock as a self-heal, so a clock whose start condition became true some other
+// way (e.g. the dev tools) still starts without waiting for another trigger.
+app.get('/api/game/clock', async (req, res) => {
+  const session = await resolveSession(req, res);
+  if (!session) return;
+  await maybeStartClock(session.team);
+  res.json(await clockPayload(session.player, session.team));
+});
+
+// POST /api/game/clock/stop — captain-only, at most MAX_CLOCK_STOPS times per game (e.g. for
+// lunch). Freezes the whole team's app until the captain restarts it. The conditional UPDATE is
+// the real guard (atomic against a double tap); the checks before it are just for clear errors.
+app.post('/api/game/clock/stop', async (req, res) => {
+  const session = await resolveSession(req, res);
+  if (!session) return;
+  const { player, team } = session;
+  if (!requireCaptain(player, res)) return;
+
+  const { clock, allCompleted, game } = await gameClockFor(team);
+  if (!clock.started || clock.timeUp || allCompleted) return res.status(400).json({ error: "The clock isn't running." });
+  if (clock.paused) return res.status(400).json({ error: 'The clock is already stopped.' });
+  if (game.pauses_used >= MAX_CLOCK_STOPS) return res.status(400).json({ error: "You've used all your clock stops." });
+
+  const { rowCount } = await db.query(
+    `UPDATE games SET clock_paused_at = now(), pauses_used = pauses_used + 1
+     WHERE id = $1 AND clock_started_at IS NOT NULL AND clock_paused_at IS NULL AND pauses_used < $2`,
+    [team.game_id, MAX_CLOCK_STOPS]
+  );
+  if (!rowCount) return res.status(409).json({ error: 'The clock could not be stopped — try again.' });
+  res.json(await clockPayload(player, team));
+});
+
+// POST /api/game/clock/restart — captain-only. Folds the stop's length into paused_seconds, so
+// the time used carries on exactly where it left off.
+app.post('/api/game/clock/restart', async (req, res) => {
+  const session = await resolveSession(req, res);
+  if (!session) return;
+  const { player, team } = session;
+  if (!requireCaptain(player, res)) return;
+
+  const { rowCount } = await db.query(
+    `UPDATE games
+     SET paused_seconds = paused_seconds + FLOOR(EXTRACT(EPOCH FROM (now() - clock_paused_at)))::int,
+         clock_paused_at = NULL
+     WHERE id = $1 AND clock_paused_at IS NOT NULL`,
+    [team.game_id]
+  );
+  if (!rowCount) return res.status(400).json({ error: "The clock isn't stopped." });
+  res.json(await clockPayload(player, team));
 });
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -643,8 +822,10 @@ app.post('/api/game/certificate/send', async (req, res) => {
     await mailTransporter.sendMail({
       from: `TOURZ <${process.env.GMAIL_USER}>`,
       to: email.trim(),
-      subject: 'Your TOURZ Certificate of Completion',
-      text: 'Congratulations on completing your TOURZ walking tour! Your certificate is attached.',
+      // Neutral wording — the certificate may be for a team that ran out of time, not just one
+      // that completed every landmark.
+      subject: 'Your TOURZ certificate',
+      text: 'Thanks for walking with TOURZ! Your certificate is attached.',
       attachments: [{ filename: 'tourz-certificate.png', content: Buffer.from(match[1], 'base64') }],
     });
     res.json({ sent: true });
@@ -707,6 +888,7 @@ app.post('/api/game/clue/hint', async (req, res) => {
   if (!session) return;
   const { player, team } = session;
   if (!requireCaptain(player, res)) return;
+  if (!(await requireClockRunning(team, res))) return;
   const landmark = await getCurrentLandmark(team);
   const events = await eventsFor(team.id, landmark.id);
   const usedCount = events.filter((e) => e.event_type === 'clue_hint_used').length;
@@ -729,6 +911,7 @@ app.post('/api/game/clue/reveal', async (req, res) => {
   if (!session) return;
   const { player, team } = session;
   if (!requireCaptain(player, res)) return;
+  if (!(await requireClockRunning(team, res))) return;
   const landmark = await getCurrentLandmark(team);
   await db.query(
     `INSERT INTO progress_events (team_id, landmark_id, event_type) VALUES ($1, $2, 'clue_reveal_used')`,
@@ -744,6 +927,7 @@ app.post('/api/game/puzzle/answer', async (req, res) => {
   if (!session) return;
   const { player, team } = session;
   if (!requireCaptain(player, res)) return;
+  if (!(await requireClockRunning(team, res))) return;
   const landmark = await getCurrentLandmark(team);
   const { answer } = req.body;
 
@@ -788,6 +972,7 @@ app.post('/api/game/quiz/answer', async (req, res) => {
   if (!session) return;
   const { player, team } = session;
   if (!requireCaptain(player, res)) return;
+  if (!(await requireClockRunning(team, res))) return;
   const landmark = await getCurrentLandmark(team);
   const { questionId, answer } = req.body;
 
@@ -885,6 +1070,7 @@ app.post('/api/game/advance', async (req, res) => {
   if (!session) return;
   const { player, team } = session;
   if (!requireCaptain(player, res)) return;
+  if (!(await requireClockRunning(team, res))) return;
   const landmark = await getCurrentLandmark(team);
   const events = await eventsFor(team.id, landmark.id);
   if (!events.some((e) => e.event_type === 'landmark_completed')) {
@@ -1086,6 +1272,13 @@ app.post('/api/game/narration/complete', async (req, res) => {
   const { team, player } = session;
   const { landmarkSequenceOrder, siteId } = req.body || {};
 
+  // No bonus points while the clock isn't running — otherwise a team could bank listens before
+  // the captain starts the clock, or during a stop. Not an error: the listen just doesn't score.
+  const { clock: bonusClock } = await gameClockFor(team);
+  if (!bonusClock.started || bonusClock.paused || bonusClock.timeUp) {
+    return res.json({ awarded: false, totalScore: team.total_score });
+  }
+
   let landmarkId = null;
   let siteRowId = null;
 
@@ -1245,8 +1438,9 @@ app.post('/api/dev/login', async (req, res) => {
   let game;
   if (gameCode.status === 'unused') {
     const { rows: [newGame] } = await db.query(
-      `INSERT INTO games (game_code_id, expires_at) VALUES ($1, now() + interval '6 hours') RETURNING *`,
-      [gameCode.id]
+      `INSERT INTO games (game_code_id, time_limit_minutes)
+       VALUES ($1, (SELECT time_limit_minutes FROM tours WHERE id = $2)) RETURNING *`,
+      [gameCode.id, gameCode.tour_id]
     );
     await db.query(`UPDATE game_codes SET status = 'activated' WHERE id = $1`, [gameCode.id]);
     game = newGame;
@@ -1310,7 +1504,57 @@ app.post('/api/dev/reset', async (req, res) => {
   const minSequence = await firstPlayableSequence(await tourIdForTeam(team));
   await db.query('DELETE FROM progress_events WHERE team_id = $1', [team.id]);
   await db.query('UPDATE teams SET total_score = 0, current_landmark_sequence = $2 WHERE id = $1', [team.id, minSequence]);
+  await resetGameClock(team);
   res.json({ reset: true });
+});
+
+// Back to a never-started clock with both stops unused, on the tour's current time limit. The
+// clock then starts again by the normal rule — straight away if the captain has already finished
+// the walkthrough (the usual dev case), via the next GET /api/game/clock's maybeStartClock.
+async function resetGameClock(team) {
+  await db.query(
+    `UPDATE games g SET clock_started_at = NULL, clock_paused_at = NULL, paused_seconds = 0, pauses_used = 0,
+       time_limit_minutes = t.time_limit_minutes
+     FROM game_codes gc JOIN tours t ON t.id = gc.tour_id
+     WHERE g.id = $1 AND gc.id = g.game_code_id`,
+    [team.game_id]
+  );
+}
+
+// Dev-only clock shortcuts (Dev Tools menu) — for testing the stop/restart flow, the last-30-
+// minute warnings and time's up without waiting hours:
+//   start        — start the clock now if it hasn't started
+//   minutes-left — set the clock running with exactly `minutes` left (clears any stop in progress)
+//   reset-stops  — give the captain both stops back
+//   not-started  — back to a never-started clock AND mark the calling player's walkthrough
+//                  unfinished, so the "captain finishes the walkthrough -> clock starts" path
+//                  (and members' "waiting for your captain" banner) can be replayed end to end
+app.post('/api/dev/clock', async (req, res) => {
+  const session = await resolveSession(req, res);
+  if (!session) return;
+  const { player, team } = session;
+  const { action, minutes } = req.body || {};
+
+  if (action === 'start') {
+    await db.query('UPDATE games SET clock_started_at = now() WHERE id = $1 AND clock_started_at IS NULL', [team.game_id]);
+  } else if (action === 'minutes-left') {
+    await db.query(
+      `UPDATE games SET clock_paused_at = NULL, paused_seconds = 0,
+         clock_started_at = now() - make_interval(secs => GREATEST(0, time_limit_minutes * 60 - $2::int * 60))
+       WHERE id = $1`,
+      [team.game_id, Number(minutes) || 0]
+    );
+  } else if (action === 'reset-stops') {
+    await db.query('UPDATE games SET pauses_used = 0 WHERE id = $1', [team.game_id]);
+  } else if (action === 'not-started') {
+    await resetGameClock(team);
+    await db.query('UPDATE players SET coach_complete = false WHERE id = $1', [player.id]);
+  } else {
+    return res.status(400).json({ error: `Unknown dev clock action "${action}".` });
+  }
+
+  const { rows: [freshPlayer] } = await db.query('SELECT * FROM players WHERE id = $1', [player.id]);
+  res.json(await clockPayload(freshPlayer, team));
 });
 
 // Dev-only: reset, then fast-forward the calling session's own team through the first `count`

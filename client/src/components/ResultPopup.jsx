@@ -1,6 +1,6 @@
-export default function ResultPopup({ title, text, buttonLabel, onContinue, secondaryLabel, onSecondary, disabled, disabledNote }) {
+export default function ResultPopup({ title, text, buttonLabel, onContinue, secondaryLabel, onSecondary, disabled, disabledNote, className = '' }) {
   return (
-    <div className="result-popup">
+    <div className={`result-popup ${className}`.trim()}>
       {title && <p className="result-popup-title">{title}</p>}
       <p className="result-popup-text">{text}</p>
       <div className="result-popup-actions">

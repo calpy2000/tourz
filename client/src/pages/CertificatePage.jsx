@@ -6,6 +6,8 @@ import { rectFromEvent } from '../rect.js'
 import { clearSession } from '../localSession.js'
 import AnchoredPopup from '../components/AnchoredPopup.jsx'
 import LoadingScreen from '../components/LoadingScreen.jsx'
+import DevTools from '../components/DevTools.jsx'
+import { DEV_MODE } from '../devMode.js'
 
 function formatElapsed(totalSeconds) {
   const h = Math.floor(totalSeconds / 3600)
@@ -17,10 +19,12 @@ function formatDate(iso) {
   return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
-// Persistence per the feature spec: any session that resolves here but hasn't actually completed
-// the tour is bounced to /home — the actual "always land here after completion, even once the
-// game code has expired" behavior lives in StartPage's ResumeRedirect, which checks the same
-// /api/game/certificate endpoint on every fresh app open.
+// A team lands here once its tour is over, either way it can end: every landmark completed, or
+// the tour clock running out (timeUp — the certificate then records how far they got, e.g.
+// "12/14 landmarks completed", and drops the "completion" wording). Any session that resolves
+// here while its tour is still going is bounced to /home — the actual "always land here once
+// finished, even after the game code has expired" behavior lives in StartPage's ResumeRedirect,
+// which checks the same /api/game/certificate endpoint on every fresh app open.
 export default function CertificatePage() {
   const navigate = useNavigate()
   const [data, setData] = useState(null)
@@ -34,7 +38,7 @@ export default function CertificatePage() {
 
   useEffect(() => {
     api.getCertificateStatus().then((res) => {
-      if (!res?.tourComplete) { navigate('/home', { replace: true }); return }
+      if (!res?.tourComplete && !res?.timeUp) { navigate('/home', { replace: true }); return }
       setData(res)
     })
   }, [navigate])
@@ -81,7 +85,7 @@ export default function CertificatePage() {
         <span className="certificate-corner certificate-corner-br" />
 
         <div className="certificate-seal">🏆</div>
-        <p className="certificate-eyebrow">Certificate of Completion</p>
+        <p className="certificate-eyebrow">{data.timeUp ? 'Certificate of Achievement' : 'Certificate of Completion'}</p>
         <h1 className="certificate-brand">TOURZ</h1>
 
         <p className="certificate-name">{data.playerName}</p>
@@ -102,8 +106,10 @@ export default function CertificatePage() {
           </div>
         </div>
 
-        <span className="certificate-rank">Top 10% of teams</span>
-        <p className="certificate-date">Completed {formatDate(data.completedAt)}</p>
+        <p className="certificate-landmarks">{data.landmarksCompleted}/{data.totalLandmarks} landmarks completed</p>
+
+        {!data.timeUp && <span className="certificate-rank">Top 10% of teams</span>}
+        <p className="certificate-date">{data.timeUp ? 'Finished' : 'Completed'} {formatDate(data.completedAt)}</p>
       </div>
 
       {sentTo ? (
@@ -150,6 +156,8 @@ export default function CertificatePage() {
           </button>
         </AnchoredPopup>
       )}
+
+      {DEV_MODE && <div className="certificate-dev-tools"><DevTools onReset={() => {}} /></div>}
     </div>
   )
 }

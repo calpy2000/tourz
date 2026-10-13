@@ -1,8 +1,10 @@
-// Three-note ascending "marimba" ping for a teammate's screen updating because the captain used a
-// hint, revealed the clue, attempted the puzzle, or submitted a quiz answer.
+// Short "marimba" pings (three triangle-wave notes) for things a teammate's device should notice
+// without the player looking: the captain using a hint / revealing the clue / attempting the
+// puzzle / submitting a quiz answer (rising), the captain stopping the clock (the same notes
+// falling), restarting it (rising again), and the last-30-minutes time alerts (a two-note nudge).
 let audioCtx = null
 
-export function playScreenUpdatePing() {
+function playNotes(freqs) {
   try {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)()
     // Browsers suspend a fresh/backgrounded AudioContext until a user gesture unlocks it — by the
@@ -10,7 +12,7 @@ export function playScreenUpdatePing() {
     // the player has almost always already interacted with the page, so resume() is enough.
     if (audioCtx.state === 'suspended') audioCtx.resume()
     const now = audioCtx.currentTime
-    ;[523.25, 659.25, 783.99].forEach((freq, i) => {
+    freqs.forEach((freq, i) => {
       const osc = audioCtx.createOscillator()
       const gain = audioCtx.createGain()
       osc.type = 'triangle'
@@ -26,4 +28,24 @@ export function playScreenUpdatePing() {
   } catch {
     // Web Audio unavailable — the screen still updates on its own, just silently
   }
+}
+
+const C5 = 523.25
+const E5 = 659.25
+const G5 = 783.99
+
+export function playScreenUpdatePing() {
+  playNotes([C5, E5, G5])
+}
+
+export function playClockStoppedPing() {
+  playNotes([G5, E5, C5])
+}
+
+export function playClockRestartedPing() {
+  playNotes([C5, E5, G5])
+}
+
+export function playTimeAlertPing() {
+  playNotes([G5, G5])
 }

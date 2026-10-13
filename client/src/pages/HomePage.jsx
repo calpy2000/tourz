@@ -24,12 +24,10 @@ export default function HomePage() {
   const location = useLocation()
   const [data, setData] = useState(null)
   const [view, setView] = useState(location.state?.view || 'map')
-  const [fetchedAt, setFetchedAt] = useState(null)
-  const [, setTick] = useState(0)
   const navigate = useNavigate()
   const coach = useCoach()
 
-  const loadHome = () => api.getHome().then((res) => { setData(res); setFetchedAt(Date.now()) })
+  const loadHome = () => api.getHome().then(setData)
 
   useEffect(() => {
     loadHome()
@@ -54,16 +52,7 @@ export default function HomePage() {
     return () => window.removeEventListener('tourz:score-changed', onScoreChanged)
   }, [])
 
-  // elapsedSeconds is a snapshot from whenever we last fetched — tick locally so the clock
-  // keeps moving between fetches instead of looking frozen.
-  useEffect(() => {
-    const id = setInterval(() => setTick((t) => t + 1), 1000)
-    return () => clearInterval(id)
-  }, [])
-
   if (!data) return <LoadingScreen />
-
-  const liveElapsedSeconds = data.elapsedSeconds + Math.floor((Date.now() - fetchedAt) / 1000)
 
   return (
     <div className="home-shell">
@@ -78,7 +67,6 @@ export default function HomePage() {
 
       <GameHeader
         data={data}
-        elapsedSeconds={liveElapsedSeconds}
         onReset={loadHome}
         showHelp
         helpReturnState={{ view }}
@@ -86,6 +74,7 @@ export default function HomePage() {
           <>
             <p><strong>Map view</strong> shows solved landmarks and points-of-interest markers on the map, plus your live location — tap any marker to open it.</p>
             <p><strong>Current landmark</strong> jumps straight to the landmark you're working on now — the find it/solve it page if you haven't cracked it yet, or the quiz if you have.</p>
+            <p>The red <strong>clock</strong> in the bottom bar shows how much time your team has left.</p>
           </>
         }
       />

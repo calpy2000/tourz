@@ -2961,6 +2961,7 @@ button.primary.instructions-next-btn {
   flex-shrink: 0;
 }
 .narration-min-btn svg, .narration-close-btn svg { width: 11px; height: 11px; }
+.narration-min-btn svg { width: 14.3px; height: 14.3px; } /* chevron read too small at 11px — 1.3x */
 .narration-wave {
   width: 42px;
   height: 42px;
@@ -3097,3 +3098,175 @@ button.primary.instructions-next-btn {
   flex-shrink: 0;
 }
 .narration-bonus-toast strong { font-weight: 800; }
+
+/* --- Tour clock (see gameClock.jsx) --- */
+
+/* Footer clock pill while the captain has the clock stopped — solid brick and pulsing, so a
+   stopped clock reads differently from a running one at a glance. */
+.home-pill-brick.home-pill-clock-stopped {
+  background: var(--brick);
+  color: #fff;
+  animation: clock-pill-pulse 1.6s ease-in-out infinite;
+}
+@keyframes clock-pill-pulse {
+  50% { opacity: 0.6; }
+}
+.clock-pill-pause { flex-shrink: 0; }
+
+/* Frozen app (clock stopped, waiting for the captain to start it, or time's up): a full-screen
+   tap-blocker that also greys out whatever's beneath it — the page, an open details card, the
+   narration player — without dimming it (no dark backdrops, per the popup conventions). z 85:
+   above .modal-overlay (70) and .narration-player (80). The footer is lifted above it so the
+   Help menu (the captain's Restart the clock) and Dev tools stay usable; the banner, toasts and
+   time's-up popup all sit higher still. */
+.clock-freeze-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 85;
+  background: rgba(240, 230, 210, 0.25);
+  -webkit-backdrop-filter: grayscale(0.85);
+  backdrop-filter: grayscale(0.85);
+}
+body.clock-frozen .home-header {
+  position: relative;
+  z-index: 86;
+}
+
+/* "Clock stopped" / "Waiting for your captain" banner — pinned to the top of the screen for as
+   long as the app is frozen. Brick for stopped (something's actively on hold), umber for waiting
+   (the normal pre-start state, nothing wrong). */
+.clock-banner {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 95;
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 11px 14px 12px;
+  background: var(--brick);
+  color: #fff;
+  box-shadow: 0 6px 18px -6px rgba(0, 0, 0, 0.45);
+  animation: clock-banner-drop 0.25s ease-out;
+}
+.clock-banner-waiting {
+  background: var(--umber);
+  color: var(--cream);
+}
+@keyframes clock-banner-drop {
+  from { transform: translate(-50%, -100%); opacity: 0; }
+  to { transform: translate(-50%, 0); opacity: 1; }
+}
+.clock-banner-icon {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  margin-top: 1px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.clock-banner-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  font-size: 13px;
+  line-height: 1.35;
+}
+.clock-banner-text strong { font-size: 14px; }
+.clock-banner-sub { opacity: 0.88; }
+button.primary.clock-banner-btn {
+  margin: 8px 0 0;
+  background: var(--chevron-yellow);
+}
+
+/* Time alerts (last 30 minutes) and the members' "clock restarted" notice — same pill shape and
+   position as .narration-bonus-toast, tap to dismiss. */
+.clock-toast {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 95;
+  width: calc(100% - 24px);
+  max-width: 456px;
+  border: none;
+  border-radius: 999px;
+  padding: 10px 16px;
+  font: inherit;
+  font-size: 13px;
+  text-align: center;
+  box-shadow: 0 10px 24px -8px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}
+.clock-toast-alert {
+  background: var(--brick);
+  color: #fff;
+}
+.clock-toast-ok {
+  background: var(--forest);
+  color: var(--cream);
+}
+
+/* Time's-up popup sits above the freeze overlay (85) and banner (95). */
+.result-popup.clock-timeup-popup {
+  z-index: 96;
+}
+
+/* Help menu item badge (e.g. "2 left" on Stop the clock). */
+.help-menu-badge {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--brick-tint);
+  color: var(--brick);
+  white-space: nowrap;
+}
+
+/* Captain-only items shown but locked before the tour clock starts (Stop the clock, Change team
+   captain) — visible so the captain knows they exist, greyed and untappable. */
+.help-menu-item.help-menu-item-disabled {
+  opacity: 0.4;
+  filter: grayscale(1);
+  cursor: default;
+}
+.help-menu-item.help-menu-item-disabled:active { background: none; }
+.modal-card p.help-menu-note {
+  margin: 6px 8px 2px;
+  font-size: 12px;
+  color: var(--ink-soft, #6b5a45);
+}
+
+/* Last-stop warning line in the Stop the clock confirmation. */
+.modal-card p.clock-confirm-last {
+  color: var(--brick);
+  font-weight: 600;
+  margin-top: -8px;
+}
+
+/* Certificate: "12/14 landmarks completed" line under the Time/Points stats. */
+.certificate-landmarks {
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--brass-deep);
+  margin: -4px 0 14px;
+}
+.certificate-dev-tools {
+  margin-top: 16px;
+}
+
+/* Popups opened from a footer control (Help menu, its Stop the clock confirmation, Dev menu)
+   render inside .home-header, whose cream text colour would otherwise leak into anything in the
+   card that doesn't set its own colour (e.g. a ConfirmDialog's <h3> title). */
+.home-header .modal-card {
+  color: var(--ink);
+}

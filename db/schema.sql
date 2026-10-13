@@ -24,6 +24,10 @@ CREATE TABLE tours (
     total_landmarks  INT NOT NULL,  -- the PLANNED final tile count (incl. the start landmark),
                                      -- not just how many landmarks are authored so far — lets the
                                      -- Home tile grid draw placeholder "?" tiles for the rest
+    time_limit_minutes INT NOT NULL DEFAULT 180,  -- how long a team gets to finish this tour,
+                                     -- counting only time the clock is running (see games below).
+                                     -- Copied onto each game at activation, so changing it later
+                                     -- never alters a game already in progress.
     created_at       TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -171,13 +175,25 @@ CREATE TABLE game_codes (
 -- Payment/purchase audit detail (Stripe session IDs, slot-purchase history) deliberately
 -- left out of this pass — belongs to the purchase API work, not the game engine schema.
 
--- The live 6-hour session, created only at activation.
+-- The live session, created at activation (the first registration with the code). The tour clock
+-- is separate from activation: it only starts once the team captain finishes the guided
+-- walkthrough, and the captain can stop it (at most twice, e.g. for lunch). Time used is
+-- (now, or clock_paused_at while stopped) - clock_started_at - paused_seconds; the team's time is
+-- up once that reaches time_limit_minutes. Computed on read (see clockState in server/index.js)
+-- rather than stored, so stopping/restarting never needs a deadline rewritten.
 CREATE TABLE games (
-    id             BIGSERIAL PRIMARY KEY,
-    game_code_id   BIGINT NOT NULL UNIQUE REFERENCES game_codes(id),
-    activated_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
-    expires_at     TIMESTAMPTZ NOT NULL,      -- activated_at + 6 hours, set by application
-    status         TEXT NOT NULL DEFAULT 'active'
+    id                 BIGSERIAL PRIMARY KEY,
+    game_code_id       BIGINT NOT NULL UNIQUE REFERENCES game_codes(id),
+    activated_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
+    expires_at         TIMESTAMPTZ,               -- RETIRED (was activated_at + 6 hours) — no longer
+                                                  -- written or read; kept nullable so a deploy can't
+                                                  -- break mid-rollout, safe to drop later.
+    time_limit_minutes INT NOT NULL DEFAULT 180,  -- copied from tours.time_limit_minutes at activation
+    clock_started_at   TIMESTAMPTZ,               -- NULL until the captain finishes the walkthrough
+    clock_paused_at    TIMESTAMPTZ,               -- set while the captain has the clock stopped
+    paused_seconds     INT NOT NULL DEFAULT 0,    -- total length of every finished stop
+    pauses_used        INT NOT NULL DEFAULT 0,    -- stops taken so far (max 2, enforced in app)
+    status             TEXT NOT NULL DEFAULT 'active'
                     CHECK (status IN ('active', 'completed', 'expired')),
     created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
 );

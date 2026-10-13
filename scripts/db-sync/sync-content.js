@@ -153,7 +153,7 @@ async function upsertLandmarks(client, tourId, landmarks) {
 }
 
 async function main() {
-  const { tourCode, cityName, tourName } = readManifest();
+  const { tourCode, cityName, tourName, timeLimitMinutes } = readManifest();
   if (!tourCode) throw new Error(`${tourFolder}/tour.json must have tourCode.`);
 
   const landmarks = readCsv('landmarks.csv');
@@ -331,7 +331,11 @@ async function main() {
       );
     }
 
-    await client.query('UPDATE tours SET total_landmarks = $1 WHERE id = $2', [landmarks.length, tour.id]);
+    // timeLimitMinutes is optional in tour.json — omitted means "leave the tour's current limit alone".
+    await client.query(
+      'UPDATE tours SET total_landmarks = $1, time_limit_minutes = COALESCE($3, time_limit_minutes) WHERE id = $2',
+      [landmarks.length, tour.id, timeLimitMinutes ?? null]
+    );
 
     await client.query('COMMIT');
     console.log(`Synced '${tourCode}' (${tour.name}): ${landmarks.length} landmarks, ${clueHints.length} hints, ${quizQuestions.length + fiveRightGroups.size + quizAnagram.length} quiz questions, ${sites.length} sites. Instance data (game_codes/games/teams/players) untouched.`);

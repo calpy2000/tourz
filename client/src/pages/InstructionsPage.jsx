@@ -5,6 +5,8 @@ import { API_BASE } from '../apiBase.js'
 import GameHeader from '../components/GameHeader.jsx'
 import LoadingScreen from '../components/LoadingScreen.jsx'
 import { NarrationSpeakerIcon } from '../components/NarrationPlayer.jsx'
+import { getSession } from '../localSession.js'
+import { formatTimeLimit } from '../gameClock.jsx'
 
 // One screenshot per tour (captured via scripts/dev/capture-instructions-map-screenshot.mjs), so
 // the map-view mockups below show this tour's own landmarks/markers instead of whichever tour was
@@ -277,21 +279,22 @@ function CoachTileDemo() {
 }
 
 // Real HelpButton.jsx/HelpMenu.jsx classes/icons, rendered non-interactively — see HelpMenu.jsx
-// for the source of the six items and their icons.
+// for the source of the items and their icons. Shows the captain's view (Change team captain,
+// Stop the clock) since that's the fullest version of the menu.
 function HelpButtonDemo() {
   return <button className="help-btn" tabIndex={-1}>💡 Help</button>
 }
 
 // Real GameHeader footer markup/classes, rendered non-interactively with sample numbers — used
-// in "final things to know" to show where the points, timer and help button actually live now
-// (the bottom of the screen, not the top). No Dev button here — real players never see that one.
+// in "final things to know" to show where the points, clock (time left, counting down) and help
+// button live. No Dev button here — real players never see that one.
 function FooterDemo() {
   return (
     <footer className="home-header instructions-footer-demo">
       <div className="home-pills">
         <div className="home-pill home-pill-oat"><span className="stat-line">Found 3/14</span></div>
         <div className="home-pill home-pill-brass"><span className="stat-line">40 pts</span></div>
-        <div className="home-pill home-pill-brick"><span className="icon-clock" /><span className="stat-line">01:12</span></div>
+        <div className="home-pill home-pill-brick"><span className="icon-clock" /><span className="stat-line">2:47</span></div>
         <HelpButtonDemo />
       </div>
     </footer>
@@ -324,6 +327,11 @@ function HelpMenuDemo() {
           Change team captain
         </button>
         <button className="help-menu-item" tabIndex={-1}>
+          <span className="help-menu-icon-chip warn"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1.2" /><rect x="14" y="5" width="4" height="14" rx="1.2" /></svg></span>
+          Stop the clock
+          <span className="help-menu-badge">2 left</span>
+        </button>
+        <button className="help-menu-item" tabIndex={-1}>
           <span className="help-menu-icon-chip"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6" /><path d="M18.5 8v6M15.5 11h6" /></svg></span>
           Add new player
         </button>
@@ -332,7 +340,11 @@ function HelpMenuDemo() {
   )
 }
 
-function TipsList() {
+function ClockTipIcon() {
+  return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="13" r="8" /><path d="M12 9v4l2.5 1.5" /><path d="M9.5 2.5h5" /></svg>
+}
+
+function TipsList({ limitText }) {
   return (
     <div className="instructions-tips-list">
       <div className="instructions-tip-item">
@@ -362,6 +374,10 @@ function TipsList() {
         </span>
       </div>
       <div className="instructions-tip-item">
+        <span className="instructions-tip-icon"><ClockTipIcon /></span>
+        <span className="instructions-tip-text">You have <strong className="instructions-red">{limitText}</strong> &mdash; the clock counts down at the bottom of the screen, and the captain can <strong className="instructions-red">stop it twice</strong> for a break &mdash; tap <strong className="instructions-red">help</strong> <HelpButtonDemo /> then <strong className="instructions-red">Stop the clock</strong></span>
+      </div>
+      <div className="instructions-tip-item">
         <span className="instructions-tip-icon">💡</span>
         <span className="instructions-tip-text">If you get stuck - tap <strong className="instructions-red">help</strong> <HelpButtonDemo /></span>
       </div>
@@ -373,8 +389,38 @@ function TipsList() {
 // <h2>. Updated 2026-10-08 when Tile view was removed in favour of a 2-option Map view / Current
 // landmark switcher, and the GameHeader moved from a top header to a bottom footer — see
 // project-tileview-removal-archive and this session's footer-redesign work for the history.
+// The tour clock explained — shared by the paginated flow's own "The clock" section and the
+// helpMode page, so the two can't drift apart.
+function ClockExplainer({ limitText }) {
+  return (
+    <>
+      <p>
+        You have <strong className="instructions-red">{limitText}</strong> to complete the tour. The
+        clock starts as soon as your <strong className="instructions-red">team captain</strong> has
+        finished these instructions and the short app walkthrough that follows &mdash; until then,
+        team members who are ready will see a waiting message.
+      </p>
+      <p>
+        Need a break, e.g. for lunch? The captain can <strong className="instructions-red">stop the clock</strong>{' '}
+        up to <strong className="instructions-red">2 times</strong>, using{' '}
+        <strong className="instructions-red">Stop the clock</strong> in the help menu. While it&rsquo;s
+        stopped, the app is <strong className="instructions-red">paused for everyone</strong> &mdash;
+        nobody can play or open cards &mdash; until the captain restarts it.
+      </p>
+      <p>
+        In the <strong className="instructions-red">last 30 minutes</strong> everyone gets a time alert
+        every 5 minutes. If time runs out before you finish, the tour ends and you&rsquo;ll go straight
+        to your <strong className="instructions-red">certificate</strong>, showing how many landmarks
+        you completed.
+      </p>
+    </>
+  )
+}
+
 function sections(data, startLandmark) {
   const playableCount = (data?.totalLandmarks || 1) - 1
+  const limitText = formatTimeLimit(data?.timeLimitMinutes || 180)
+  const isCaptain = getSession()?.isCaptain ?? false
   return [
     {
       body: (
@@ -484,6 +530,7 @@ function sections(data, startLandmark) {
         <>
           <h2>Finding landmarks</h2>
           <p>Tap <strong className="instructions-red">CURRENT LANDMARK</strong> in the switcher.</p>
+          <ViewSwitchDemo active="current" ring />
           <p>
             You will see a <strong className="instructions-red">Find it clue</strong> to locate the
             landmark. If you can&rsquo;t find it from the clue you can have up to{' '}
@@ -528,8 +575,9 @@ function sections(data, startLandmark) {
             Only the <strong className="instructions-red">team captain</strong> can ask for{' '}
             <strong className="instructions-red">hints</strong>,{' '}
             <strong className="instructions-red">reveal</strong> a landmark,{' '}
-            <strong className="instructions-red">solve</strong> a landmark or{' '}
-            <strong className="instructions-red">submit</strong> quiz answers. All team members will
+            <strong className="instructions-red">solve</strong> a landmark,{' '}
+            <strong className="instructions-red">submit</strong> quiz answers or{' '}
+            <strong className="instructions-red">stop the clock</strong>. All team members will
             see these updates on their phone.
           </p>
           <p>
@@ -543,17 +591,26 @@ function sections(data, startLandmark) {
     {
       body: (
         <>
+          <h2>The clock</h2>
+          <ClockExplainer limitText={limitText} />
+        </>
+      ),
+    },
+    {
+      body: (
+        <>
           <h2>Final things to know</h2>
           <p>
-            The tour has a time limit of <strong className="instructions-red">6 hours</strong>. Your{' '}
-            <strong className="instructions-red">points</strong> and <strong className="instructions-red">timer</strong>{' '}
-            live in a bar at the <strong className="instructions-red">bottom</strong> of every page, along
-            with the <strong className="instructions-red">help function</strong> (see below):
+            Your <strong className="instructions-red">points</strong> and the{' '}
+            <strong className="instructions-red">clock</strong> (time left) live in a bar at the{' '}
+            <strong className="instructions-red">bottom</strong> of every page, along with the{' '}
+            <strong className="instructions-red">help function</strong> (see below):
           </p>
           <FooterDemo />
           <p>
             Tap <HelpButtonDemo /> if you ever get stuck - it has the following{' '}
-            <strong className="instructions-red">options</strong>:
+            <strong className="instructions-red">options</strong> (<strong>Change team captain</strong> and{' '}
+            <strong>Stop the clock</strong> are only shown to the captain):
           </p>
           <HelpMenuDemo />
         </>
@@ -563,11 +620,16 @@ function sections(data, startLandmark) {
       body: (
         <div className="instructions-final-tips">
           <h2>Final tips</h2>
-          <p><strong className="instructions-red">6 key things</strong> to remember:</p>
-          <TipsList />
+          <p><strong className="instructions-red">7 key things</strong> to remember:</p>
+          <TipsList limitText={limitText} />
           <p>
             When you tap on <strong className="instructions-red">let&rsquo;s start the tour</strong> below
             you will see a green panel with your navigation coach - do what they say <CoachTileDemo />
+          </p>
+          <p>
+            {isCaptain
+              ? <>As captain, <strong className="instructions-red">the clock starts as soon as you finish</strong> the walkthrough.</>
+              : <>The clock starts when your <strong className="instructions-red">captain</strong> finishes their walkthrough.</>}
           </p>
         </div>
       ),
@@ -586,30 +648,22 @@ export default function InstructionsPage() {
   const returnTo = location.state?.returnTo || '/home'
   const returnState = location.state?.returnState
   const [data, setData] = useState(null)
-  const [fetchedAt, setFetchedAt] = useState(null)
-  const [, setTick] = useState(0)
   const [step, setStep] = useState(location.state?.step ?? 0)
   // The real starting landmark's full detail (image/about-text/interesting-fact included) — used
   // by the tile/detail-card demo mockups below so they show this tour's actual start landmark
   // instead of a fixed Edinburgh example. sequence_order 1 is always the start landmark.
   const [startLandmark, setStartLandmark] = useState(null)
 
-  const loadHome = () => api.getHome().then((res) => { setData(res); setFetchedAt(Date.now()) })
+  const loadHome = () => api.getHome().then(setData)
 
   useEffect(() => {
     loadHome()
     api.getLandmarkDetail(1).then((res) => { if (!res.error) setStartLandmark(res) })
   }, [helpMode])
 
-  // Same live-ticking pattern as HomePage — elapsedSeconds is a snapshot from the last fetch.
-  useEffect(() => {
-    const id = setInterval(() => setTick((t) => t + 1), 1000)
-    return () => clearInterval(id)
-  }, [])
-
   if (!data) return <LoadingScreen />
 
-  const liveElapsedSeconds = data ? data.elapsedSeconds + Math.floor((Date.now() - fetchedAt) / 1000) : 0
+  const limitText = formatTimeLimit(data.timeLimitMinutes || 180)
 
   if (helpMode) {
     return (
@@ -626,9 +680,9 @@ export default function InstructionsPage() {
               Welcome to your {data.tourName}. The aim is to find{' '}
               <strong className="instructions-red">{data.totalLandmarks - 1} landmarks</strong> &mdash; some big, some
               small. For each landmark you can gain up to{' '}
-              <strong className="instructions-red">10 points</strong>. You&rsquo;ll have{' '}
-              <strong className="instructions-red">6 hours</strong> from the moment you start &mdash;
-              your points and timer live in a bar at the bottom of every page.
+              <strong className="instructions-red">10 points</strong>. You have{' '}
+              <strong className="instructions-red">{limitText}</strong> &mdash; the clock counts down
+              in a bar at the bottom of every page, next to your points.
             </p>
 
             <p>
@@ -693,14 +747,18 @@ export default function InstructionsPage() {
               Only the <strong className="instructions-red">team captain</strong> can ask for{' '}
               <strong className="instructions-red">hints</strong>,{' '}
               <strong className="instructions-red">reveal</strong> a landmark,{' '}
-              <strong className="instructions-red">solve</strong> a landmark or{' '}
-              <strong className="instructions-red">submit</strong> quiz answers &mdash; all team
+              <strong className="instructions-red">solve</strong> a landmark,{' '}
+              <strong className="instructions-red">submit</strong> quiz answers or{' '}
+              <strong className="instructions-red">stop the clock</strong> &mdash; all team
               members see these updates on their phone.
             </p>
 
+            <h2>The clock</h2>
+            <ClockExplainer limitText={limitText} />
+
             <h2>Final tips</h2>
-            <p><strong className="instructions-red">6 key things</strong> to remember:</p>
-            <TipsList />
+            <p><strong className="instructions-red">7 key things</strong> to remember:</p>
+            <TipsList limitText={limitText} />
 
             <p>
               Good luck &mdash; the clock is ticking, so you had better get on with it. Don&rsquo;t
@@ -747,7 +805,6 @@ export default function InstructionsPage() {
 
       <GameHeader
         data={data}
-        elapsedSeconds={liveElapsedSeconds}
         onReset={loadHome}
         showHelp
         helpReturnState={{ step }}

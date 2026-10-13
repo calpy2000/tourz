@@ -97,12 +97,10 @@ export default function PlayPage() {
   const [revealConfirmAnchor, setRevealConfirmAnchor] = useState(null)
   const [whyPopup, setWhyPopup] = useState(null) // { text, anchorRect } | null
   const [landmarkPopup, setLandmarkPopup] = useState(null)
-  // GameHeader's team/tour/score/clock pills — /api/game/current (polled below) never carries
-  // this, only /api/game/home does, so it's fetched+ticked here independently, same pattern as
-  // HomePage/InstructionsPage each already do on their own.
+  // GameHeader's found/score pills — /api/game/current (polled below) never carries this, only
+  // /api/game/home does, so it's fetched here independently, same as HomePage/InstructionsPage.
+  // (The clock pill reads the shared tour clock itself — see gameClock.jsx.)
   const [headerData, setHeaderData] = useState(null)
-  const [headerFetchedAt, setHeaderFetchedAt] = useState(null)
-  const [, setHeaderTick] = useState(0)
   // Only the captain's device ever calls the hint/reveal/puzzle/quiz endpoints (server-gated —
   // see resolveCaptain in index.js), so on a non-captain device any change here between polls is
   // by definition the captain's doing, never our own action bouncing back.
@@ -110,7 +108,7 @@ export default function PlayPage() {
   const anagramBoardRef = useRef(null)
 
   const refresh = () => api.getCurrent().then(setState)
-  const loadHeaderData = () => api.getHome().then((res) => { setHeaderData(res); setHeaderFetchedAt(Date.now()) })
+  const loadHeaderData = () => api.getHome().then(setHeaderData)
 
   function openLandmark(sequenceOrder) {
     api.getLandmarkDetail(sequenceOrder).then((res) => { if (!res.error) setLandmarkPopup(res) })
@@ -119,13 +117,6 @@ export default function PlayPage() {
   useEffect(() => {
     refresh()
     loadHeaderData()
-  }, [])
-
-  // elapsedSeconds is a snapshot from whenever we last fetched — tick locally so GameHeader's
-  // clock keeps moving between fetches instead of looking frozen. Same pattern as HomePage.
-  useEffect(() => {
-    const id = setInterval(() => setHeaderTick((t) => t + 1), 1000)
-    return () => clearInterval(id)
   }, [])
 
   // Team members don't trigger any of these mutations themselves (only the captain can), so
@@ -274,8 +265,6 @@ export default function PlayPage() {
   // Same condition that decides which section renders below — the help popup needs to match
   // whichever one is actually on screen, not always describe the find/solve flow.
   const inQuizView = (showQuiz || landmarkComplete) && quiz.unlocked
-
-  const liveElapsedSeconds = headerData.elapsedSeconds + Math.floor((Date.now() - headerFetchedAt) / 1000)
 
   return (
     <div className="home-shell">
@@ -581,7 +570,6 @@ export default function PlayPage() {
 
       <GameHeader
         data={headerData}
-        elapsedSeconds={liveElapsedSeconds}
         onReset={() => { refresh(); loadHeaderData() }}
         showHelp
         pageHelpText={

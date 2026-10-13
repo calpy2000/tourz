@@ -73,9 +73,13 @@ export const api = {
   getSiteDetail: (id) => get(`${BASE}/site/${id}`),
   completeNarrationListen: (payload) => post(`${BASE}/narration/complete`, payload),
   getLatestNarrationBonus: () => get(`${BASE}/narration/latest`),
+  getClock: () => get(`${BASE}/clock`),
+  stopClock: () => post(`${BASE}/clock/stop`),
+  restartClock: () => post(`${BASE}/clock/restart`),
   getMap: () => get(`${BASE}/map`),
   getRoute: () => get(`${BASE}/route`),
   devLogin: () => post(`${API_BASE}/api/dev/login`),
   devReset: () => post(`${API_BASE}/api/dev/reset`),
   devComplete: (count) => post(`${API_BASE}/api/dev/complete/${count}`),
+  devClock: (action, minutes) => post(`${API_BASE}/api/dev/clock`, { action, minutes }),
 };

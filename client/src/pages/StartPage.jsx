@@ -33,7 +33,8 @@ function ResumeRedirect({ fallback = '/home' }) {
     api.getCertificateStatus()
       .then((res) => {
         setDebugInfo(`got response: ${JSON.stringify(res)}`)
-        if (res?.tourComplete) return setDestination('/certificate')
+        // Finished either way — every landmark done, or the tour clock ran out.
+        if (res?.tourComplete || res?.timeUp) return setDestination('/certificate')
         if (!res?.instructionsComplete) return setDestination('/instructions')
         if (fallback === '/home' && !res?.coachComplete) {
           setState({ startCoach: true })
@@ -143,11 +144,12 @@ export default function StartPage() {
         <p className="eyebrow">TOURZ &middot; Walking Tour</p>
         <h1 className="start-heading">Welcome to the tour</h1>
         <p className="subtitle">
-          To activate the tour you will need to enter your game play code. Once you start, the
-          game timer starts and you will have exactly six hours to complete the tour. When you
-          enter the code, you will be asked if you are the team captain or a team member &mdash;
-          note that while all team players can use the app on their phone independently, only the
-          team captain can submit answers to solve the walk.
+          To activate the tour you will need to enter your game play code. Each tour has a time
+          limit (usually 3 hours) &mdash; the clock starts once your team captain has read the
+          instructions and finished a short app walkthrough, and the captain can stop it twice for
+          a break. When you enter the code, you will be asked if you are the team captain or a team
+          member &mdash; note that while all team players can use the app on their phone
+          independently, only the team captain can submit answers to solve the walk.
         </p>
 
         <form onSubmit={handleSubmit}>

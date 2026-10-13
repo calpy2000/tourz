@@ -13,6 +13,7 @@ import CoachOverlay from './coach/CoachOverlay.jsx'
 import GpsGateScreen from './components/GpsGateScreen.jsx'
 import { useGpsPreflightStatus } from './gpsPreflight.js'
 import { NarrationPlayerProvider } from './components/NarrationPlayer.jsx'
+import { GameClockProvider, GameClockLayer } from './gameClock.jsx'
 
 // /home, /play, /instructions all need a real registered player — without a session there's no
 // team for the API to resolve, so bounce back to registration rather than showing a broken page.
@@ -33,6 +34,7 @@ export default function App() {
         <GpsGateScreen />
       ) : (
         <NarrationPlayerProvider>
+          <GameClockProvider>
           <Routes>
             <Route path="/" element={<StartPage />} />
             <Route path="/welcome" element={<RequireSession><WelcomePage /></RequireSession>} />
@@ -41,6 +43,8 @@ export default function App() {
             <Route path="/play" element={<RequireSession><PlayPage /></RequireSession>} />
             <Route path="/certificate" element={<RequireSession><CertificatePage /></RequireSession>} />
           </Routes>
+          <GameClockLayer />
+          </GameClockProvider>
         </NarrationPlayerProvider>
       )}
       <CoachOverlay />

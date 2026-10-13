@@ -7,6 +7,8 @@ import AnchoredPopup from './AnchoredPopup.jsx'
 import HelpMenu from './HelpMenu.jsx'
 import ChangeCaptainPopup from './ChangeCaptainPopup.jsx'
 import ReportProblemPopup from './ReportProblemPopup.jsx'
+import ConfirmDialog from './ConfirmDialog.jsx'
+import { useGameClock } from '../gameClock.jsx'
 
 // The "💡 Help" control shown on every in-game page except registration, instructions and the
 // certificate (see App.jsx/pages for where this is and isn't wired in). Tapping it opens a menu:
@@ -33,6 +35,26 @@ export default function HelpButton({ pageHelpText, returnState }) {
   const [teamPlayers, setTeamPlayers] = useState(null)
   const [captainPickerAnchor, setCaptainPickerAnchor] = useState(null)
   const [reportProblemAnchor, setReportProblemAnchor] = useState(null)
+  const [stopConfirmAnchor, setStopConfirmAnchor] = useState(null)
+  const [stopError, setStopError] = useState('')
+  const { clock, stopClock, restartClock } = useGameClock()
+
+  // Tour clock controls — captain only (the clock poll's own fresh isCaptain, not the cached
+  // session, so a handoff takes effect here too). Before the clock has started (the captain is
+  // still reading the instructions / in the walkthrough) "Stop the clock" and "Change team
+  // captain" are both shown but greyed out and untappable; then "stop" while it runs and stops
+  // remain (max 2), "restart" while it's stopped. Changing captain is hidden while the clock is
+  // stopped — only the captain can restart it, so the role can't move mid-stop. The server
+  // refuses a captain change in both cases too.
+  const stopsLeft = clock ? clock.maxStops - clock.pausesUsed : 0
+  const clockNotStarted = Boolean(clock?.isCaptain && !clock.started)
+  let clockAction = null
+  if (clockNotStarted) clockAction = 'stop-disabled'
+  else if (clock?.isCaptain && clock.started && !clock.timeUp && !clock.tourComplete) {
+    if (clock.paused) clockAction = 'restart'
+    else if (stopsLeft > 0) clockAction = 'stop'
+  }
+  const clockStopped = Boolean(clock?.paused)
 
   useEffect(() => {
     if (!isCaptain) return
@@ -73,6 +95,26 @@ export default function HelpButton({ pageHelpText, returnState }) {
     setCaptainPickerAnchor(anchor)
   }
 
+  function handleAskStopClock() {
+    setStopError('')
+    setStopConfirmAnchor(menuAnchor)
+    setMenuAnchor(null)
+  }
+
+  async function handleConfirmStopClock() {
+    const res = await stopClock()
+    if (res?.error) {
+      setStopError(res.error)
+      return
+    }
+    setStopConfirmAnchor(null)
+  }
+
+  async function handleRestartClock() {
+    setMenuAnchor(null)
+    await restartClock()
+  }
+
   function handleCaptainChanged() {
     // The old captain (this device — only the captain can trigger this) loses the role
     // immediately, rather than waiting for the next gameplay poll to pick it up.
@@ -94,7 +136,12 @@ export default function HelpButton({ pageHelpText, returnState }) {
           onPageHelp={handlePageHelp}
           onReportProblem={handleReportProblem}
           onChangeCaptain={handleOpenCaptainPicker}
-          canChangeCaptain={isCaptain && (teamPlayers?.length ?? 0) > 0}
+          canChangeCaptain={isCaptain && !clockStopped && (clockNotStarted || (teamPlayers?.length ?? 0) > 0)}
+          changeCaptainDisabled={clockNotStarted}
+          clockAction={clockAction}
+          stopsLeft={stopsLeft}
+          onStopClock={handleAskStopClock}
+          onRestartClock={handleRestartClock}
           onComingSoon={handleComingSoon}
           onClose={() => setMenuAnchor(null)}
         />
@@ -107,6 +154,21 @@ export default function HelpButton({ pageHelpText, returnState }) {
           onClose={() => setCaptainPickerAnchor(null)}
           onChanged={handleCaptainChanged}
         />
+      )}
+
+      {stopConfirmAnchor && (
+        <ConfirmDialog
+          title="Stop the clock?"
+          message={`The tour will pause for your whole team until you restart it. You have ${stopsLeft} stop${stopsLeft === 1 ? '' : 's'} left.`}
+          cancelLabel="Cancel"
+          confirmLabel="Stop the clock"
+          anchorRect={stopConfirmAnchor}
+          onConfirm={handleConfirmStopClock}
+          onCancel={() => setStopConfirmAnchor(null)}
+        >
+          {stopsLeft === 1 && <p className="clock-confirm-last">This is your last one &mdash; after this, the clock can&rsquo;t be stopped again.</p>}
+          {stopError && <p className="form-error">{stopError}</p>}
+        </ConfirmDialog>
       )}
 
       {reportProblemAnchor && (
