@@ -1,5 +1,6 @@
 {
   "tourCode": "edinburgh",
   "cityName": "Edinburgh",
-  "tourName": "Edinburgh Old Town Walk"
+  "tourName": "Edinburgh Old Town Walk",
+  "timeLimitMinutes": 180
 }
