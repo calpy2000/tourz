@@ -73,7 +73,7 @@ export default function HomePage() {
         pageHelpText={
           <>
             <p><strong>Map view</strong> shows solved landmarks and points-of-interest markers on the map, plus your live location — tap any marker to open it.</p>
-            <p><strong>Current landmark</strong> jumps straight to the landmark you're working on now — the find it/solve it page if you haven't cracked it yet, or the quiz if you have.</p>
+            <p><strong>Current landmark</strong> jumps straight to the landmark you're working on now — the find it/prove it page if you haven't cracked it yet, or the quiz if you have.</p>
             <p>The red <strong>clock</strong> in the bottom bar shows how much time your team has left.</p>
           </>
         }

@@ -218,7 +218,7 @@ function MiniPlayPageDemo() {
             </div>
           </section>
           <section className="card">
-            <h2>Solve it</h2>
+            <h2>Prove it (that you were actually there)</h2>
             <p>What year was it built? (4 digits please)</p>
             <div className="answer-form">
               <input placeholder="Your answer" readOnly tabIndex={-1} />
@@ -477,8 +477,8 @@ function sections(data, startLandmark) {
           </p>
           <p>
             If you haven't cracked it yet, you'll see the <strong className="instructions-red">Find it</strong>{' '}
-            (the clue to its location) and <strong className="instructions-red">Solve it</strong> (prove
-            you're there) page, shown below. If you've already solved it, you'll see its{' '}
+            (the clue to its location) and <strong className="instructions-red">Prove it</strong> (that
+            you were actually there) page, shown below. If you've already solved it, you'll see its{' '}
             <strong className="instructions-red">quiz</strong> instead.
           </p>
           <ViewSwitchDemo active="current" ring />
@@ -539,7 +539,7 @@ function sections(data, startLandmark) {
             and reveals mean less points.
           </p>
           <p>
-            When you find a landmark you need to <strong className="instructions-red">Solve it</strong>{' '}
+            When you find a landmark you need to <strong className="instructions-red">Prove it</strong>{' '}
             by answering a question &mdash; <strong className="instructions-red">be careful</strong>,
             you only get one go.
           </p>
@@ -696,7 +696,7 @@ export default function InstructionsPage() {
               Tap <strong className="instructions-red">CURRENT LANDMARK</strong> to jump straight to
               the landmark you're working on now &mdash; its{' '}
               <strong className="instructions-red">Find it</strong> /{' '}
-              <strong className="instructions-red">Solve it</strong> page if you haven&rsquo;t cracked
+              <strong className="instructions-red">Prove it</strong> page if you haven&rsquo;t cracked
               it yet, or its <strong className="instructions-red">quiz</strong> if you have:
             </p>
             <MiniPlayPageDemo />
@@ -723,7 +723,7 @@ export default function InstructionsPage() {
               hints and reveals mean fewer points.
             </p>
             <p>
-              When you find it, <strong className="instructions-red">Solve it</strong> by
+              When you find it, <strong className="instructions-red">Prove it</strong> by
               answering a question &mdash; <strong className="instructions-red">be careful</strong>,
               you only get one go.
             </p>

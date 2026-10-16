@@ -22,11 +22,11 @@ import { useWakeLock } from '../useWakeLock.js'
 // Find & solve banner copy — re-amended 2026-08-24. A wrong answer is one flat outcome
 // regardless of hints (0 points always), so it no longer needs a hints-aware message.
 function puzzleBannerText({ points, hintsUsed, revealUsed, correct }) {
-  if (!correct) return `Unlucky - you didn't solve it 🙁 no points`
-  if (revealUsed) return `You revealed the answer but solved it 🙂 ${points} point`
-  if (hintsUsed === 0) return `Congratulations, you found it & solved it with no hints 🥳 ${points} points`
-  if (hintsUsed === 1) return `Well done, you found it with 1 hint and solved it 🙂 ${points} points`
-  return `Well done, you found it with 2 hints and solved it 🙂 ${points} points`
+  if (!correct) return `Unlucky - you didn't prove you were there 🙁 no points`
+  if (revealUsed) return `You revealed the answer but still proved you were there 🙂 ${points} point`
+  if (hintsUsed === 0) return `Congratulations, you found it & proved it with no hints 🥳 ${points} points`
+  if (hintsUsed === 1) return `Well done, you found it with 1 hint and proved it 🙂 ${points} points`
+  return `Well done, you found it with 2 hints and proved it 🙂 ${points} points`
 }
 
 // Quiz completion banner copy — settled 2026-08-24, same tone pattern as the puzzle banner.
@@ -494,7 +494,7 @@ export default function PlayPage() {
           {hintConfirmAnchor && (
             <ConfirmDialog
               title="Use a hint?"
-              message="Using a hint means fewer points if you solve it — each hint used lowers your possible score for this landmark."
+              message="Using a hint means fewer Find It points when you find the landmark."
               cancelLabel="Cancel"
               confirmLabel="Use hint"
               confirmClassName="btn-hint"
@@ -507,7 +507,7 @@ export default function PlayPage() {
           {revealConfirmAnchor && (
             <ConfirmDialog
               title="Reveal the location?"
-              message="Revealing means you'll only score 1 point on Solve it for this landmark, no matter what you answer."
+              message="Revealing the landmark means you get zero Find It points, but you can still earn 1 point if you can prove you were there."
               cancelLabel="Cancel"
               confirmLabel="Reveal anyway"
               confirmClassName="btn-reveal"
@@ -518,7 +518,7 @@ export default function PlayPage() {
           )}
 
           <section className="card">
-            <h2>Solve it</h2>
+            <h2>Prove it (that you were actually there)</h2>
             <p>{puzzle.questionText}</p>
             {!puzzle.solved ? (
               <>
@@ -582,7 +582,7 @@ export default function PlayPage() {
           ) : (
             <>
               <p><strong>Find it:</strong> work out where the clue is pointing you and head there. Only your team captain can ask for a hint or reveal the location — each hint lowers the points you can earn here, and revealing caps this landmark at 1 point.</p>
-              <p><strong>Solve it:</strong> once you're confident, answer the question — only the captain can submit, and you only get one attempt.</p>
+              <p><strong>Prove it:</strong> once you're confident, answer the question — only the captain can submit, and you only get one attempt.</p>
               <p>After solving, you'll take a short quiz on things you should have noticed on the way, then move on to the next landmark.</p>
             </>
           )

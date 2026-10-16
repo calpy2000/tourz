@@ -22,6 +22,27 @@ let lastCamera = null // { center: {lat,lng}, zoom }
 // line with strokeOpacity 0, plus a short line symbol repeated along the path instead.
 const DASH_ICON = { icon: { path: 'M 0,-1 0,1', strokeOpacity: 1, scale: 3 }, offset: '0', repeat: '12px' }
 
+// Fixed N/E/S/W reference, not a live heading — the map never rotates (no heading/tilt
+// interaction is enabled), so north is always straight up and this never needs to move.
+// pointer-events: none in CSS so it can't swallow a pan/tap on the map underneath it.
+const COMPASS_LETTER = { fontFamily: 'Quicksand', fontWeight: 700, textAnchor: 'middle', dominantBaseline: 'central' }
+function MapCompass() {
+  return (
+    <div className="map-compass" aria-hidden="true">
+      <svg width="48" height="48" viewBox="0 0 64 64">
+        <circle cx="32" cy="32" r="30" fill="#fffdf8" fillOpacity=".6" stroke="var(--umber)" strokeOpacity=".5" strokeWidth="1.5" />
+        <polygon points="32,21 36,32 28,32" fill="#b3402e" />
+        <polygon points="32,43 36,32 28,32" fill="#9a9184" />
+        <circle cx="32" cy="32" r="1.6" fill="#fffdf8" />
+        <text x="32" y="9" fontSize="14" fill="#b3402e" style={COMPASS_LETTER}>N</text>
+        <text x="55" y="32" fontSize="12" fill="var(--umber)" style={COMPASS_LETTER}>E</text>
+        <text x="32" y="55" fontSize="12" fill="var(--umber)" style={COMPASS_LETTER}>S</text>
+        <text x="9" y="32" fontSize="12" fill="var(--umber)" style={COMPASS_LETTER}>W</text>
+      </svg>
+    </div>
+  )
+}
+
 // Fallback only — used when the browser's real GPS (useGeolocation) hasn't produced a fix yet,
 // or is unsupported/denied. Renders "you are here" a short fixed offset from the most recently
 // solved landmark, so the marker exists visually rather than the layer having nothing to show.
@@ -308,6 +329,8 @@ export default function MapView() {
             })}
           </Map>
         </APIProvider>
+
+        <MapCompass />
 
         {!liveLocation && (gpsError === 'denied' || stalled) && !gpsHelpDismissed && (
           <div className="gps-help-banner">
