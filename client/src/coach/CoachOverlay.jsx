@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useCoach } from './CoachContext.jsx'
 import { API_BASE } from '../apiBase.js'
+import { isMiniCloseTap } from '../components/NarrationPlayer.jsx'
 
 const MARGIN = 12
 const DRAG_THRESHOLD = 20 // px — how far a pointer has to move to count as a "swipe", not a tap
@@ -240,6 +241,13 @@ export default function CoachOverlay() {
 
     function isHit(e) {
       if (currentStep.coachId === '__anywhere__') return true
+      // The minimised player's X has an enlarged tap area overlapping the speaker icon, where a
+      // tap expands instead of closing — use the player's own close-vs-expand decision so a tap
+      // that opens the full player isn't also accepted as "closed it".
+      if (currentStep.coachId === 'narration-mini-close-btn') {
+        const pt = e.touches?.[0] ?? e
+        return isMiniCloseTap(e.target, pt.clientX, pt.clientY)
+      }
       return !!e.target.closest(`[data-coach-id="${currentStep.coachId}"]`)
     }
 

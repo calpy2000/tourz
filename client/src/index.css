@@ -3117,9 +3117,9 @@ button.primary.instructions-next-btn {
 }
 .narration-mini-close {
   /* Visual placement unchanged (tight badge on the icon's corner) — the "close vs expand"
-     precision is handled in JS (see NarrationPlayer.jsx), which only treats a tap as a close when
-     it lands near the glyph's own center, and otherwise lets it fall through to expand. Moving
-     this badge further off the icon to fix mis-taps just left a visible gap that looked wrong. */
+     decision is handled in JS (isMiniCloseTap in NarrationPlayer.jsx): the visible badge or the
+     empty space just beyond the icon's edge closes, the speaker icon itself expands. Moving this
+     badge further off the icon to fix mis-taps just left a visible gap that looked wrong. */
   position: absolute;
   top: -3px;
   right: -3px;
@@ -3131,6 +3131,15 @@ button.primary.instructions-next-btn {
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.35);
 }
 .narration-mini-close svg { width: 8px; height: 8px; }
+/* Invisible enlarged tap area around the badge (35px circle). Taps on its part that overlaps the
+   speaker icon are routed back to expand by isMiniCloseTap, so this only really grows the X
+   outward, into empty space. */
+.narration-mini-close::before {
+  content: '';
+  position: absolute;
+  inset: -10px;
+  border-radius: 50%;
+}
 
 /* Cross-device "someone on your team fully listened" toast — see NarrationPlayer.jsx's poll
    loop. Fixed near the top (the bottom is already busy with the player/footer), centered and

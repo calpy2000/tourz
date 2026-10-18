@@ -57,6 +57,24 @@ function Fwd10Icon() {
 function ChevronDownIcon() {
   return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M6 9l6 6 6-6" /></svg>
 }
+// Close-vs-expand decision for a tap on the minimised player's X badge. The badge's tap area is
+// enlarged outward by an invisible circle (.narration-mini-close::before), so a tap can land on
+// the button while actually sitting over the speaker icon. Decided by geometry, not by which
+// element was hit: inside the visible badge circle -> close; otherwise inside the 42px icon
+// circle -> expand (the icon keeps all of its own area); otherwise (empty space just beyond the
+// icon's edge, near the X) -> close. Shared with CoachOverlay's "close button" step so the coach
+// and the player can never disagree about what a tap did (they did before: the coach accepted
+// any tap on the badge while the player only closed within 5px of its centre).
+export function isMiniCloseTap(target, x, y) {
+  const btn = target?.closest?.('[data-coach-id="narration-mini-close-btn"]')
+  const mini = btn?.closest('.narration-mini')
+  if (!btn || !mini) return false
+  const b = btn.getBoundingClientRect()
+  if (Math.hypot(x - (b.left + b.width / 2), y - (b.top + b.height / 2)) <= b.width / 2 + 1) return true
+  const m = mini.getBoundingClientRect()
+  return Math.hypot(x - (m.left + m.width / 2), y - (m.top + m.height / 2)) > m.width / 2
+}
+
 function CloseIcon() {
   return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M5 5l14 14M19 5L5 19" /></svg>
 }
@@ -306,16 +324,9 @@ export function NarrationPlayerProvider({ children }) {
                 data-coach-id="narration-mini-close-btn"
                 className="narration-icon-btn narration-mini-close"
                 onClick={(e) => {
-                  // The visible badge is only 15px, tucked onto the icon's corner (see
-                  // .narration-mini-close) — its full square hit box was closing the player on
-                  // taps that were clearly aimed at the icon, not the X. Requiring the tap to land
-                  // near the glyph's own center (not just anywhere in the button's box) before
-                  // treating it as "close", and otherwise letting the click bubble up to expand()
-                  // on .narration-mini, keeps the badge's look/position untouched while fixing that.
-                  const rect = e.currentTarget.getBoundingClientRect()
-                  const dx = e.clientX - (rect.left + rect.width / 2)
-                  const dy = e.clientY - (rect.top + rect.height / 2)
-                  if (Math.hypot(dx, dy) <= 5) {
+                  // See isMiniCloseTap — a tap that isn't a close bubbles up to expand() on
+                  // .narration-mini.
+                  if (isMiniCloseTap(e.target, e.clientX, e.clientY)) {
                     e.stopPropagation()
                     close()
                   }
