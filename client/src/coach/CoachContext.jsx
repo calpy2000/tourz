@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useMemo, useState } from 'react
 import coachStepsRaw from '../content/coach-steps.csv?raw'
 import { parseCsv } from './parseCsv.js'
 import { resolveCoachId } from './targetMap.js'
-import { api } from '../api.js'
+import { enqueue } from '../offline/gameStore.js'
 
 // Row 1's own wording, reused whenever a later row writes "same" in its error_message/
 // help_message column instead of retyping the standard text.
@@ -52,7 +52,9 @@ export function CoachProvider({ children }) {
       const next = i + 1
       if (next >= steps.length) {
         setActive(false)
-        api.markCoachComplete().catch(() => {})
+        // Queued (offline/gameStore.js): applies on the phone at once — finishing as captain
+        // starts the clock there and then, signal or not — and reaches the server when it can.
+        enqueue('coach_complete')
         return i
       }
       return next

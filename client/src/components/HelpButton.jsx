@@ -9,6 +9,7 @@ import ChangeCaptainPopup from './ChangeCaptainPopup.jsx'
 import ReportProblemPopup from './ReportProblemPopup.jsx'
 import ConfirmDialog from './ConfirmDialog.jsx'
 import { useGameClock } from '../gameClock.jsx'
+import { syncNow } from '../offline/gameStore.js'
 
 // The "💡 Help" control shown on every in-game page except registration, instructions and the
 // certificate (see App.jsx/pages for where this is and isn't wired in). Tapping it opens a menu:
@@ -59,7 +60,7 @@ export default function HelpButton({ pageHelpText, returnState }) {
   useEffect(() => {
     if (!isCaptain) return
     let cancelled = false
-    api.getTeamPlayers().then((res) => { if (!cancelled) setTeamPlayers(res?.players || []) })
+    api.getTeamPlayers().then((res) => { if (!cancelled) setTeamPlayers(res?.players || []) }).catch(() => {})
     return () => { cancelled = true }
   }, [isCaptain])
 
@@ -90,8 +91,12 @@ export default function HelpButton({ pageHelpText, returnState }) {
     // Refetch right before showing the picker — the background copy above only needs to be
     // roughly right to gate the menu item, but the list the captain actually submits from should
     // be current (e.g. a player who joined moments ago).
-    const res = await api.getTeamPlayers()
-    setTeamPlayers(res?.players || [])
+    // Needs signal (the roster and the handoff itself are agreed by the server) — with none,
+    // the picker opens on the last roster this phone saw and says why it can't submit.
+    try {
+      const res = await api.getTeamPlayers()
+      setTeamPlayers(res?.players || [])
+    } catch { /* keep the last roster */ }
     setCaptainPickerAnchor(anchor)
   }
 
@@ -117,10 +122,11 @@ export default function HelpButton({ pageHelpText, returnState }) {
 
   function handleCaptainChanged() {
     // The old captain (this device — only the captain can trigger this) loses the role
-    // immediately, rather than waiting for the next gameplay poll to pick it up.
+    // immediately, rather than waiting for the next state refresh to pick it up.
     const session = getSession()
     if (session) saveSession({ ...session, isCaptain: false })
     setCaptainPickerAnchor(null)
+    syncNow()
   }
 
   return (

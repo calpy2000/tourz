@@ -1026,6 +1026,9 @@ button.primary.quiz-submit {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  /* Room for the "No signal" / "Syncing…" strip when it's showing — set live by
+     ConnectionStatus.jsx, 0 otherwise — so it never covers the MAP/CURRENT switch. */
+  padding-top: var(--conn-strip-h, 0px);
 }
 
 .home-header {
@@ -3405,4 +3408,107 @@ button.primary.clock-banner-btn {
 
 .debug-overlay-data {
   color: #d8f0d8;
+}
+
+/* ---- Signal / offline status (components/ConnectionStatus.jsx) — added 2026-10-18 ----------- */
+/* Slim strip pinned to the top of the 480px column. Below the clock banner (95) so a stopped clock
+   still reads first, above the narration player (80). Never takes taps. */
+.conn-strip {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 94;
+  width: 100%;
+  max-width: 480px;
+  padding: 6px 14px 7px;
+  font-size: 12px;
+  line-height: 1.35;
+  text-align: center;
+  pointer-events: none;
+  box-shadow: 0 4px 12px -6px rgba(0, 0, 0, 0.45);
+}
+.conn-strip-offline {
+  background: var(--umber);
+  color: var(--cream);
+}
+.conn-strip-syncing {
+  background: var(--forest);
+  color: var(--cream);
+}
+.conn-strip-sub {
+  display: block;
+  font-size: 11px;
+  opacity: 0.8;
+}
+.conn-notices {
+  position: fixed;
+  top: 52px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 96;
+  width: calc(100% - 24px);
+  max-width: 456px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.conn-notice {
+  border: none;
+  border-radius: 14px;
+  padding: 10px 14px;
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  background: var(--brick);
+  color: #fff;
+  box-shadow: 0 10px 24px -8px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}
+/* Bottom of the screen, just above the footer pills — out of the way of the map's compass/scale
+   (top corners) and of the clue cards. */
+.offline-save-pill {
+  position: fixed;
+  bottom: 64px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 70;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  white-space: nowrap;
+  background: rgba(61, 42, 19, 0.88);
+  color: var(--cream);
+  pointer-events: none;
+}
+.offline-save-pill-done {
+  background: rgba(47, 107, 79, 0.92);
+}
+/* Score pill marker while points earned on this phone haven't reached the server yet. */
+.score-sync-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-left: 4px;
+  border-radius: 50%;
+  background: var(--chevron-yellow);
+  vertical-align: middle;
+}
+/* PlayPage: the team has gone further than the clues this phone holds. */
+.waiting-content-card {
+  text-align: center;
+}
+/* MapView: Google's map script couldn't load (no signal on a fresh open). */
+.map-offline-note {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+  background: var(--stone);
+  color: var(--ink-soft);
+  font-size: 14px;
+  line-height: 1.5;
 }

@@ -66,6 +66,11 @@ async function wipeTour(client, tourId) {
       JOIN game_codes gc ON g.game_code_id = gc.id
       WHERE gc.tour_id = $1
     )`, [tourId]);
+  // client_actions (offline sync, 2026-10-18) references teams — guarded so this still runs against a DB
+  // that hasn't had db/migrations/2026-10-18-offline-sync.sql applied yet.
+  if ((await client.query("SELECT to_regclass('public.client_actions') AS t")).rows[0].t) {
+    await client.query('DELETE FROM client_actions WHERE team_id IN (SELECT t.id FROM teams t JOIN games g ON t.game_id = g.id JOIN game_codes gc ON g.game_code_id = gc.id WHERE gc.tour_id = $1)', [tourId]);
+  }
   await client.query(`
     DELETE FROM progress_events WHERE team_id IN (
       SELECT t.id FROM teams t JOIN games g ON t.game_id = g.id

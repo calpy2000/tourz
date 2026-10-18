@@ -6,6 +6,8 @@ import { loadGpsCorrections, clearGpsCorrections } from '../gpsCorrections.js'
 import { useCoach } from '../coach/CoachContext.jsx'
 import DevMenu from './DevMenu.jsx'
 import { useGameClock } from '../gameClock.jsx'
+import { syncNow } from '../offline/gameStore.js'
+import { isSimulatingDeadSignal, setSimulateDeadSignal } from '../net/connection.js'
 
 // The "Dev" button + menu shared by every page that needs quick test shortcuts. `onReset` lets
 // each page decide what "reset" means for it (re-fetch in place vs. refresh current state) —
@@ -19,12 +21,14 @@ export default function DevTools({ onReset }) {
   const gameClock = useGameClock()
 
   async function completeThrough(count) {
-    await api.devComplete(count)
+    try { await api.devComplete(count) } catch { alert('No signal'); return }
+    await syncNow()
     navigate('/home')
   }
 
   async function handleReset() {
-    await api.devReset()
+    try { await api.devReset() } catch { alert('No signal'); return }
+    await syncNow()
     if (onReset) onReset()
     // Land back on "/" so the app's own dev-mode redirect logic (StartPage's ResumeRedirect)
     // sends us to /instructions — a fresh reset means tourComplete is false, so this always
@@ -63,10 +67,11 @@ export default function DevTools({ onReset }) {
   // this device has already shown, so they fire again. From the certificate page (reached via
   // time's up) the clock poll isn't running, so these hop back to /home to see the result.
   async function devClock(action, minutes) {
-    const res = await api.devClock(action, minutes)
+    let res
+    try { res = await api.devClock(action, minutes) } catch { alert('No signal'); return }
     if (res?.error) { alert(res.error); return }
     gameClock.resetAlerts()
-    gameClock.apply(res)
+    await syncNow()
     if (location.pathname === '/certificate') navigate('/home')
   }
 
@@ -79,6 +84,11 @@ export default function DevTools({ onReset }) {
   }
 
   const actions = [
+    // Every request hangs until it times out, like a real dead spot — see net/connection.js.
+    {
+      label: isSimulatingDeadSignal() ? 'Dead signal: ON (tap to end)' : 'Simulate dead signal',
+      onClick: () => setSimulateDeadSignal(!isSimulatingDeadSignal()),
+    },
     { label: 'Reset', onClick: handleReset },
     { label: 'Landmark 1 complete', onClick: () => completeThrough(1) },
     { label: 'Landmark 2 complete', onClick: () => completeThrough(2) },

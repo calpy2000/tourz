@@ -1,7 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../api.js'
 import { API_BASE } from '../apiBase.js'
+import { useGameStore, enqueue, syncNow } from '../offline/gameStore.js'
+import { currentView, homeView, landmarkDetailView } from '../offline/engine.js'
 import { fireConfetti } from '../confetti.js'
 import ResultPopup from '../components/ResultPopup.jsx'
 import AnagramBoard from '../components/AnagramBoard.jsx'
@@ -14,10 +16,8 @@ import TourCompletePopup from '../components/TourCompletePopup.jsx'
 import LoadingScreen from '../components/LoadingScreen.jsx'
 import { rectFromEvent } from '../rect.js'
 import { isStartLandmark, landmarkDisplayNumber } from '../landmarkNumber.js'
-import { getLastFetched, setLastFetched } from '../lastFetched.js'
-import { getSession, saveSession } from '../localSession.js'
+import { getSession } from '../localSession.js'
 import { DEV_MODE } from '../devMode.js'
-import { useRefreshOnResume } from '../useRefreshOnResume.js'
 import { useWakeLock } from '../useWakeLock.js'
 
 // Find & solve banner copy — re-amended 2026-08-24. A wrong answer is one flat outcome
@@ -86,10 +86,19 @@ function HouseIcon() {
   )
 }
 
+// Everything on this page is built on the phone from the shared game state (offline/engine.js —
+// same shape GET /api/game/current used to return), and every button is applied on the phone first
+// and queued for the server (offline/gameStore.js), so the page works the same with no signal:
+// right/wrong and points show instantly, and the server confirms when it next hears from the phone.
+// Teammates' screens update from the same state, which the store keeps polling while there's
+// signal — no per-page polling any more.
 export default function PlayPage() {
   const navigate = useNavigate()
-  const isCaptain = getSession()?.isCaptain ?? false
-  const [state, setState] = useState(null)
+  const { state: game } = useGameStore()
+  const isCaptain = game?.player.isCaptain ?? getSession()?.isCaptain ?? false
+  const state = useMemo(() => (game ? currentView(game) : null), [game])
+  const headerData = useMemo(() => (game ? homeView(game) : null), [game])
+  const [actionError, setActionError] = useState('')
   const [answer, setAnswer] = useState('')
   const [showQuiz, setShowQuiz] = useState(false)
   const [selectedOptions, setSelectedOptions] = useState({})
@@ -98,53 +107,32 @@ export default function PlayPage() {
   const [revealConfirmAnchor, setRevealConfirmAnchor] = useState(null)
   const [whyPopup, setWhyPopup] = useState(null) // { text, anchorRect } | null
   const [landmarkPopup, setLandmarkPopup] = useState(null)
-  // GameHeader's found/score pills — /api/game/current (polled below) never carries this, only
-  // /api/game/home does, so it's fetched here independently, same as HomePage/InstructionsPage.
-  // (The clock pill reads the shared tour clock itself — see gameClock.jsx.)
-  // Seeded from the same cached /api/game/home response HomePage uses (see lastFetched.js).
-  const [headerData, setHeaderData] = useState(() => getLastFetched('home'))
-  // Only the captain's device ever calls the hint/reveal/puzzle/quiz endpoints (server-gated —
-  // see resolveCaptain in index.js), so on a non-captain device any change here between polls is
-  // by definition the captain's doing, never our own action bouncing back.
+  // Only the captain's device can take the hint/reveal/puzzle/quiz actions (server-gated), so on a
+  // non-captain device any change here between state refreshes is by definition the captain's
+  // doing, never our own action bouncing back.
   const prevSignalRef = useRef(null)
   const anagramBoardRef = useRef(null)
 
-  const refresh = () => api.getCurrent().then(setState)
-  const loadHeaderData = () => api.getHome().then(setHeaderData)
+  const refresh = () => syncNow()
 
   function openLandmark(sequenceOrder) {
-    api.getLandmarkDetail(sequenceOrder).then((res) => { if (!res.error) setLandmarkPopup(res) })
+    const detail = game && landmarkDetailView(game, sequenceOrder)
+    if (detail) setLandmarkPopup(detail)
   }
 
-  useEffect(() => {
-    refresh()
-    loadHeaderData()
-  }, [])
+  // Applies one captain action (see enqueue). Returns the engine's result, or null after showing
+  // why it was refused.
+  function act(type, payload) {
+    const res = enqueue(type, payload)
+    if (res.error) {
+      setActionError(res.error)
+      return null
+    }
+    setActionError('')
+    return res.result
+  }
 
-  // Team members don't trigger any of these mutations themselves (only the captain can), so
-  // without polling their screen would just sit stale until they manually reload. Simple interval
-  // poll rather than the Socket.io push wired up in the architecture plan — much less to build for
-  // what's being asked right now, and fine at this game's scale. Runs for the captain's own device
-  // too (harmless — same idempotent GET, and their own actions already refresh immediately anyway).
-  useEffect(() => {
-    const id = setInterval(refresh, 4000)
-    return () => clearInterval(id)
-  }, [])
-
-  useEffect(() => { setLastFetched('home', headerData) }, [headerData])
-
-  useRefreshOnResume(() => { refresh(); loadHeaderData() })
   useWakeLock()
-
-  // NarrationPlayerProvider (mounted at the App root) fires this when its own poll detects a
-  // teammate just earned the narration bonus — refetch the header data here so the score pill
-  // updates without waiting for this page's own next 4s poll tick (that poll only covers `state`/
-  // getCurrent, not headerData/getHome, which is what actually carries totalScore on this page).
-  useEffect(() => {
-    const onScoreChanged = () => loadHeaderData()
-    window.addEventListener('tourz:score-changed', onScoreChanged)
-    return () => window.removeEventListener('tourz:score-changed', onScoreChanged)
-  }, [])
 
   // Fires the screen-update ping on a teammate's device when a poll picks up one of the captain's
   // four gated actions. Skipped entirely on the captain's own device (they see the result of their
@@ -164,17 +152,8 @@ export default function PlayPage() {
     prevSignalRef.current = sig
   }, [state, isCaptain])
 
-  // A captain handoff flips is_captain server-side only — this device's cached isCaptain flag
-  // (read live via getSession() above, and used all over this page to gate the action buttons)
-  // otherwise never learns about it until a manual refresh. GET /api/game/current now carries
-  // this device's own fresh isCaptain on every poll (see the server comment on that route), so
-  // just re-save the cached session whenever it disagrees — cheap, and correct for whichever of
-  // the two roles (or neither) this device actually holds now.
-  useEffect(() => {
-    if (!state || typeof state.isCaptain !== 'boolean') return
-    const session = getSession()
-    if (session && session.isCaptain !== state.isCaptain) saveSession({ ...session, isCaptain: state.isCaptain })
-  }, [state])
+  // (A captain handoff by a teammate reaches this phone through the game state — gameStore.js
+  // keeps the cached session's isCaptain in step with it.)
 
   // Also runs on first load (sequenceOrder null -> N): arriving at a landmark whose puzzle is
   // already solved (e.g. back via the CURRENT landmark toggle) skips straight to the quiz instead
@@ -198,7 +177,7 @@ export default function PlayPage() {
         <h1>Nice walking.</h1>
         <p className="subtitle">Final score: {state.totalScore} points</p>
         {DEV_MODE && (
-          <button className="ghost" onClick={async () => { await api.devReset(); refresh() }}>
+          <button className="ghost" onClick={async () => { try { await api.devReset() } catch { /* no signal */ } refresh() }}>
             Restart (dev)
           </button>
         )}
@@ -207,25 +186,39 @@ export default function PlayPage() {
     )
   }
 
+  // The team has gone further than the landmarks this phone holds — only possible if the server
+  // is sending a rolling window rather than the whole tour (see LOOKAHEAD_LANDMARKS there).
+  if (state.waitingForContent) {
+    return (
+      <div className="home-shell">
+        <div className="landmark-body">
+          <section className="card waiting-content-card">
+            <h2>Next clue on its way</h2>
+            <p>Your next clue hasn&rsquo;t downloaded to this phone yet. It will appear here as soon as you&rsquo;re back in signal.</p>
+          </section>
+        </div>
+        <GameHeader data={headerData} onReset={refresh} showHelp />
+      </div>
+    )
+  }
+
   const { clue, puzzle, quiz, landmarkComplete } = state
 
-  async function handleHint() {
+  function handleHint() {
     setHintConfirmAnchor(null)
-    await api.requestHint()
-    refresh()
+    act('hint', { hintNumber: clue.hintsRevealed.length + 1 })
   }
 
-  async function handleReveal() {
+  function handleReveal() {
     setRevealConfirmAnchor(null)
-    await api.requestReveal()
-    refresh()
+    act('reveal')
   }
 
-  async function handlePuzzleSubmit(e) {
+  function handlePuzzleSubmit(e) {
     e.preventDefault()
-    const result = await api.submitPuzzleAnswer(answer)
+    const result = act('puzzle', { answer })
+    if (!result) return
     setAnswer('')
-    refresh()
     if (result.correct && result.hintsUsed === 0 && !result.revealUsed) fireConfetti()
   }
 
@@ -233,12 +226,11 @@ export default function PlayPage() {
     setSelectedOptions((prev) => ({ ...prev, [questionId]: opt }))
   }
 
-  async function handleQuizSubmit(questionId) {
+  function handleQuizSubmit(questionId) {
     const opt = selectedOptions[questionId]
     if (!opt) return
-    const result = await api.submitQuizAnswer(questionId, opt)
-    refresh()
-    if (result.quizComplete && result.correctCount === 4) fireConfetti()
+    const result = act('quiz', { questionId, answer: opt })
+    if (result?.quizComplete && result.correctCount === 4) fireConfetti()
   }
 
   function toggleFiveRightTile(questionId, tileId) {
@@ -250,24 +242,21 @@ export default function PlayPage() {
     })
   }
 
-  async function handleFiveRightSubmit(questionId) {
+  function handleFiveRightSubmit(questionId) {
     const picked = Array.from(fiveRightPicks[questionId] || [])
-    const result = await api.submitQuizAnswer(questionId, picked)
-    refresh()
-    if (result.quizComplete && result.score === 5) fireConfetti()
+    const result = act('quiz', { questionId, answer: picked })
+    if (result?.quizComplete && result.score === 5) fireConfetti()
   }
 
-  async function handleAnagramSubmit(questionId) {
+  function handleAnagramSubmit(questionId) {
     const answerText = anagramBoardRef.current?.getAnswer()
     if (!answerText) return
-    const result = await api.submitQuizAnswer(questionId, answerText)
-    refresh()
-    if (result.correct) fireConfetti()
+    const result = act('quiz', { questionId, answer: answerText })
+    if (result?.correct) fireConfetti()
   }
 
-  async function handleContinue() {
-    await api.advance()
-    refresh()
+  function handleContinue() {
+    act('advance')
   }
 
   // Same condition that decides which section renders below — the help popup needs to match
@@ -281,6 +270,7 @@ export default function PlayPage() {
         <button className="view-seg" onClick={() => navigate('/home')}><HouseIcon /><strong>MAP</strong> view</button>
         <button className="view-seg view-seg-active" onClick={() => navigate('/play')}><HouseIcon /><strong>CURRENT</strong> landmark</button>
       </div>
+      {actionError && <p className="form-error" role="alert">{actionError}</p>}
       {(showQuiz || landmarkComplete) && quiz.unlocked ? (
         <section className={quiz.questions[0]?.type === 'five_right' ? 'five-right-section' : 'card'}>
           {quiz.questions[0]?.type === 'anagram' ? (

@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { api } from '../api.js'
 import { API_BASE } from '../apiBase.js'
+import { useGameStore, enqueue, syncNow } from '../offline/gameStore.js'
+import { homeView, landmarkDetailView } from '../offline/engine.js'
 import GameHeader from '../components/GameHeader.jsx'
 import LoadingScreen from '../components/LoadingScreen.jsx'
 import { NarrationSpeakerIcon } from '../components/NarrationPlayer.jsx'
@@ -647,19 +648,17 @@ export default function InstructionsPage() {
   const helpMode = Boolean(location.state?.helpMode)
   const returnTo = location.state?.returnTo || '/home'
   const returnState = location.state?.returnState
-  const [data, setData] = useState(null)
+  // From the phone's game state (offline/gameStore.js) — works with no signal, e.g. reopening the
+  // instructions from Help in a dead spot.
+  const { state } = useGameStore()
+  const data = useMemo(() => (state ? homeView(state) : null), [state])
   const [step, setStep] = useState(location.state?.step ?? 0)
   // The real starting landmark's full detail (image/about-text/interesting-fact included) — used
   // by the tile/detail-card demo mockups below so they show this tour's actual start landmark
   // instead of a fixed Edinburgh example. sequence_order 1 is always the start landmark.
-  const [startLandmark, setStartLandmark] = useState(null)
+  const startLandmark = useMemo(() => (state ? landmarkDetailView(state, 1) : null), [state])
 
-  const loadHome = () => api.getHome().then(setData)
-
-  useEffect(() => {
-    loadHome()
-    api.getLandmarkDetail(1).then((res) => { if (!res.error) setStartLandmark(res) })
-  }, [helpMode])
+  const loadHome = () => syncNow()
 
   if (!data) return <LoadingScreen />
 
@@ -795,7 +794,8 @@ export default function InstructionsPage() {
           className="primary instructions-next-btn"
           onClick={async () => {
             if (!isLast) return setStep((s) => s + 1)
-            await api.markInstructionsComplete()
+            // Queued like any other action — applies on the phone at once, signal or not.
+            enqueue('instructions_complete')
             navigate('/home', { state: { startCoach: true } })
           }}
         >

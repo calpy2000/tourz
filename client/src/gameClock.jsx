@@ -1,23 +1,25 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { api } from './api.js'
 import { getSession } from './localSession.js'
-import { useRefreshOnResume } from './useRefreshOnResume.js'
 import { useCoach } from './coach/CoachContext.jsx'
+import { useGameStore, enqueue, syncNow, serverNow } from './offline/gameStore.js'
+import { clockView } from './offline/engine.js'
 import { useNarrationPlayer } from './components/NarrationPlayer.jsx'
 import ResultPopup from './components/ResultPopup.jsx'
 import { playClockRestartedPing, playClockStoppedPing, playTimeAlertPing } from './screenUpdatePing.js'
 
 // The tour clock, client side. The server owns the real clock (see clockState in server/index.js:
 // a per-tour limit, started when the captain finishes the walkthrough, stoppable twice by the
-// captain); this polls GET /api/game/clock and drives everything that depends on it: the footer
-// countdown (GameHeader's ClockPill), the Help menu's stop/restart items (HelpButton), and — via
-// GameClockLayer below — the frozen screen, the stopped/waiting banners, the stop/restart pings,
-// the last-30-minutes time alerts and the time's-up popup. One shared poll instead of each page
-// fetching its own, since the clock has to behave identically on every in-game page.
+// captain). Since 2026-10-18 it's worked out on the phone from the game state's raw clock columns
+// (offline/engine.js clockView — same maths as the server), so it keeps counting, stopping and
+// restarting with no signal; the state itself is kept fresh by offline/gameStore.js. Drives
+// everything that depends on it: the footer countdown (GameHeader's ClockPill), the Help menu's
+// stop/restart items (HelpButton), and — via GameClockLayer below — the frozen screen, the
+// stopped/waiting banners, the stop/restart pings, the last-30-minutes time alerts and the
+// time's-up popup.
 
 const IN_GAME_PATHS = ['/home', '/play', '/instructions']
-const POLL_MS = 4000
+const RECOMPUTE_MS = 1000
 // Time alerts: one each time the remaining time drops past one of these (minutes left).
 const ALERT_MINUTES = [30, 25, 20, 15, 10, 5]
 
@@ -53,9 +55,9 @@ function isRunning(c) {
   return Boolean(c && c.started && !c.paused && !c.timeUp && !c.tourComplete)
 }
 
-// Each poll's remainingSeconds is converted to a local deadline (when running) so the countdown
-// can tick between polls. A fresh poll only replaces state when something real changed — poll-to-
-// poll jitter of a second or two in the deadline would otherwise re-render the whole app every 4s.
+// Each recompute's remainingSeconds is converted to a local deadline (when running) so the
+// countdown can tick on its own. A recompute only replaces state when something real changed —
+// a second or two of jitter in the deadline would otherwise re-render the whole app every second.
 function sameClock(a, b) {
   for (const key of Object.keys(b)) {
     if (key === 'remainingSeconds' || key === 'deadline') continue
@@ -71,8 +73,11 @@ const GameClockContext = createContext(null)
 export function GameClockProvider({ children }) {
   const location = useLocation()
   const coach = useCoach()
-  const active = IN_GAME_PATHS.includes(location.pathname) && Boolean(getSession())
+  const { state } = useGameStore()
+  const active = IN_GAME_PATHS.includes(location.pathname) && Boolean(getSession()) && Boolean(state)
   const [clock, setClock] = useState(null)
+  const stateRef = useRef(state)
+  stateRef.current = state
 
   const apply = useCallback((res) => {
     if (!res || res.error) return
@@ -80,43 +85,30 @@ export function GameClockProvider({ children }) {
     setClock((prev) => (prev && sameClock(prev, next) ? prev : next))
   }, [])
 
-  const refresh = useCallback(() => api.getClock().then(apply).catch(() => {}), [apply])
-
+  // Also how the walkthrough finishing starts the clock straight away: CoachContext queues
+  // coach_complete, which the engine applies to the state at once (signal or not).
+  const recompute = useCallback(() => {
+    if (stateRef.current) apply(clockView(stateRef.current, serverNow()))
+  }, [apply])
+  useEffect(() => { recompute() }, [state, recompute])
   useEffect(() => {
     if (!active) return
-    refresh()
-    const id = setInterval(refresh, POLL_MS)
+    const id = setInterval(recompute, RECOMPUTE_MS)
     return () => clearInterval(id)
-  }, [active, refresh])
+  }, [active, recompute])
 
-  useRefreshOnResume(() => { if (active) refresh() })
+  const refresh = useCallback(() => syncNow(), [])
 
-  // The captain finishing the walkthrough is what starts the clock — pick that up straight away
-  // rather than on the next poll tick. Short delay: CoachContext fires markCoachComplete without
-  // awaiting it, so the server may not have recorded it the instant the coach closes.
-  const wasCoachActive = useRef(coach.active)
-  useEffect(() => {
-    if (wasCoachActive.current && !coach.active && active) {
-      const id = setTimeout(refresh, 800)
-      wasCoachActive.current = coach.active
-      return () => clearTimeout(id)
-    }
-    wasCoachActive.current = coach.active
-  }, [coach.active, active, refresh])
-
+  // Applied on the phone at once (the whole team's screens freeze when the server hears of it).
   const stopClock = useCallback(async () => {
-    const res = await api.stopClock()
-    if (res?.error) refresh()
-    else apply(res)
-    return res
-  }, [apply, refresh])
+    const res = enqueue('clock_stop')
+    return res.error ? { error: res.error } : res.result
+  }, [])
 
   const restartClock = useCallback(async () => {
-    const res = await api.restartClock()
-    if (res?.error) refresh()
-    else apply(res)
-    return res
-  }, [apply, refresh])
+    const res = enqueue('clock_restart')
+    return res.error ? { error: res.error } : res.result
+  }, [])
 
   // Dev tools only: forget which time alerts this device has already shown for this game, so a
   // "jump to N minutes left" shortcut can show them again.

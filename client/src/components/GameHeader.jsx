@@ -2,6 +2,19 @@ import DevTools from './DevTools.jsx'
 import HelpButton from './HelpButton.jsx'
 import { DEV_MODE } from '../devMode.js'
 import { formatClock, useGameClock, useLiveRemaining } from '../gameClock.jsx'
+import { useGameStore } from '../offline/gameStore.js'
+
+// Points pill. A small yellow dot while points earned on this phone haven't reached the server
+// yet (e.g. answered in a dead spot) — they count straight away, the dot just says "not synced".
+function ScorePill({ score }) {
+  const { pendingCount } = useGameStore()
+  return (
+    <div className="home-pill home-pill-brass">
+      <span className="stat-line">{score} pts</span>
+      {pendingCount > 0 && <span className="score-sync-dot" title="Not synced yet" aria-label="Not synced yet" />}
+    </div>
+  )
+}
 
 // Time LEFT on the tour clock (see gameClock.jsx), counting down as H:MM. Before the captain has
 // started the clock it just shows the full limit (e.g. 3:00), not moving. While the captain has it
@@ -37,9 +50,7 @@ export default function GameHeader({ data, onReset, showHelp = false, pageHelpTe
               isn't something a team "finds" — subtract it so the pill reads e.g. 0/14, not 1/15. */}
           <span className="stat-line">Found {data.foundCount - 1}/{data.totalLandmarks - 1}</span>
         </div>
-        <div className="home-pill home-pill-brass">
-          <span className="stat-line">{data.totalScore} pts</span>
-        </div>
+        <ScorePill score={data.totalScore} />
         <ClockPill />
         {DEV_MODE && <DevTools onReset={onReset} />}
         {showHelp && <HelpButton pageHelpText={pageHelpText} returnState={helpReturnState} />}

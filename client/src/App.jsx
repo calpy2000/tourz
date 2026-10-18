@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import StartPage from './pages/StartPage.jsx'
 import WelcomePage from './pages/WelcomePage.jsx'
@@ -15,6 +16,33 @@ import DebugOverlay from './components/DebugOverlay.jsx'
 import { useGpsPreflightStatus } from './gpsPreflight.js'
 import { NarrationPlayerProvider } from './components/NarrationPlayer.jsx'
 import { GameClockProvider, GameClockLayer } from './gameClock.jsx'
+import ConnectionStatus from './components/ConnectionStatus.jsx'
+import { startGameStore, useGameStore } from './offline/gameStore.js'
+import { useContentCache, loadTourPack, assetUrlsFor, saveForOffline, rememberUrls } from './offline/contentCache.js'
+
+// Keeps the phone's copy of the game going (offline/gameStore.js) and saves the whole tour onto
+// the phone in the background (offline/contentCache.js): the tour pack (every POI card), then
+// every photo and narration file the game and the pack refer to — so after the first few minutes
+// of a tour nothing static ever needs fetching again. Re-checks whenever the set of landmarks the
+// phone holds or the pack itself changes; already-saved files are skipped.
+function OfflineKeeper() {
+  const { pathname } = useLocation()
+  const { state } = useGameStore()
+  const { pack } = useContentCache()
+  useEffect(() => { if (getSession()) startGameStore() }, [pathname])
+  const tourId = state?.tour?.id
+  useEffect(() => { if (tourId) loadTourPack(tourId) }, [tourId])
+  const landmarkKey = state ? Object.keys(state.landmarks).join(',') : ''
+  useEffect(() => {
+    if (!state) return
+    const urls = assetUrlsFor(state, pack)
+    rememberUrls(urls)
+    saveForOffline(urls)
+  }, [landmarkKey, pack?.version])
+  return null
+}
+
+const STATUS_PATHS = ['/home', '/play', '/instructions', '/certificate']
 
 // /home, /play, /instructions all need a real registered player — without a session there's no
 // team for the API to resolve, so bounce back to registration rather than showing a broken page.
@@ -38,6 +66,7 @@ export default function App() {
   return (
     <CoachProvider>
       {DEV_MODE && <div className="app-version-badge">{APP_VERSION}</div>}
+      <OfflineKeeper />
       {gpsStatus !== 'ok' ? (
         <GpsGateScreen />
       ) : (
@@ -58,6 +87,7 @@ export default function App() {
             <Route path="/certificate" element={<RequireSession><CertificatePage /></RequireSession>} />
           </Routes>
           <GameClockLayer />
+          <ConnectionStatus inGame={STATUS_PATHS.includes(pathname) && Boolean(getSession())} />
           <DebugOverlay appWide />
           </GameClockProvider>
         </NarrationPlayerProvider>

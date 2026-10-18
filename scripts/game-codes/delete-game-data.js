@@ -30,6 +30,11 @@ async function deleteGameDataForCode(client, gameCode) {
       'DELETE FROM location_pings WHERE player_id IN (SELECT id FROM players WHERE team_id = $1)',
       [team.id]
     );
+    // client_actions (offline sync, 2026-10-18) references teams — guarded so this still runs against a DB
+    // that hasn't had db/migrations/2026-10-18-offline-sync.sql applied yet.
+    if ((await client.query("SELECT to_regclass('public.client_actions') AS t")).rows[0].t) {
+      await client.query('DELETE FROM client_actions WHERE team_id = $1', [team.id]);
+    }
     const { rowCount: listens } = await client.query('DELETE FROM narration_listens WHERE team_id = $1', [team.id]);
     const { rowCount: events } = await client.query('DELETE FROM progress_events WHERE team_id = $1', [team.id]);
     const { rowCount: players } = await client.query('DELETE FROM players WHERE team_id = $1', [team.id]);

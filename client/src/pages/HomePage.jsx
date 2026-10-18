@@ -1,13 +1,12 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { api } from '../api.js'
 import GameHeader from '../components/GameHeader.jsx'
 import MapView from '../components/MapView.jsx'
 import LoadingScreen from '../components/LoadingScreen.jsx'
-import { getLastFetched, setLastFetched } from '../lastFetched.js'
-import { useRefreshOnResume } from '../useRefreshOnResume.js'
 import { useWakeLock } from '../useWakeLock.js'
 import { useCoach } from '../coach/CoachContext.jsx'
+import { useGameStore, syncNow } from '../offline/gameStore.js'
+import { homeView } from '../offline/engine.js'
 
 // Bootstrap Icons' "house-fill" (bi-house-fill) — picked over a hand-drawn shape so the switcher
 // icon matches a real icon library exactly. Shown before both segment labels, not just one, since
@@ -24,27 +23,16 @@ function HouseIcon() {
 // `active` is false while this page is kept mounted but hidden behind /play (see App.jsx).
 export default function HomePage({ active = true }) {
   const location = useLocation()
-  // Seeded from the last response (see lastFetched.js) so coming back from CURRENT landmark skips
-  // the loading screen; the mount effect below still refetches fresh data right away.
-  const [data, setData] = useState(() => getLastFetched('home'))
+  // Built on the phone from the shared game state (see offline/gameStore.js), which keeps itself
+  // fresh — so this is always current, signal or not, with nothing to fetch on the way back from
+  // CURRENT landmark.
+  const { state } = useGameStore()
+  const data = useMemo(() => (state ? homeView(state) : null), [state])
   const [view, setView] = useState(location.state?.view || 'map')
   const navigate = useNavigate()
   const coach = useCoach()
 
-  const loadHome = () => api.getHome().then(setData)
-
-  useEffect(() => {
-    loadHome()
-  }, [])
-
-  useEffect(() => { setLastFetched('home', data) }, [data])
-
-  // Shown again after being kept hidden — the score/found pills may have moved on meanwhile.
-  const wasActiveRef = useRef(active)
-  useEffect(() => {
-    if (active && !wasActiveRef.current) loadHome()
-    wasActiveRef.current = active
-  }, [active])
+  const loadHome = () => syncNow()
 
   // Set by StartPage's ResumeRedirect (fresh from finishing instructions, or reopening the app
   // with the coach walkthrough still unfinished) — see CoachContext's markCoachComplete call for
@@ -53,17 +41,7 @@ export default function HomePage({ active = true }) {
     if (location.state?.startCoach) coach.start()
   }, [])
 
-  useRefreshOnResume(loadHome)
   useWakeLock()
-
-  // NarrationPlayerProvider (mounted at the App root, so it's present regardless of which page
-  // is showing) fires this when its own poll detects a teammate just earned the narration bonus
-  // — refetch here so this page's score pill updates without waiting for the next mount/resume.
-  useEffect(() => {
-    const onScoreChanged = () => loadHome()
-    window.addEventListener('tourz:score-changed', onScoreChanged)
-    return () => window.removeEventListener('tourz:score-changed', onScoreChanged)
-  }, [])
 
   if (!data) return <LoadingScreen />
 

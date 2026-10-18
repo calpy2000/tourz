@@ -10,15 +10,9 @@
          one). Settled 2026-08-24 after real-device testing on iPhone showed exactly this. -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>TOURZ</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <!-- crossorigin is required here (not just on the gstatic preconnect above) — without it the
-         browser treats this stylesheet as opaque to JS, and html-to-image's font-embedding step
-         (used by CertificatePage to rasterize the Cormorant Garamond certificate text into the
-         emailed PNG) throws a SecurityError trying to read its cssRules. -->
-    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;700&family=Cormorant+Garamond:ital,wght@0,600;1,600&display=swap" rel="stylesheet" crossorigin="anonymous">
-    <!-- Powers the confetti celebration on solving a puzzle with no hints — see src/confetti.js -->
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js" defer></script>
+    <!-- Fonts (Quicksand, Cormorant Garamond) and confetti are bundled, not loaded from Google
+         Fonts / jsDelivr (since 2026-10-18) — see src/main.jsx and src/confetti.js — so the app the
+         service worker saves is complete and looks right when reopened with no signal. -->
   </head>
   <body>
     <div id="root"></div>

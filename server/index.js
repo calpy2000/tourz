@@ -131,17 +131,30 @@ function requireCaptain(player, res) {
 // out of time afterwards, however long they take to tap through to their certificate.
 const MAX_CLOCK_STOPS = 2;
 
-function clockState(game, allCompleted, completedAt) {
+// Whether GET /api/game/current carries the `_dev` block (the current puzzle answer + every quiz
+// answer, logged to the browser console for testing). Defaults to on for the local server (no
+// DATABASE_URL) and off in production; set EXPOSE_DEV_ANSWERS=true|false to override either way.
+const EXPOSE_DEV_ANSWERS = process.env.EXPOSE_DEV_ANSWERS
+  ? process.env.EXPOSE_DEV_ANSWERS === 'true'
+  : !process.env.DATABASE_URL;
+
+// `at` (default now) is the moment being judged — an action synced from a phone that was out of
+// signal is judged at the time it was actually tapped (see POST /api/game/sync), so an answer given
+// a minute before time ran out still counts even though it reaches the server after. A stop that
+// began after `at` doesn't count as paused at `at`.
+function clockState(game, allCompleted, completedAt, at = new Date()) {
   const limitSeconds = game.time_limit_minutes * 60;
-  if (!game.clock_started_at) {
+  const startedAt = game.clock_started_at && new Date(game.clock_started_at);
+  if (!startedAt || startedAt > at) {
     return { started: false, paused: false, timeUp: false, elapsedSeconds: 0, remainingSeconds: limitSeconds, limitSeconds };
   }
-  const endPoint = allCompleted && completedAt ? new Date(completedAt) : game.clock_paused_at ? new Date(game.clock_paused_at) : new Date();
-  const elapsed = Math.max(0, Math.floor((endPoint - new Date(game.clock_started_at)) / 1000) - game.paused_seconds);
+  const pausedAt = game.clock_paused_at && new Date(game.clock_paused_at) <= at ? new Date(game.clock_paused_at) : null;
+  const endPoint = allCompleted && completedAt && new Date(completedAt) <= at ? new Date(completedAt) : pausedAt || at;
+  const elapsed = Math.max(0, Math.floor((endPoint - startedAt) / 1000) - game.paused_seconds);
   const remaining = Math.max(0, limitSeconds - elapsed);
   return {
     started: true,
-    paused: Boolean(game.clock_paused_at),
+    paused: Boolean(pausedAt),
     timeUp: !allCompleted && remaining <= 0,
     elapsedSeconds: Math.min(elapsed, limitSeconds),
     remainingSeconds: remaining,
@@ -153,7 +166,7 @@ function clockState(game, allCompleted, completedAt) {
 // landmark completion ("12/14") — which the clock needs too, since finishing stops it.
 // playableCount counts landmarks that actually have a puzzle, i.e. excludes the start landmark,
 // matching the "Found x/14" footer pill.
-async function gameClockFor(team) {
+async function gameClockFor(team, at = new Date()) {
   const { rows: [game] } = await db.query('SELECT * FROM games WHERE id = $1', [team.game_id]);
   const { rows: [counts] } = await db.query(
     `SELECT
@@ -168,7 +181,7 @@ async function gameClockFor(team) {
   const allCompleted = playableCount > 0 && completedCount >= playableCount;
   return {
     game,
-    clock: clockState(game, allCompleted, counts.last_completed_at),
+    clock: clockState(game, allCompleted, counts.last_completed_at, at),
     allCompleted,
     completedCount,
     playableCount,
@@ -180,12 +193,12 @@ async function gameClockFor(team) {
 // called from every place that can make that true (the captain finishing it, a captain handoff to
 // someone who already has, and the clock poll itself as a self-heal). Idempotent and atomic: the
 // WHERE clause only ever lets the first caller set clock_started_at.
-async function maybeStartClock(team) {
+async function maybeStartClock(team, at = new Date()) {
   await db.query(
-    `UPDATE games SET clock_started_at = now()
+    `UPDATE games SET clock_started_at = $3
      WHERE id = $1 AND clock_started_at IS NULL
        AND EXISTS (SELECT 1 FROM players WHERE team_id = $2 AND is_captain AND coach_complete)`,
-    [team.game_id, team.id]
+    [team.game_id, team.id, at]
   );
 }
 
@@ -194,16 +207,13 @@ async function maybeStartClock(team) {
 // project's rule that anything with real value is enforced server-side. A team that has completed
 // every landmark is let through (the clock has frozen at completion) so the final "Head to next
 // landmark" tap still works. 423 Locked, so the client can tell this apart from a real error.
-async function requireClockRunning(team, res) {
-  const { clock, allCompleted } = await gameClockFor(team);
-  if (allCompleted) return true;
-  let error = null;
-  if (!clock.started) error = "The tour clock hasn't started yet — it starts when your captain finishes the app walkthrough.";
-  else if (clock.timeUp) error = "Time's up — your tour has ended.";
-  else if (clock.paused) error = 'The clock is stopped — your captain needs to restart it before you can carry on.';
-  if (!error) return true;
-  res.status(423).json({ error, clockBlocked: true });
-  return false;
+async function clockBlockError(team, at = new Date()) {
+  const { clock, allCompleted } = await gameClockFor(team, at);
+  if (allCompleted) return null;
+  if (!clock.started) return "The tour clock hasn't started yet — it starts when your captain finishes the app walkthrough.";
+  if (clock.timeUp) return "Time's up — your tour has ended.";
+  if (clock.paused) return 'The clock is stopped — your captain needs to restart it before you can carry on.';
+  return null;
 }
 
 // Shape of GET /api/game/clock (and the stop/restart responses) — the one payload the client's
@@ -265,19 +275,25 @@ function normalize(text) {
 // (and every team member's device) sees the same random-looking arrangement for the lifetime of
 // that team's playthrough, but a different arrangement than any other team gets. Tile identity for
 // picking/scoring is always by `tile.id`, never by array position, so shuffling this is display-only.
-function seededShuffle(array, seedStr) {
+// FNV-1a seed into a mulberry32-style generator — deterministic per seed string. Also drives
+// sealJson's keystream; the client mirror (client/src/offline/seal.js) must produce the same output.
+function seededRandom(seedStr) {
   let h = 2166136261;
   for (let i = 0; i < seedStr.length; i++) {
     h ^= seedStr.charCodeAt(i);
     h = Math.imul(h, 16777619);
   }
   let state = h >>> 0;
-  function rand() {
+  return function rand() {
     state |= 0; state = (state + 0x6d2b79f5) | 0;
     let t = Math.imul(state ^ (state >>> 15), 1 | state);
     t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  }
+  };
+}
+
+function seededShuffle(array, seedStr) {
+  const rand = seededRandom(seedStr);
   const result = array.slice();
   for (let i = result.length - 1; i > 0; i--) {
     const j = Math.floor(rand() * (i + 1));
@@ -630,20 +646,25 @@ app.get('/api/game/current', async (req, res) => {
   const quizCompleted = quizQuestions.length > 0 && quizQuestions.every((q) => q.answered);
   const landmarkComplete = Boolean(quizCompletedEvent);
 
-  // Dev-only: the real answers, never sent to a real player — for local testing convenience.
-  const { rows: allQuizForDev } = await db.query(
-    'SELECT id, question_text, type, answer_payload FROM quiz_questions WHERE landmark_id = $1 ORDER BY sequence_order',
-    [landmark.id]
-  );
-
-  res.json({
-    _dev: {
+  // Dev-only: the real answers, for local testing convenience. Until 2026-10-18 this went to every
+  // player, production included — now only when EXPOSE_DEV_ANSWERS allows it (see its definition).
+  let _dev;
+  if (EXPOSE_DEV_ANSWERS) {
+    const { rows: allQuizForDev } = await db.query(
+      'SELECT id, question_text, type, answer_payload FROM quiz_questions WHERE landmark_id = $1 ORDER BY sequence_order',
+      [landmark.id]
+    );
+    _dev = {
       puzzleAnswer: readableAnswer(landmark.puzzle_type, landmark.puzzle_answer),
       quizAnswers: allQuizForDev.map((q) => ({
         question: q.question_text,
         answer: readableAnswer(q.type, q.answer_payload),
       })),
-    },
+    };
+  }
+
+  res.json({
+    _dev,
     sequenceOrder: landmark.sequence_order,
     title: puzzleSolvedEvent ? landmark.title : null, // withheld until attempted — never reveal the name in advance
     totalScore: team.total_score,
@@ -732,8 +753,7 @@ app.get('/api/game/certificate', async (req, res) => {
 app.post('/api/game/instructions-complete', async (req, res) => {
   const session = await resolveSession(req, res);
   if (!session) return;
-  await db.query('UPDATE players SET instructions_complete = true WHERE id = $1', [session.player.id]);
-  res.json({ ok: true });
+  sendResult(res, await actInstructionsComplete(session));
 });
 
 // POST /api/game/coach-complete — called once, when this player reaches the end of the guided
@@ -744,9 +764,7 @@ app.post('/api/game/instructions-complete', async (req, res) => {
 app.post('/api/game/coach-complete', async (req, res) => {
   const session = await resolveSession(req, res);
   if (!session) return;
-  await db.query('UPDATE players SET coach_complete = true WHERE id = $1', [session.player.id]);
-  await maybeStartClock(session.team);
-  res.json({ ok: true });
+  sendResult(res, await actCoachComplete(session, {}, new Date()));
 });
 
 // GET /api/game/clock — polled every few seconds by every in-game device (GameClockProvider in
@@ -761,48 +779,20 @@ app.get('/api/game/clock', async (req, res) => {
 });
 
 // POST /api/game/clock/stop — captain-only, at most MAX_CLOCK_STOPS times per game (e.g. for
-// lunch). Freezes the whole team's app until the captain restarts it. The conditional UPDATE is
-// the real guard (atomic against a double tap); the checks before it are just for clear errors.
+// lunch). Freezes the whole team's app until the captain restarts it. See actClockStop.
 app.post('/api/game/clock/stop', async (req, res) => {
   const session = await resolveSession(req, res);
   if (!session) return;
-  const { player, team } = session;
-  if (!requireCaptain(player, res)) return;
-
-  const { clock, allCompleted, game } = await gameClockFor(team);
-  if (!clock.started || clock.timeUp || allCompleted) return res.status(400).json({ error: "The clock isn't running." });
-  if (clock.paused) return res.status(400).json({ error: 'The clock is already stopped.' });
-  if (game.pauses_used >= MAX_CLOCK_STOPS) return res.status(400).json({ error: "You've used all your clock stops." });
-
-  const { rowCount } = await db.query(
-    `UPDATE games SET clock_paused_at = now(), pauses_used = pauses_used + 1
-     WHERE id = $1 AND clock_started_at IS NOT NULL AND clock_paused_at IS NULL AND pauses_used < $2`,
-    [team.game_id, MAX_CLOCK_STOPS]
-  );
-  if (!rowCount) return res.status(409).json({ error: 'The clock could not be stopped — try again.' });
-  res.json(await clockPayload(player, team));
+  sendResult(res, await actClockStop(session, {}, new Date()));
 });
 
 // POST /api/game/clock/restart — captain-only. Folds the stop's length into paused_seconds, so
-// the time used carries on exactly where it left off.
+// the time used carries on exactly where it left off. See actClockRestart.
 app.post('/api/game/clock/restart', async (req, res) => {
   const session = await resolveSession(req, res);
   if (!session) return;
-  const { player, team } = session;
-  if (!requireCaptain(player, res)) return;
-
-  const { rowCount } = await db.query(
-    `UPDATE games
-     SET paused_seconds = paused_seconds + FLOOR(EXTRACT(EPOCH FROM (now() - clock_paused_at)))::int,
-         clock_paused_at = NULL
-     WHERE id = $1 AND clock_paused_at IS NOT NULL`,
-    [team.game_id]
-  );
-  if (!rowCount) return res.status(400).json({ error: "The clock isn't stopped." });
-  res.json(await clockPayload(player, team));
+  sendResult(res, await actClockRestart(session, {}, new Date()));
 });
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // POST /api/game/certificate/send — emails a rasterized PNG of the certificate (built client-side
 // from the certificate card's DOM, see CertificatePage.jsx) as an attachment. Any player may send
@@ -810,275 +800,48 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 app.post('/api/game/certificate/send', async (req, res) => {
   const session = await resolveSession(req, res);
   if (!session) return;
-  const { email, imageDataUrl } = req.body;
-
-  if (!email || !EMAIL_RE.test(String(email).trim())) {
-    return res.status(400).json({ error: 'Enter a valid email address.' });
-  }
-  const match = typeof imageDataUrl === 'string' && imageDataUrl.match(/^data:image\/png;base64,(.+)$/);
-  if (!match) return res.status(400).json({ error: 'Missing certificate image.' });
-
-  try {
-    await mailTransporter.sendMail({
-      from: `TOURZ <${process.env.GMAIL_USER}>`,
-      to: email.trim(),
-      // Neutral wording — the certificate may be for a team that ran out of time, not just one
-      // that completed every landmark.
-      subject: 'Your TOURZ certificate',
-      text: 'Thanks for walking with TOURZ! Your certificate is attached.',
-      attachments: [{ filename: 'tourz-certificate.png', content: Buffer.from(match[1], 'base64') }],
-    });
-    res.json({ sent: true });
-  } catch (err) {
-    console.error('Certificate email error:', err);
-    res.status(502).json({ error: 'Could not send the email — try again.' });
-  }
+  sendResult(res, await actCertificateSend(session, req.body));
 });
 
-// POST /api/game/problem-report — emails the app's own inbox (GMAIL_USER, same address the
-// certificate sender uses) with the player's free-text description plus enough team/progress
-// context to triage it. Any player may send (not captain-gated) — reporting a problem isn't a
-// captain-only action and doesn't mutate game state.
+// POST /api/game/problem-report — emails the app's own inbox with the player's description plus
+// team/progress context. Any player may send. See actProblemReport.
 app.post('/api/game/problem-report', async (req, res) => {
   const session = await resolveSession(req, res);
   if (!session) return;
-  const { player, team } = session;
-
-  const message = String(req.body.message || '').trim();
-  if (!message) return res.status(400).json({ error: 'Enter a description of the problem.' });
-
-  const { rows: [info] } = await db.query(
-    `SELECT t.name AS tour_name, l.title AS current_landmark_title,
-            (SELECT COUNT(*) FROM progress_events pe
-             WHERE pe.team_id = tm.id AND pe.event_type = 'landmark_completed') AS landmarks_completed
-     FROM teams tm
-     JOIN games g ON g.id = tm.game_id
-     JOIN game_codes gc ON gc.id = g.game_code_id
-     JOIN tours t ON t.id = gc.tour_id
-     LEFT JOIN landmarks l ON l.tour_id = t.id AND l.sequence_order = tm.current_landmark_sequence
-     WHERE tm.id = $1`,
-    [team.id]
-  );
-
-  const details = [
-    `Team: ${team.name}`,
-    `Player: ${player.name} ${player.avatar}${player.is_captain ? ' (captain)' : ''}`,
-    `Tour: ${info?.tour_name || 'unknown'}`,
-    `Current landmark: ${info?.current_landmark_title || `sequence ${team.current_landmark_sequence}`}`,
-    `Landmarks completed: ${info?.landmarks_completed ?? 0}`,
-    `Score: ${team.total_score}`,
-  ].join('\n');
-
-  try {
-    await mailTransporter.sendMail({
-      from: `TOURZ <${process.env.GMAIL_USER}>`,
-      to: process.env.GMAIL_USER,
-      subject: `TOURZ problem report — ${team.name}`,
-      text: `${details}\n\nProblem description:\n${message}`,
-    });
-    res.json({ sent: true });
-  } catch (err) {
-    console.error('Problem report email error:', err);
-    res.status(502).json({ error: 'Could not send the report — try again.' });
-  }
+  sendResult(res, await actProblemReport(session, req.body));
 });
 
+// The direct (online, one-at-a-time) versions of the captain's game actions. Current clients send
+// these through POST /api/game/sync instead; these stay for any older client still cached on a
+// phone, and share the exact same act* logic (judged at the moment the request arrives).
 app.post('/api/game/clue/hint', async (req, res) => {
   const session = await resolveSession(req, res);
   if (!session) return;
-  const { player, team } = session;
-  if (!requireCaptain(player, res)) return;
-  if (!(await requireClockRunning(team, res))) return;
-  const landmark = await getCurrentLandmark(team);
-  const events = await eventsFor(team.id, landmark.id);
-  const usedCount = events.filter((e) => e.event_type === 'clue_hint_used').length;
-
-  const { rows: [hint] } = await db.query(
-    'SELECT hint_text FROM clue_hints WHERE clue_id = $1 AND hint_order = $2',
-    [landmark.clue_id, usedCount + 1]
-  );
-  if (!hint) return res.status(400).json({ error: 'No more hints available.' });
-
-  await db.query(
-    `INSERT INTO progress_events (team_id, landmark_id, event_type, payload) VALUES ($1, $2, 'clue_hint_used', $3)`,
-    [team.id, landmark.id, JSON.stringify({ hintText: hint.hint_text })]
-  );
-  res.json({ hintText: hint.hint_text });
+  sendResult(res, await actHint(session, req.body, new Date()));
 });
 
 app.post('/api/game/clue/reveal', async (req, res) => {
   const session = await resolveSession(req, res);
   if (!session) return;
-  const { player, team } = session;
-  if (!requireCaptain(player, res)) return;
-  if (!(await requireClockRunning(team, res))) return;
-  const landmark = await getCurrentLandmark(team);
-  await db.query(
-    `INSERT INTO progress_events (team_id, landmark_id, event_type) VALUES ($1, $2, 'clue_reveal_used')`,
-    [team.id, landmark.id]
-  );
-  res.json({ title: landmark.title, address: landmark.address, latitude: landmark.latitude, longitude: landmark.longitude });
+  sendResult(res, await actReveal(session, req.body, new Date()));
 });
 
-// Single-shot: one submission ends this stage regardless of whether it's right or wrong —
-// there is no retry. The client should never show this form again once puzzle.solved is true.
 app.post('/api/game/puzzle/answer', async (req, res) => {
   const session = await resolveSession(req, res);
   if (!session) return;
-  const { player, team } = session;
-  if (!requireCaptain(player, res)) return;
-  if (!(await requireClockRunning(team, res))) return;
-  const landmark = await getCurrentLandmark(team);
-  const { answer } = req.body;
-
-  const events = await eventsFor(team.id, landmark.id);
-  if (events.some((e) => e.event_type === 'puzzle_solved')) {
-    return res.status(400).json({ error: 'This puzzle has already been answered.' });
-  }
-
-  const payload = landmark.puzzle_answer;
-  let correct = false;
-  if (landmark.puzzle_type === 'exact_numeric') correct = String(answer).trim() === String(payload.answer).trim();
-  if (landmark.puzzle_type === 'fuzzy_text') correct = payload.accepted.some((a) => normalize(a) === normalize(answer));
-
-  const hintsUsed = events.filter((e) => e.event_type === 'clue_hint_used').length;
-  const revealUsed = events.some((e) => e.event_type === 'clue_reveal_used');
-  const pointsEarned = puzzlePoints(hintsUsed, revealUsed, correct);
-
-  await db.query(
-    `INSERT INTO progress_events (team_id, landmark_id, event_type, points_delta, payload) VALUES ($1, $2, 'puzzle_solved', $3, $4)`,
-    [team.id, landmark.id, pointsEarned, JSON.stringify({ correct, answer })]
-  );
-  await db.query('UPDATE teams SET total_score = total_score + $1 WHERE id = $2', [pointsEarned, team.id]);
-
-  res.json({
-    correct,
-    correctAnswer: readableAnswer(landmark.puzzle_type, payload),
-    explanation: landmark.puzzle_explanation,
-    pointsEarned,
-    hintsUsed,
-    revealUsed,
-  });
+  sendResult(res, await actPuzzle(session, req.body, new Date()));
 });
 
-// Single-shot per question too. Points are NOT awarded per question — each answer is recorded
-// with points_delta 0, and once all 4 are in, a lump sum (via quizPoints) is awarded in one
-// 'quiz_completed' event based on how many were correct. Advancing to the next landmark is a
-// separate step (POST /api/game/advance, fired by the "Continue" tap on the complete screen) —
-// deliberately NOT done here, otherwise the client's next refresh would already be looking at
-// the next landmark and the completion screen would never get a chance to render.
 app.post('/api/game/quiz/answer', async (req, res) => {
   const session = await resolveSession(req, res);
   if (!session) return;
-  const { player, team } = session;
-  if (!requireCaptain(player, res)) return;
-  if (!(await requireClockRunning(team, res))) return;
-  const landmark = await getCurrentLandmark(team);
-  const { questionId, answer } = req.body;
-
-  const events = await eventsFor(team.id, landmark.id);
-  if (events.some((e) => e.event_type === 'quiz_answered' && e.payload.questionId === questionId)) {
-    return res.status(400).json({ error: 'This question has already been answered.' });
-  }
-
-  const { rows: [question] } = await db.query('SELECT * FROM quiz_questions WHERE id = $1', [questionId]);
-
-  // five_right: `answer` is an array of tile ids the captain tapped, any number of them (not
-  // necessarily one "correct" scalar) — +1 per correct tile picked, -1 per wrong one, so this
-  // single question's own score (-4..+5) already IS the lump-sum points, unlike multiple_choice
-  // where points are only awarded once every question in the set has been answered.
-  const isFiveRight = question.type === 'five_right';
-  const isAnagram = question.type === 'anagram';
-  let correct = null;
-  let fiveRightScore = null;
-  if (isFiveRight) {
-    const picked = Array.isArray(answer) ? answer.map(Number) : [];
-    fiveRightScore = question.answer_payload.tiles.reduce(
-      (score, tile) => (picked.includes(tile.id) ? score + (tile.correct ? 1 : -1) : score),
-      0
-    );
-    await db.query(
-      `INSERT INTO progress_events (team_id, landmark_id, event_type, payload) VALUES ($1, $2, 'quiz_answered', $3)`,
-      [team.id, landmark.id, JSON.stringify({ questionId, picked, score: fiveRightScore })]
-    );
-  } else if (isAnagram) {
-    correct = normalize(question.answer_payload.solution) === normalize(answer);
-    await db.query(
-      `INSERT INTO progress_events (team_id, landmark_id, event_type, payload) VALUES ($1, $2, 'quiz_answered', $3)`,
-      [team.id, landmark.id, JSON.stringify({ questionId, correct, submitted: answer })]
-    );
-  } else {
-    correct = normalize(question.answer_payload.correct) === normalize(answer);
-    await db.query(
-      `INSERT INTO progress_events (team_id, landmark_id, event_type, payload) VALUES ($1, $2, 'quiz_answered', $3)`,
-      [team.id, landmark.id, JSON.stringify({ questionId, correct })]
-    );
-  }
-
-  // Only this landmark's active quiz_format is ever "the quiz" for completion purposes — a kept
-  // backup set of a different type (see landmarks.quiz_format) must never block completion.
-  const { rows: allQuestions } = await db.query(
-    'SELECT id FROM quiz_questions WHERE landmark_id = $1 AND type = $2',
-    [landmark.id, question.type]
-  );
-  const freshEvents = await eventsFor(team.id, landmark.id);
-  const answered = freshEvents.filter((e) => e.event_type === 'quiz_answered');
-  // Number(...) both sides: pg returns bigint id columns as strings, but payload.questionId
-  // came from a JSON request body as a number — without normalizing, this comparison is always false.
-  const quizComplete = allQuestions.every((q) => answered.some((e) => Number(e.payload.questionId) === Number(q.id)));
-
-  let quizPointsEarned = null;
-  let correctCount = null;
-  if (quizComplete) {
-    quizPointsEarned = isFiveRight
-      ? fiveRightScore
-      : isAnagram
-        ? (correct ? ANAGRAM_POINTS : 0)
-        : quizPoints((correctCount = answered.filter((e) => e.payload.correct).length));
-
-    await db.query(
-      `INSERT INTO progress_events (team_id, landmark_id, event_type, points_delta) VALUES ($1, $2, 'quiz_completed', $3)`,
-      [team.id, landmark.id, quizPointsEarned]
-    );
-    await db.query('UPDATE teams SET total_score = total_score + $1 WHERE id = $2', [quizPointsEarned, team.id]);
-    await db.query(
-      `INSERT INTO progress_events (team_id, landmark_id, event_type) VALUES ($1, $2, 'landmark_completed')`,
-      [team.id, landmark.id]
-    );
-  }
-
-  res.json({
-    type: question.type,
-    correct,
-    correctAnswer: isFiveRight ? null : isAnagram ? question.answer_payload.solution : question.answer_payload.correct,
-    // Reveals every tile's correct/wrong flag at once — the whole point of the format is seeing
-    // all 9 answers together after submitting, not one at a time.
-    tiles: isFiveRight ? question.answer_payload.tiles.map((t) => ({ id: t.id, correct: t.correct })) : null,
-    score: fiveRightScore,
-    explanation: question.explanation,
-    quizComplete,
-    correctCount,
-    quizPointsEarned,
-  });
+  sendResult(res, await actQuiz(session, req.body, new Date()));
 });
 
-// Fired by the "Continue" tap on the landmark-complete screen. Only actually moves the team on
-// once the current landmark really has a landmark_completed event — guards against a client
-// calling this out of turn (e.g. before the quiz is actually finished).
 app.post('/api/game/advance', async (req, res) => {
   const session = await resolveSession(req, res);
   if (!session) return;
-  const { player, team } = session;
-  if (!requireCaptain(player, res)) return;
-  if (!(await requireClockRunning(team, res))) return;
-  const landmark = await getCurrentLandmark(team);
-  const events = await eventsFor(team.id, landmark.id);
-  if (!events.some((e) => e.event_type === 'landmark_completed')) {
-    return res.status(400).json({ error: 'This landmark is not complete yet.' });
-  }
-
-  await db.query('UPDATE teams SET current_landmark_sequence = current_landmark_sequence + 1 WHERE id = $1', [team.id]);
-  res.json({ advanced: true });
+  sendResult(res, await actAdvance(session, req.body, new Date()));
 });
 
 // GET /api/game/landmark/:sequenceOrder — the post-solve detail page (image, facts, external
@@ -1269,63 +1032,7 @@ app.get('/api/game/site/:id', async (req, res) => {
 app.post('/api/game/narration/complete', async (req, res) => {
   const session = await resolveSession(req, res);
   if (!session) return;
-  const { team, player } = session;
-  const { landmarkSequenceOrder, siteId } = req.body || {};
-
-  // No bonus points while the clock isn't running — otherwise a team could bank listens before
-  // the captain starts the clock, or during a stop. Not an error: the listen just doesn't score.
-  const { clock: bonusClock } = await gameClockFor(team);
-  if (!bonusClock.started || bonusClock.paused || bonusClock.timeUp) {
-    return res.json({ awarded: false, totalScore: team.total_score });
-  }
-
-  let landmarkId = null;
-  let siteRowId = null;
-
-  if (landmarkSequenceOrder != null) {
-    const { rows: [tourRow] } = await db.query(
-      `SELECT t.id FROM teams tm
-       JOIN games g ON g.id = tm.game_id
-       JOIN game_codes gc ON gc.id = g.game_code_id
-       JOIN tours t ON t.id = gc.tour_id
-       WHERE tm.id = $1`,
-      [team.id]
-    );
-    const { rows: [landmark] } = await db.query(
-      'SELECT id, audio_path FROM landmarks WHERE tour_id = $1 AND sequence_order = $2',
-      [tourRow.id, Number(landmarkSequenceOrder)]
-    );
-    if (!landmark) return res.status(404).json({ error: 'No such landmark.' });
-    if (!landmark.audio_path) return res.status(400).json({ error: 'This landmark has no narration.' });
-    landmarkId = landmark.id;
-  } else if (siteId != null) {
-    const { rows: [site] } = await db.query('SELECT id, audio_path FROM sites WHERE id = $1', [siteId]);
-    if (!site) return res.status(404).json({ error: 'No such site.' });
-    if (!site.audio_path) return res.status(400).json({ error: 'This site has no narration.' });
-    siteRowId = site.id;
-  } else {
-    return res.status(400).json({ error: 'landmarkSequenceOrder or siteId required.' });
-  }
-
-  const { rows: inserted } = await db.query(
-    `INSERT INTO narration_listens (team_id, landmark_id, site_id, player_id)
-     VALUES ($1, $2, $3, $4)
-     ON CONFLICT DO NOTHING
-     RETURNING id`,
-    [team.id, landmarkId, siteRowId, player.id]
-  );
-
-  const awarded = inserted.length > 0;
-  let totalScore = team.total_score;
-  if (awarded) {
-    const { rows: [updated] } = await db.query(
-      'UPDATE teams SET total_score = total_score + 1 WHERE id = $1 RETURNING total_score',
-      [team.id]
-    );
-    totalScore = updated.total_score;
-  }
-
-  res.json({ awarded, totalScore });
+  sendResult(res, await actNarration(session, req.body, new Date()));
 });
 
 // Polled (every few seconds, see NarrationPlayer.jsx) by every team member's device so a bonus
@@ -1634,6 +1341,770 @@ app.post('/api/dev/complete/:count', async (req, res) => {
   }
 
   res.json({ completedCount: landmarks.length });
+});
+
+// ============================================================================================
+// Game actions — the one implementation of everything a player can DO. Shared by the direct
+// routes above (judged at the moment the request arrives) and POST /api/game/sync (judged at the
+// moment the player tapped, for actions queued on a phone while it was out of signal). Each
+// returns { status, body } instead of writing the response, so sync can collect a batch of them.
+// The phone runs a mirror of these rules (client/src/offline/engine.js) to show results
+// instantly with no signal — any rule change here must be made there too.
+// ============================================================================================
+
+const okResult = (body) => ({ status: 200, body });
+const failResult = (status, error, extra = {}) => ({ status, body: { error, ...extra } });
+
+function sendResult(res, result) {
+  res.status(result.status).json(result.body);
+}
+
+async function addProgressEvent(team, landmark, player, eventType, pointsDelta, payload, at) {
+  await db.query(
+    `INSERT INTO progress_events (team_id, landmark_id, player_id, event_type, points_delta, payload, created_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+    [team.id, landmark.id, player.id, eventType, pointsDelta || 0, payload ? JSON.stringify(payload) : null, at]
+  );
+}
+
+function puzzleIsCorrect(type, payload, answer) {
+  if (type === 'exact_numeric') return String(answer).trim() === String(payload.answer).trim();
+  if (type === 'fuzzy_text') return payload.accepted.some((a) => normalize(a) === normalize(answer));
+  return false;
+}
+
+// Shared gate for the captain's scoring/progress actions (hint, reveal, puzzle/quiz answer,
+// advance): captain only, the clock running at `at`, and a current landmark to act on.
+async function captainGameGate(session, at) {
+  if (!session.player.is_captain) return { fail: failResult(403, 'Only your team captain can do this.') };
+  const clockError = await clockBlockError(session.team, at);
+  if (clockError) return { fail: failResult(423, clockError, { clockBlocked: true }) };
+  const landmark = await getCurrentLandmark(session.team);
+  if (!landmark) return { fail: failResult(400, 'Your tour is already complete.') };
+  return { landmark };
+}
+
+// Hints are asked for by number (hintNumber 1, 2, ...), so a repeated request — a double tap, or a
+// phone re-sending after the first reply was lost in a dead spot — gets back the hint it already
+// used instead of spending the next one (a real bug before 2026-10-18). No hintNumber = "the next
+// one", for older clients.
+async function actHint(session, body, at) {
+  const { player, team } = session;
+  const gate = await captainGameGate(session, at);
+  if (gate.fail) return gate.fail;
+  const { landmark } = gate;
+  const used = (await eventsFor(team.id, landmark.id)).filter((e) => e.event_type === 'clue_hint_used');
+  const wanted = Number(body?.hintNumber) || used.length + 1;
+  if (wanted <= used.length) return okResult({ hintText: used[wanted - 1].payload.hintText, duplicate: true });
+  if (wanted > used.length + 1) return failResult(400, 'Hints must be used in order.');
+
+  const { rows: [hint] } = await db.query(
+    'SELECT hint_text FROM clue_hints WHERE clue_id = $1 AND hint_order = $2',
+    [landmark.clue_id, wanted]
+  );
+  if (!hint) return failResult(400, 'No more hints available.');
+  await addProgressEvent(team, landmark, player, 'clue_hint_used', 0, { hintText: hint.hint_text }, at);
+  return okResult({ hintText: hint.hint_text });
+}
+
+async function actReveal(session, body, at) {
+  const { player, team } = session;
+  const gate = await captainGameGate(session, at);
+  if (gate.fail) return gate.fail;
+  const { landmark } = gate;
+  const events = await eventsFor(team.id, landmark.id);
+  if (!events.some((e) => e.event_type === 'clue_reveal_used')) {
+    await addProgressEvent(team, landmark, player, 'clue_reveal_used', 0, null, at);
+  }
+  return okResult({ title: landmark.title, address: landmark.address, latitude: landmark.latitude, longitude: landmark.longitude });
+}
+
+// Single-shot: one submission ends this stage regardless of whether it's right or wrong —
+// there is no retry. The client should never show this form again once puzzle.solved is true.
+async function actPuzzle(session, body, at) {
+  const { player, team } = session;
+  const gate = await captainGameGate(session, at);
+  if (gate.fail) return gate.fail;
+  const { landmark } = gate;
+  const answer = body?.answer ?? '';
+
+  const events = await eventsFor(team.id, landmark.id);
+  if (events.some((e) => e.event_type === 'puzzle_solved')) {
+    return failResult(400, 'This puzzle has already been answered.');
+  }
+
+  const payload = landmark.puzzle_answer;
+  const correct = puzzleIsCorrect(landmark.puzzle_type, payload, answer);
+  const hintsUsed = events.filter((e) => e.event_type === 'clue_hint_used').length;
+  const revealUsed = events.some((e) => e.event_type === 'clue_reveal_used');
+  const pointsEarned = puzzlePoints(hintsUsed, revealUsed, correct);
+
+  await addProgressEvent(team, landmark, player, 'puzzle_solved', pointsEarned, { correct, answer }, at);
+  await db.query('UPDATE teams SET total_score = total_score + $1 WHERE id = $2', [pointsEarned, team.id]);
+
+  return okResult({
+    correct,
+    correctAnswer: readableAnswer(landmark.puzzle_type, payload),
+    explanation: landmark.puzzle_explanation,
+    pointsEarned,
+    hintsUsed,
+    revealUsed,
+  });
+}
+
+// Single-shot per question too. Points are NOT awarded per question — each answer is recorded
+// with points_delta 0, and once all of them are in, a lump sum is awarded in one 'quiz_completed'
+// event. Advancing to the next landmark is a separate step (actAdvance) — deliberately not done
+// here, otherwise the completion screen would never get a chance to render.
+async function actQuiz(session, body, at) {
+  const { player, team } = session;
+  const gate = await captainGameGate(session, at);
+  if (gate.fail) return gate.fail;
+  const { landmark } = gate;
+  const questionId = Number(body?.questionId);
+  const answer = body?.answer;
+
+  const events = await eventsFor(team.id, landmark.id);
+  if (!events.some((e) => e.event_type === 'puzzle_solved')) {
+    return failResult(400, 'Answer the Prove it question first.');
+  }
+  if (events.some((e) => e.event_type === 'quiz_answered' && Number(e.payload.questionId) === questionId)) {
+    return failResult(400, 'This question has already been answered.');
+  }
+
+  const { rows: [question] } = await db.query('SELECT * FROM quiz_questions WHERE id = $1', [questionId]);
+  // Must belong to the landmark the team is actually on — never trusted to the client (an old
+  // queued answer for a previous landmark, or a hand-crafted request, would otherwise score).
+  if (!question || String(question.landmark_id) !== String(landmark.id)) {
+    return failResult(400, "That question isn't part of your current landmark.");
+  }
+
+  // five_right: `answer` is an array of tile ids the captain tapped, any number of them — +1 per
+  // correct tile picked, -1 per wrong one, so this single question's own score (-4..+5) already IS
+  // the lump-sum points, unlike multiple_choice where points come once every question is answered.
+  const isFiveRight = question.type === 'five_right';
+  const isAnagram = question.type === 'anagram';
+  let correct = null;
+  let fiveRightScore = null;
+  if (isFiveRight) {
+    const picked = Array.isArray(answer) ? answer.map(Number) : [];
+    fiveRightScore = question.answer_payload.tiles.reduce(
+      (score, tile) => (picked.includes(tile.id) ? score + (tile.correct ? 1 : -1) : score),
+      0
+    );
+    await addProgressEvent(team, landmark, player, 'quiz_answered', 0, { questionId, picked, score: fiveRightScore }, at);
+  } else if (isAnagram) {
+    correct = normalize(question.answer_payload.solution) === normalize(answer);
+    await addProgressEvent(team, landmark, player, 'quiz_answered', 0, { questionId, correct, submitted: answer }, at);
+  } else {
+    correct = normalize(question.answer_payload.correct) === normalize(answer);
+    await addProgressEvent(team, landmark, player, 'quiz_answered', 0, { questionId, correct }, at);
+  }
+
+  // Only this landmark's active quiz_format is ever "the quiz" for completion purposes — a kept
+  // backup set of a different type (see landmarks.quiz_format) must never block completion.
+  const { rows: allQuestions } = await db.query(
+    'SELECT id FROM quiz_questions WHERE landmark_id = $1 AND type = $2',
+    [landmark.id, question.type]
+  );
+  const freshEvents = await eventsFor(team.id, landmark.id);
+  const answered = freshEvents.filter((e) => e.event_type === 'quiz_answered');
+  // Number(...) both sides: pg returns bigint id columns as strings, but payload.questionId
+  // came from a JSON request body as a number — without normalizing, this comparison is always false.
+  const quizComplete = allQuestions.every((q) => answered.some((e) => Number(e.payload.questionId) === Number(q.id)));
+
+  let quizPointsEarned = null;
+  let correctCount = null;
+  if (quizComplete) {
+    quizPointsEarned = isFiveRight
+      ? fiveRightScore
+      : isAnagram
+        ? (correct ? ANAGRAM_POINTS : 0)
+        : quizPoints((correctCount = answered.filter((e) => e.payload.correct).length));
+
+    await addProgressEvent(team, landmark, player, 'quiz_completed', quizPointsEarned, null, at);
+    await db.query('UPDATE teams SET total_score = total_score + $1 WHERE id = $2', [quizPointsEarned, team.id]);
+    await addProgressEvent(team, landmark, player, 'landmark_completed', 0, null, at);
+  }
+
+  return okResult({
+    type: question.type,
+    correct,
+    correctAnswer: isFiveRight ? null : isAnagram ? question.answer_payload.solution : question.answer_payload.correct,
+    // Reveals every tile's correct/wrong flag at once — the whole point of the format is seeing
+    // all 9 answers together after submitting, not one at a time.
+    tiles: isFiveRight ? question.answer_payload.tiles.map((t) => ({ id: t.id, correct: t.correct })) : null,
+    score: fiveRightScore,
+    explanation: question.explanation,
+    quizComplete,
+    correctCount,
+    quizPointsEarned,
+  });
+}
+
+// The "Head to next landmark" tap. Only actually moves the team on once the current landmark
+// really has a landmark_completed event — guards against a client calling this out of turn.
+async function actAdvance(session, body, at) {
+  const { team } = session;
+  const gate = await captainGameGate(session, at);
+  if (gate.fail) return gate.fail;
+  const { landmark } = gate;
+  const events = await eventsFor(team.id, landmark.id);
+  if (!events.some((e) => e.event_type === 'landmark_completed')) {
+    return failResult(400, 'This landmark is not complete yet.');
+  }
+  await db.query('UPDATE teams SET current_landmark_sequence = current_landmark_sequence + 1 WHERE id = $1', [team.id]);
+  return okResult({ advanced: true });
+}
+
+// At most MAX_CLOCK_STOPS per game. The conditional UPDATE is the real guard (atomic against a
+// double tap); the checks before it are just for clear errors. `at` becomes the stop's start, so a
+// stop tapped in a dead spot pauses the clock from that moment, not from when it reached us.
+async function actClockStop(session, body, at) {
+  const { player, team } = session;
+  if (!player.is_captain) return failResult(403, 'Only your team captain can do this.');
+  const { clock, allCompleted, game } = await gameClockFor(team, at);
+  if (!clock.started || clock.timeUp || allCompleted) return failResult(400, "The clock isn't running.");
+  if (clock.paused) return failResult(400, 'The clock is already stopped.');
+  if (game.pauses_used >= MAX_CLOCK_STOPS) return failResult(400, "You've used all your clock stops.");
+
+  const { rowCount } = await db.query(
+    `UPDATE games SET clock_paused_at = $3, pauses_used = pauses_used + 1
+     WHERE id = $1 AND clock_started_at IS NOT NULL AND clock_started_at <= $3
+       AND clock_paused_at IS NULL AND pauses_used < $2`,
+    [team.game_id, MAX_CLOCK_STOPS, at]
+  );
+  if (!rowCount) return failResult(409, 'The clock could not be stopped — try again.');
+  return okResult(await clockPayload(player, team));
+}
+
+// Folds the stop's length (up to `at`) into paused_seconds, so the time used carries on exactly
+// where it left off.
+async function actClockRestart(session, body, at) {
+  const { player, team } = session;
+  if (!player.is_captain) return failResult(403, 'Only your team captain can do this.');
+  const { rowCount } = await db.query(
+    `UPDATE games
+     SET paused_seconds = paused_seconds + GREATEST(0, FLOOR(EXTRACT(EPOCH FROM ($2::timestamptz - clock_paused_at))))::int,
+         clock_paused_at = NULL
+     WHERE id = $1 AND clock_paused_at IS NOT NULL`,
+    [team.game_id, at]
+  );
+  if (!rowCount) return failResult(400, "The clock isn't stopped.");
+  return okResult(await clockPayload(player, team));
+}
+
+// Narration "fully listened" bonus — any team member (not just the captain) can trigger this. The
+// "was this genuinely listened to end to end" judgment is made client-side (see NarrationPlayer.jsx's
+// coverage tracking) — this is just idempotent award-once-per-team enforcement, via
+// narration_listens' own partial unique indexes (ON CONFLICT DO NOTHING), which also makes it
+// race-safe if two teammates finish listening at nearly the same moment.
+async function actNarration(session, body, at) {
+  const { team, player } = session;
+  const { landmarkSequenceOrder, siteId } = body || {};
+
+  // No bonus points while the clock isn't running — otherwise a team could bank listens before
+  // the captain starts the clock, or during a stop. Not an error: the listen just doesn't score.
+  const { clock: bonusClock } = await gameClockFor(team, at);
+  if (!bonusClock.started || bonusClock.paused || bonusClock.timeUp) {
+    return okResult({ awarded: false, totalScore: team.total_score });
+  }
+
+  let landmarkId = null;
+  let siteRowId = null;
+  if (landmarkSequenceOrder != null) {
+    const { rows: [landmark] } = await db.query(
+      'SELECT id, audio_path FROM landmarks WHERE tour_id = $1 AND sequence_order = $2',
+      [await tourIdForTeam(team), Number(landmarkSequenceOrder)]
+    );
+    if (!landmark) return failResult(404, 'No such landmark.');
+    if (!landmark.audio_path) return failResult(400, 'This landmark has no narration.');
+    landmarkId = landmark.id;
+  } else if (siteId != null) {
+    const { rows: [site] } = await db.query('SELECT id, audio_path FROM sites WHERE id = $1', [siteId]);
+    if (!site) return failResult(404, 'No such site.');
+    if (!site.audio_path) return failResult(400, 'This site has no narration.');
+    siteRowId = site.id;
+  } else {
+    return failResult(400, 'landmarkSequenceOrder or siteId required.');
+  }
+
+  const { rows: inserted } = await db.query(
+    `INSERT INTO narration_listens (team_id, landmark_id, site_id, player_id, created_at)
+     VALUES ($1, $2, $3, $4, $5)
+     ON CONFLICT DO NOTHING
+     RETURNING id`,
+    [team.id, landmarkId, siteRowId, player.id, at]
+  );
+
+  const awarded = inserted.length > 0;
+  let totalScore = team.total_score;
+  if (awarded) {
+    const { rows: [updated] } = await db.query(
+      'UPDATE teams SET total_score = total_score + 1 WHERE id = $1 RETURNING total_score',
+      [team.id]
+    );
+    totalScore = updated.total_score;
+  }
+  return okResult({ awarded, totalScore });
+}
+
+// Per-player flags. Finishing the walkthrough as captain is what starts the clock — from `at`, so
+// a walkthrough finished in a dead spot starts the clock when it was really finished.
+async function actCoachComplete(session, body, at) {
+  await db.query('UPDATE players SET coach_complete = true WHERE id = $1', [session.player.id]);
+  await maybeStartClock(session.team, at);
+  return okResult({ ok: true });
+}
+
+async function actInstructionsComplete(session) {
+  await db.query('UPDATE players SET instructions_complete = true WHERE id = $1', [session.player.id]);
+  return okResult({ ok: true });
+}
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+async function actCertificateSend(session, body) {
+  const { email, imageDataUrl } = body || {};
+  if (!email || !EMAIL_RE.test(String(email).trim())) {
+    return failResult(400, 'Enter a valid email address.');
+  }
+  const match = typeof imageDataUrl === 'string' && imageDataUrl.match(/^data:image\/png;base64,(.+)$/);
+  if (!match) return failResult(400, 'Missing certificate image.');
+
+  try {
+    await mailTransporter.sendMail({
+      from: `TOURZ <${process.env.GMAIL_USER}>`,
+      to: email.trim(),
+      // Neutral wording — the certificate may be for a team that ran out of time, not just one
+      // that completed every landmark.
+      subject: 'Your TOURZ certificate',
+      text: 'Thanks for walking with TOURZ! Your certificate is attached.',
+      attachments: [{ filename: 'tourz-certificate.png', content: Buffer.from(match[1], 'base64') }],
+    });
+    return okResult({ sent: true });
+  } catch (err) {
+    console.error('Certificate email error:', err);
+    return failResult(502, 'Could not send the email — try again.');
+  }
+}
+
+async function actProblemReport(session, body) {
+  const { player, team } = session;
+  const message = String(body?.message || '').trim();
+  if (!message) return failResult(400, 'Enter a description of the problem.');
+
+  const { rows: [info] } = await db.query(
+    `SELECT t.name AS tour_name, l.title AS current_landmark_title,
+            (SELECT COUNT(*) FROM progress_events pe
+             WHERE pe.team_id = tm.id AND pe.event_type = 'landmark_completed') AS landmarks_completed
+     FROM teams tm
+     JOIN games g ON g.id = tm.game_id
+     JOIN game_codes gc ON gc.id = g.game_code_id
+     JOIN tours t ON t.id = gc.tour_id
+     LEFT JOIN landmarks l ON l.tour_id = t.id AND l.sequence_order = tm.current_landmark_sequence
+     WHERE tm.id = $1`,
+    [team.id]
+  );
+
+  const details = [
+    `Team: ${team.name}`,
+    `Player: ${player.name} ${player.avatar}${player.is_captain ? ' (captain)' : ''}`,
+    `Tour: ${info?.tour_name || 'unknown'}`,
+    `Current landmark: ${info?.current_landmark_title || `sequence ${team.current_landmark_sequence}`}`,
+    `Landmarks completed: ${info?.landmarks_completed ?? 0}`,
+    `Score: ${team.total_score}`,
+  ].join('\n');
+
+  try {
+    await mailTransporter.sendMail({
+      from: `TOURZ <${process.env.GMAIL_USER}>`,
+      to: process.env.GMAIL_USER,
+      subject: `TOURZ problem report — ${team.name}`,
+      text: `${details}\n\nProblem description:\n${message}`,
+    });
+    return okResult({ sent: true });
+  } catch (err) {
+    console.error('Problem report email error:', err);
+    return failResult(502, 'Could not send the report — try again.');
+  }
+}
+
+// ============================================================================================
+// Offline play (built 2026-10-18 after a live tour froze in a mobile-signal dead spot).
+//   GET  /api/game/state     — everything the phone needs to run the game on its own: team
+//                              progress, the clock's raw columns, solved landmarks' details, and
+//                              the current + next LOOKAHEAD_LANDMARKS landmarks' full packages
+//                              (clue, all hints, puzzle, quiz, answers), sealed (see sealJson).
+//   POST /api/game/sync      — replays the actions a phone queued, in order, each judged at its
+//                              own tap time (clamped to MAX_BACKDATE_MS), idempotent by action id.
+//   GET  /api/game/tour-pack — every site's full detail, downloaded once at the start of the tour.
+// ============================================================================================
+
+// How many landmarks past the current one a phone holds, so a team that walks into a dead spot
+// can keep solving and advancing through them. User decision 2026-10-18: first 3, then changed the
+// same day to the WHOLE tour (Infinity) — every landmark's card, clue, hints, Prove it question
+// and quiz go to the phone in the initial load, so no stretch without signal can ever leave a team
+// waiting for the next clue. Trade-off accepted: the whole route and its answers are on the phone
+// from the start (sealed — obfuscated, not secure). Set a number to go back to a rolling window.
+const LOOKAHEAD_LANDMARKS = Infinity;
+// Oldest tap time a synced action may claim. User decision 2026-10-18: 20 minutes — enough to
+// cover a long dead spot, short enough that a doctored phone clock can't claw back real time.
+const MAX_BACKDATE_MS = 20 * 60 * 1000;
+
+// Obfuscation, not security: anything a phone can check and reveal with no signal is, by
+// definition, on the phone. This keeps upcoming clues/answers out of plain sight in the network
+// tab and storage. XOR with a keystream from the same generator seededShuffle uses, seeded by the
+// player's session token + landmark. Mirror: client/src/offline/seal.js — keep them identical.
+function sealJson(obj, keyStr) {
+  const bytes = Buffer.from(JSON.stringify(obj), 'utf8');
+  const rand = seededRandom(keyStr);
+  for (let i = 0; i < bytes.length; i++) bytes[i] ^= Math.floor(rand() * 256);
+  return bytes.toString('base64');
+}
+
+const msOrNull = (d) => (d ? new Date(d).getTime() : null);
+
+async function sessionForPlayer(playerId) {
+  const { rows: [player] } = await db.query('SELECT * FROM players WHERE id = $1', [playerId]);
+  const { rows: [team] } = await db.query('SELECT * FROM teams WHERE id = $1', [player.team_id]);
+  return { player, team };
+}
+
+async function tourForTeam(team) {
+  const { rows: [row] } = await db.query(
+    `SELECT t.id, t.name, t.tour_code, t.total_landmarks, g.activated_at
+     FROM teams tm
+     JOIN games g ON g.id = tm.game_id
+     JOIN game_codes gc ON gc.id = g.game_code_id
+     JOIN tours t ON t.id = gc.tour_id
+     WHERE tm.id = $1`,
+    [team.id]
+  );
+  return row;
+}
+
+// Cheap fingerprint of everything /state depends on — the phone polls with ?v=<last version> and
+// gets a tiny { unchanged: true } back unless something actually moved (a 4s full-state poll would
+// otherwise cost tens of MB an hour of mobile data).
+async function stateVersion(team) {
+  const { rows: [row] } = await db.query(
+    `SELECT
+       (SELECT COALESCE(MAX(id), 0) FROM progress_events WHERE team_id = t.id) AS ev,
+       (SELECT COUNT(*) FROM progress_events WHERE team_id = t.id) AS evc,
+       (SELECT COALESCE(MAX(id), 0) FROM narration_listens WHERE team_id = t.id) AS nl,
+       (SELECT string_agg(id || ':' || is_captain || ':' || coach_complete || ':' || instructions_complete || ':' || name, ',' ORDER BY id)
+          FROM players WHERE team_id = t.id) AS pl,
+       t.current_landmark_sequence, t.total_score, t.name,
+       g.clock_started_at, g.clock_paused_at, g.paused_seconds, g.pauses_used, g.time_limit_minutes
+     FROM teams t JOIN games g ON g.id = t.game_id
+     WHERE t.id = $1`,
+    [team.id]
+  );
+  return crypto.createHash('sha1').update(JSON.stringify(row)).digest('hex').slice(0, 16);
+}
+
+function landmarkDetailFields(l) {
+  return {
+    aboutLandmarkLabel: l.about_landmark_label,
+    aboutLandmarkText: l.about_landmark_text,
+    aboutSubjectLabel: l.about_subject_label,
+    aboutSubjectText: l.about_subject_text,
+    interestingFact: l.interesting_fact,
+    externalLink: l.external_link,
+    audioPath: l.audio_path,
+  };
+}
+
+async function buildStatePayload(session) {
+  const { player, team } = session;
+  const tour = await tourForTeam(team);
+  const { game, playableCount } = await gameClockFor(team);
+  const version = await stateVersion(team);
+  const { rows: [captain] } = await db.query('SELECT name FROM players WHERE team_id = $1 AND is_captain', [team.id]);
+
+  const { rows: landmarkRows } = await db.query(
+    `SELECT l.*, c.id AS clue_id, c.type AS clue_type, c.clue_text,
+            p.type AS puzzle_type, p.question_text AS puzzle_question, p.answer_payload AS puzzle_answer,
+            p.explanation AS puzzle_explanation,
+            (SELECT image_path FROM landmark_images WHERE landmark_id = l.id ORDER BY sort_order LIMIT 1) AS tile_image,
+            (SELECT image_path FROM landmark_images WHERE landmark_id = l.id ORDER BY sort_order DESC LIMIT 1) AS hero_image
+     FROM landmarks l
+     LEFT JOIN clues c ON c.landmark_id = l.id
+     LEFT JOIN puzzles p ON p.landmark_id = l.id
+     WHERE l.tour_id = $1
+     ORDER BY l.sequence_order`,
+    [tour.id]
+  );
+
+  // Same max-score sum /api/game/home uses.
+  const { rows: [totals] } = await db.query(
+    `SELECT SUM(30 + COALESCE(q.points_sum, 0)) AS max_score
+     FROM landmarks l
+     JOIN puzzles p ON p.landmark_id = l.id
+     LEFT JOIN (SELECT landmark_id, SUM(points) AS points_sum FROM quiz_questions GROUP BY landmark_id) q ON q.landmark_id = l.id
+     WHERE l.tour_id = $1`,
+    [tour.id]
+  );
+
+  const { rows: eventRows } = await db.query(
+    `SELECT pe.id, pe.event_type, pe.points_delta, pe.payload, pe.created_at, l.sequence_order
+     FROM progress_events pe JOIN landmarks l ON l.id = pe.landmark_id
+     WHERE pe.team_id = $1
+     ORDER BY pe.id`,
+    [team.id]
+  );
+
+  const { rows: listenRows } = await db.query(
+    `SELECT nl.id, nl.site_id, l.sequence_order AS landmark_seq, p.name AS player_name
+     FROM narration_listens nl
+     LEFT JOIN landmarks l ON l.id = nl.landmark_id
+     JOIN players p ON p.id = nl.player_id
+     WHERE nl.team_id = $1
+     ORDER BY nl.id`,
+    [team.id]
+  );
+
+  const current = team.current_landmark_sequence;
+  const playableSeqs = landmarkRows.filter((l) => l.puzzle_type).map((l) => l.sequence_order);
+
+  const landmarks = [];
+  for (const l of landmarkRows) {
+    const base = { seq: l.sequence_order, playable: Boolean(l.puzzle_type) };
+    if (l.sequence_order < current) {
+      // Already passed — nothing left to protect, so sent in the clear.
+      landmarks.push({
+        ...base,
+        title: l.title,
+        address: l.address,
+        latitude: Number(l.latitude),
+        longitude: Number(l.longitude),
+        tileImage: l.tile_image,
+        heroImage: l.hero_image,
+        detail: landmarkDetailFields(l),
+      });
+      continue;
+    }
+    if (!l.puzzle_type || l.sequence_order > current + LOOKAHEAD_LANDMARKS) continue;
+
+    const { rows: hintRows } = await db.query(
+      'SELECT hint_text FROM clue_hints WHERE clue_id = $1 ORDER BY hint_order',
+      [l.clue_id]
+    );
+    // Only the landmark's active quiz_format is played — same rule as /api/game/current.
+    const { rows: quizRows } = await db.query(
+      `SELECT id, sequence_order, type, question_text, answer_payload, explanation, points
+       FROM quiz_questions WHERE landmark_id = $1 AND type = $2 ORDER BY sequence_order`,
+      [l.id, l.quiz_format]
+    );
+    const pkg = {
+      title: l.title,
+      address: l.address,
+      latitude: Number(l.latitude),
+      longitude: Number(l.longitude),
+      tileImage: l.tile_image,
+      heroImage: l.hero_image,
+      detail: landmarkDetailFields(l),
+      clue: { type: l.clue_type, text: l.clue_text },
+      hints: hintRows.map((h) => h.hint_text),
+      puzzle: {
+        type: l.puzzle_type,
+        question: l.puzzle_question,
+        answer: l.puzzle_answer,
+        readable: readableAnswer(l.puzzle_type, l.puzzle_answer),
+        explanation: l.puzzle_explanation,
+      },
+      quiz: quizRows.map((q) => ({
+        id: Number(q.id),
+        sequenceOrder: q.sequence_order,
+        type: q.type,
+        questionText: q.question_text,
+        // five_right tiles pre-shuffled exactly as /api/game/current does (seeded team+question).
+        payload: q.type === 'five_right'
+          ? { ...q.answer_payload, tiles: seededShuffle(q.answer_payload.tiles, `${team.id}:${q.id}`) }
+          : q.answer_payload,
+        explanation: q.explanation,
+        points: q.points,
+      })),
+    };
+    landmarks.push({ ...base, sealed: sealJson(pkg, `${player.session_token}:${l.sequence_order}`) });
+  }
+
+  return {
+    version,
+    serverNow: Date.now(),
+    lookahead: Number.isFinite(LOOKAHEAD_LANDMARKS) ? LOOKAHEAD_LANDMARKS : 'all',
+    team: { id: Number(team.id), name: team.name, currentSequence: current, totalScore: team.total_score },
+    player: {
+      id: Number(player.id),
+      name: player.name,
+      avatar: player.avatar,
+      isCaptain: player.is_captain,
+      coachComplete: player.coach_complete,
+      instructionsComplete: player.instructions_complete,
+    },
+    tour: {
+      id: Number(tour.id),
+      name: tour.name,
+      tourCode: tour.tour_code,
+      totalLandmarks: tour.total_landmarks,
+      timeLimitMinutes: game.time_limit_minutes,
+      maxScore: Number(totals.max_score) || 0,
+      playableCount,
+      firstPlayableSequence: playableSeqs.length ? Math.min(...playableSeqs) : null,
+      lastPlayableSequence: playableSeqs.length ? Math.max(...playableSeqs) : null,
+      activatedAt: msOrNull(game.activated_at),
+    },
+    clock: {
+      gameId: Number(game.id),
+      startedAt: msOrNull(game.clock_started_at),
+      pausedAt: msOrNull(game.clock_paused_at),
+      pausedSeconds: game.paused_seconds,
+      pausesUsed: game.pauses_used,
+      maxStops: MAX_CLOCK_STOPS,
+      limitSeconds: game.time_limit_minutes * 60,
+      captainName: captain ? captain.name : null,
+    },
+    events: eventRows.map((e) => ({
+      id: Number(e.id),
+      seq: e.sequence_order,
+      type: e.event_type,
+      pointsDelta: e.points_delta,
+      payload: e.payload,
+      createdAt: msOrNull(e.created_at),
+    })),
+    narration: listenRows.map((n) => ({
+      id: Number(n.id),
+      landmarkSeq: n.landmark_seq,
+      siteId: n.site_id != null ? Number(n.site_id) : null,
+      playerName: n.player_name,
+    })),
+    landmarks,
+  };
+}
+
+app.get('/api/game/state', async (req, res) => {
+  const session = await resolveSession(req, res);
+  if (!session) return;
+  // Same self-heal the clock poll has always done.
+  await maybeStartClock(session.team);
+  const version = await stateVersion(session.team);
+  if (req.query.v && req.query.v === version) {
+    return res.json({ unchanged: true, version, serverNow: Date.now() });
+  }
+  res.json(await buildStatePayload(session));
+});
+
+// One sync at a time per team (this is a single Node process) — the lie-fi case is a phone
+// re-sending a batch while the first copy is still being processed, and the claim row below
+// can't make that safe on its own without serialising.
+const teamSyncLocks = new Map();
+function withTeamLock(teamId, fn) {
+  const key = String(teamId);
+  const run = (teamSyncLocks.get(key) || Promise.resolve()).then(fn, fn);
+  const tail = run.catch(() => {});
+  teamSyncLocks.set(key, tail);
+  tail.then(() => { if (teamSyncLocks.get(key) === tail) teamSyncLocks.delete(key); });
+  return run;
+}
+
+const SYNC_ACTIONS = {
+  hint: actHint,
+  reveal: actReveal,
+  puzzle: actPuzzle,
+  quiz: actQuiz,
+  advance: actAdvance,
+  clock_stop: actClockStop,
+  clock_restart: actClockRestart,
+  narration: actNarration,
+  coach_complete: actCoachComplete,
+  instructions_complete: actInstructionsComplete,
+  problem_report: actProblemReport,
+  certificate_send: actCertificateSend,
+};
+
+async function applyClientAction(playerId, action) {
+  const id = String(action?.id || '').slice(0, 100);
+  const fn = SYNC_ACTIONS[action?.type];
+  if (!id || !fn) return { id, status: 400, body: { error: 'Unknown action.' } };
+
+  // Fresh team/captain state for every action — the one before may have moved the team on.
+  const session = await sessionForPlayer(playerId);
+  const now = Date.now();
+  const tapped = Date.parse(action.clientTime);
+  const at = new Date(Number.isFinite(tapped) ? Math.min(now, Math.max(now - MAX_BACKDATE_MS, tapped)) : now);
+
+  // Claim the id first. Already there = a re-send: answer from the stored result instead of
+  // applying it again.
+  const { rows: claimed } = await db.query(
+    `INSERT INTO client_actions (id, team_id, player_id, action_type, client_time, applied_time)
+     VALUES ($1, $2, $3, $4, $5, $6)
+     ON CONFLICT (id) DO NOTHING
+     RETURNING id`,
+    [id, session.team.id, session.player.id, action.type, Number.isFinite(tapped) ? new Date(tapped) : null, at]
+  );
+  if (!claimed.length) {
+    const { rows: [prev] } = await db.query('SELECT * FROM client_actions WHERE id = $1', [id]);
+    if (String(prev.team_id) !== String(session.team.id)) return { id, status: 400, body: { error: 'Unknown action.' } };
+    if (prev.status == null) {
+      // Claimed but never finished — only possible if the server died mid-action. Don't guess
+      // whether it half-applied; tell the phone to drop it (the next state refresh shows the truth).
+      return { id, status: 410, body: { error: 'This action was interrupted on the server.' } };
+    }
+    return { id, status: prev.status, body: prev.result, duplicate: true };
+  }
+
+  let result;
+  try {
+    result = await fn(session, action.payload || {}, at);
+  } catch (err) {
+    console.error(`Sync action ${action.type} failed:`, err);
+    result = { status: 500, body: { error: 'Server error.' } };
+  }
+  if (result.status >= 500) {
+    // Transient (e.g. the mail server) — release the claim so the phone's retry runs it for real.
+    await db.query('DELETE FROM client_actions WHERE id = $1', [id]);
+  } else {
+    await db.query('UPDATE client_actions SET status = $2, result = $3 WHERE id = $1', [id, result.status, JSON.stringify(result.body)]);
+  }
+  return { id, ...result };
+}
+
+app.post('/api/game/sync', async (req, res) => {
+  const session = await resolveSession(req, res);
+  if (!session) return;
+  const actions = Array.isArray(req.body?.actions) ? req.body.actions.slice(0, 200) : [];
+  const results = await withTeamLock(session.team.id, async () => {
+    const out = [];
+    for (const action of actions) out.push(await applyClientAction(session.player.id, action));
+    return out;
+  });
+  res.json({ results, state: await buildStatePayload(await sessionForPlayer(session.player.id)) });
+});
+
+app.get('/api/game/tour-pack', async (req, res) => {
+  const session = await resolveSession(req, res);
+  if (!session) return;
+  const tour = await tourForTeam(session.team);
+  const { rows } = await db.query('SELECT * FROM sites WHERE tour_id = $1 ORDER BY id', [tour.id]);
+  const sites = rows.map((s) => ({
+    id: Number(s.id),
+    title: s.title,
+    type: s.type,
+    address: s.address,
+    latitude: Number(s.latitude),
+    longitude: Number(s.longitude),
+    imagePath: s.image_path,
+    aboutSiteLabel: s.about_site_label,
+    aboutSiteText: s.about_site_text,
+    aboutSubjectLabel: s.about_subject_label,
+    aboutSubjectText: s.about_subject_text,
+    interestingFact: s.interesting_fact,
+    externalLink: s.external_link,
+    audioPath: s.audio_path,
+  }));
+  const version = crypto.createHash('sha1').update(JSON.stringify(sites)).digest('hex').slice(0, 16);
+  res.json({ tourId: Number(tour.id), version, sites });
 });
 
 const PORT = process.env.PORT || 3001;

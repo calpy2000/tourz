@@ -1,7 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toPng } from 'html-to-image'
-import { api } from '../api.js'
+import { useGameStore, enqueue, serverNow } from '../offline/gameStore.js'
+import { certificateView } from '../offline/engine.js'
+import { useConnection } from '../net/connection.js'
 import { rectFromEvent } from '../rect.js'
 import { clearSession } from '../localSession.js'
 import AnchoredPopup from '../components/AnchoredPopup.jsx'
@@ -27,21 +29,36 @@ function formatDate(iso) {
 // which checks the same /api/game/certificate endpoint on every fresh app open.
 export default function CertificatePage() {
   const navigate = useNavigate()
-  const [data, setData] = useState(null)
+  // Built on the phone from the game state (offline/engine.js certificateView — the mirror of
+  // GET /api/game/certificate), so a tour that ends in a dead spot still gets its certificate.
+  const { state, outcomes } = useGameStore()
+  const connection = useConnection()
+  const data = useMemo(() => {
+    const view = state ? certificateView(state, serverNow()) : null
+    return view && (view.tourComplete || view.timeUp) ? view : null
+  }, [state])
   const [emailAnchor, setEmailAnchor] = useState(null)
   const [email, setEmail] = useState('')
   const [sending, setSending] = useState(false)
   const [sendError, setSendError] = useState('')
+  // The queued send (see handleSend) and who it's going to.
+  const [pendingSend, setPendingSend] = useState(null) // { id, to } | null
   const [sentTo, setSentTo] = useState('')
   const [newTourAnchor, setNewTourAnchor] = useState(null)
   const cardRef = useRef(null)
 
   useEffect(() => {
-    api.getCertificateStatus().then((res) => {
-      if (!res?.tourComplete && !res?.timeUp) { navigate('/home', { replace: true }); return }
-      setData(res)
-    })
-  }, [navigate])
+    if (state && !data) navigate('/home', { replace: true })
+  }, [state, data, navigate])
+
+  // The emailed certificate is queued like any other action: sent as soon as there's signal.
+  const sendOutcome = pendingSend ? outcomes[pendingSend.id] : null
+  useEffect(() => {
+    if (!sendOutcome) return
+    if (sendOutcome.status === 'done') setSentTo(pendingSend.to)
+    else setSendError(sendOutcome.body?.error || 'Could not send — try again.')
+    setPendingSend(null)
+  }, [sendOutcome, pendingSend])
 
   async function handleSend(e) {
     e.preventDefault()
@@ -50,13 +67,13 @@ export default function CertificatePage() {
     setSendError('')
     try {
       const imageDataUrl = await toPng(cardRef.current, { pixelRatio: 2 })
-      const result = await api.sendCertificate(email.trim(), imageDataUrl)
-      if (result?.sent) {
-        setSentTo(email.trim())
+      const res = enqueue('certificate_send', { email: email.trim(), imageDataUrl })
+      if (res.error) {
+        setSendError(res.error)
+      } else {
+        setPendingSend({ id: res.id, to: email.trim() })
         setEmailAnchor(null)
         setEmail('')
-      } else {
-        setSendError(result?.error || 'Could not send — try again.')
       }
     } catch {
       setSendError('Could not send — try again.')
@@ -114,6 +131,10 @@ export default function CertificatePage() {
 
       {sentTo ? (
         <p className="certificate-sent-note">Sent to {sentTo} ✓</p>
+      ) : pendingSend ? (
+        <p className="certificate-sent-note">
+          {connection === 'offline' ? `Saved — it will send to ${pendingSend.to} as soon as you're back in signal` : `Sending to ${pendingSend.to}…`}
+        </p>
       ) : (
         <button className="primary" onClick={(e) => setEmailAnchor(rectFromEvent(e))}>
           Save and send

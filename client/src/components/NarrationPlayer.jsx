@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
-import { api } from '../api.js'
-import { getSession } from '../localSession.js'
 import { playScreenUpdatePing } from '../screenUpdatePing.js'
+import { useGameStore, enqueue } from '../offline/gameStore.js'
 
 // Persistent narration player — "Dock Bar" concept settled after the three-way mockup
 // comparison (see project_poi_narration_feature memory). Mounted once at the App root (outside
@@ -101,45 +100,33 @@ export function NarrationPlayerProvider({ children }) {
   const coveredSecondsRef = useRef(new Set())
   const lastTimeRef = useRef(0)
   const reportedRef = useRef(false)
-  const lastBonusIdRef = useRef(undefined) // undefined = haven't polled yet (don't toast on first load)
+  const seenBonusKeysRef = useRef(null) // null = no game state seen yet (don't toast on first load)
   const toastTimeoutRef = useRef(null)
+  const { state: gameState } = useGameStore()
   // Auto-close a few seconds after the track ends, unless the player rewinds/replays first —
   // any 'play' or 'seeking' on the audio element (play button, ±10 skip, seek bar) cancels it.
   const autoCloseTimeoutRef = useRef(null)
 
-  async function pollLatestBonus() {
-    // This provider is mounted app-wide, including the registration page — nothing to poll until
-    // there's a session (see api.js's handleResponse for what an unauthenticated call used to do).
-    if (!getSession()) return
-    try {
-      const data = await api.getLatestNarrationBonus()
-      if (lastBonusIdRef.current === undefined) {
-        // First poll just establishes the baseline — the team may already have earned bonuses
-        // before this device opened the app; those shouldn't retroactively toast/ping.
-        lastBonusIdRef.current = data.id
-        return
-      }
-      if (data.id != null && data.id !== lastBonusIdRef.current) {
-        lastBonusIdRef.current = data.id
-        playScreenUpdatePing()
-        clearTimeout(toastTimeoutRef.current)
-        setBonusToast({ playerName: data.playerName })
-        toastTimeoutRef.current = setTimeout(() => setBonusToast(null), 4000)
-        // Tells whichever page is currently mounted (Home/Play) to refetch its own score data —
-        // see HomePage.jsx/PlayPage.jsx's own listener for this; simplest way to reach them from
-        // here without restructuring their independent data-fetching into a shared context.
-        window.dispatchEvent(new CustomEvent('tourz:score-changed', { detail: { totalScore: data.totalScore } }))
-      }
-    } catch {
-      // Transient network hiccup — next poll tries again, nothing to recover here.
-    }
-  }
-
+  // Bonus toast + ping on every team member's phone, driven by the shared game state (kept fresh
+  // by offline/gameStore.js) instead of this provider's own poll. Keyed by WHAT was listened to,
+  // not the row id, so this phone's own listen toasts the moment it's earned (signal or not) and
+  // doesn't toast a second time when the server's copy of the same listen arrives. The first state
+  // seen is just the baseline — bonuses earned before this phone opened the app don't toast.
   useEffect(() => {
-    pollLatestBonus()
-    const id = setInterval(pollLatestBonus, 4000)
-    return () => clearInterval(id)
-  }, [])
+    if (!gameState) return
+    const key = (n) => (n.landmarkSeq != null ? `l:${n.landmarkSeq}` : `s:${n.siteId}`)
+    if (seenBonusKeysRef.current === null) {
+      seenBonusKeysRef.current = new Set(gameState.narration.map(key))
+      return
+    }
+    const fresh = gameState.narration.filter((n) => !seenBonusKeysRef.current.has(key(n)))
+    if (!fresh.length) return
+    fresh.forEach((n) => seenBonusKeysRef.current.add(key(n)))
+    playScreenUpdatePing()
+    clearTimeout(toastTimeoutRef.current)
+    setBonusToast({ playerName: fresh[fresh.length - 1].playerName })
+    toastTimeoutRef.current = setTimeout(() => setBonusToast(null), 4000)
+  }, [gameState])
 
   useEffect(() => {
     const audio = audioRef.current
@@ -171,11 +158,8 @@ export function NarrationPlayerProvider({ children }) {
       // legitimately never get marked covered by the integer-bucket math above.
       if (coverage >= 0.95 && track?.kind && track?.refId != null) {
         reportedRef.current = true
-        api.completeNarrationListen(
-          track.kind === 'landmark' ? { landmarkSequenceOrder: track.refId } : { siteId: track.refId }
-        ).then((res) => {
-          if (res?.awarded) pollLatestBonus() // don't make this device wait up to 4s for its own toast
-        }).catch(() => {})
+        // Queued like every other action — earned on the spot even with no signal, sent later.
+        enqueue('narration', track.kind === 'landmark' ? { landmarkSequenceOrder: track.refId } : { siteId: track.refId })
       }
     }
     audio.addEventListener('timeupdate', onTime)

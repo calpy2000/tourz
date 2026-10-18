@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { APIProvider, Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps'
+import { APIProvider, Map, AdvancedMarker, useMap, useApiLoadingStatus, APILoadingStatus } from '@vis.gl/react-google-maps'
 import { api } from '../api.js'
 import { API_BASE } from '../apiBase.js'
 import { useGeolocation } from '../useGeolocation.js'
@@ -8,6 +8,23 @@ import { saveGpsCorrection } from '../gpsCorrections.js'
 import DetailPopup from './DetailPopup.jsx'
 import { isStartLandmark, landmarkDisplayNumber } from '../landmarkNumber.js'
 import { getLastFetched, setLastFetched } from '../lastFetched.js'
+import { useGameStore } from '../offline/gameStore.js'
+import { mapLandmarksView, landmarkDetailView } from '../offline/engine.js'
+import { useContentCache, siteDetailFromPack } from '../offline/contentCache.js'
+import { useConnection } from '../net/connection.js'
+
+// Google's map script is the one part of Map view that can't work with no signal (Google's terms
+// forbid saving its map for offline use). When it fails to load — opening the app in a dead spot —
+// say so plainly instead of leaving an empty box; markers and cards return with the map.
+function MapLoadFailedNote() {
+  const status = useApiLoadingStatus()
+  if (status !== APILoadingStatus.FAILED && status !== APILoadingStatus.AUTH_FAILURE) return null
+  return (
+    <div className="map-offline-note">
+      The map needs signal to load. Everything else still works &mdash; use <strong>&nbsp;CURRENT landmark&nbsp;</strong> to carry on, and the map will be back once you have signal.
+    </div>
+  )
+}
 
 // Used only if the team has no solved landmarks yet (map needs some center before the first find).
 const FALLBACK_CENTER = { lat: 55.9535, lng: -3.197 }
@@ -137,9 +154,25 @@ const SITE_TYPE_LABELS = {
 // App.jsx) — the map and its markers stay built so switching back is instant, but GPS pauses.
 export default function MapView({ active = true }) {
   const navigate = useNavigate()
-  // Seeded from the last response (see lastFetched.js) so returning to MAP view draws the
-  // markers straight away instead of "Loading map…"; the mount effect below still refetches.
-  const [mapData, setMapData] = useState(() => getLastFetched('map'))
+  const connection = useConnection()
+  // Landmark pins come from the phone's game state; site pins and cards from the tour pack saved
+  // at the start of the tour (offline/contentCache.js) — so the whole map's markers and every card
+  // work with no signal. Only until the pack has downloaded (the first minute or so of a fresh
+  // tour) are sites fetched from GET /api/game/map instead, as before.
+  const { state: game } = useGameStore()
+  const { pack } = useContentCache()
+  const [fallbackSites, setFallbackSites] = useState(() => getLastFetched('map')?.sites || null)
+  // Set GPS drag (dev tool) moves a pin for the rest of the session — kept as an override here.
+  const [movedSites, setMovedSites] = useState({})
+  const mapData = useMemo(() => {
+    if (!game) return null
+    const baseSites = pack?.sites || fallbackSites
+    if (!baseSites) return null
+    const sites = baseSites.map((s) => (movedSites[s.id] ? { ...s, ...movedSites[s.id] } : s))
+    return { ...mapLandmarksView(game), sites }
+  }, [game, pack, fallbackSites, movedSites])
+  // Bumped on reconnect after a failed map-script load, to try loading Google's map again.
+  const [mapAttempt, setMapAttempt] = useState(0)
   // Set by DetailPopup's "Set GPS" button (Interests/sites) — identifies the one marker currently
   // draggable on the map, compared by id (sitePopup is a separately-fetched object, never the
   // same reference as its entry in mapData.sites). Cleared on drop or Cancel.
@@ -157,13 +190,17 @@ export default function MapView({ active = true }) {
   const [gpsHelpDismissed, setGpsHelpDismissed] = useState(false)
 
   function openLandmark(sequenceOrder) {
-    api.getLandmarkDetail(sequenceOrder).then((data) => { if (!data.error) setLandmarkPopup(data) })
+    const detail = game && landmarkDetailView(game, sequenceOrder)
+    if (detail) setLandmarkPopup(detail)
   }
 
   function openSite(id) {
-    // id isn't echoed back by the API response — stashed alongside it here since the dev-only
-    // Set GPS button needs it as the site's reference key.
-    api.getSiteDetail(id).then((data) => { if (!data.error) setSitePopup({ ...data, id }) })
+    // id is stashed alongside the card since the dev-only Set GPS button needs it as the site's
+    // reference key. From the saved tour pack when there is one; otherwise (pack still
+    // downloading) from the server.
+    const saved = siteDetailFromPack(id)
+    if (saved) { setSitePopup({ ...saved, id }); return }
+    api.getSiteDetail(id).then((data) => { if (!data.error) setSitePopup({ ...data, id }) }).catch(() => {})
   }
 
   function finishGpsDrag(name) {
@@ -182,24 +219,28 @@ export default function MapView({ active = true }) {
     const lat = event.latLng.lat()
     const lng = event.latLng.lng()
     saveGpsCorrection({ type: 'site', id: site.id, name: site.title, enteredGps: `${lat}, ${lng}`, capturedAt: new Date().toISOString() })
-    setMapData((prev) => ({ ...prev, sites: prev.sites.map((s) => (s.id === site.id ? { ...s, latitude: lat, longitude: lng } : s)) }))
+    setMovedSites((prev) => ({ ...prev, [site.id]: { latitude: lat, longitude: lng } }))
     finishGpsDrag(site.title)
   }
 
+  // Only while the tour pack hasn't been saved yet — sites from the server, as before.
   useEffect(() => {
-    api.getMap().then(setMapData)
-  }, [])
+    if (pack || fallbackSites) return
+    api.getMap().then((res) => {
+      if (res?.sites) {
+        setFallbackSites(res.sites)
+        setLastFetched('map', res)
+      }
+    }).catch(() => {})
+  }, [pack, fallbackSites, connection])
 
-  // Shown again after being kept hidden — refetch so anything solved/revealed meanwhile appears.
-  const wasActiveRef = useRef(active)
+  // A map script that failed to load (opened with no signal) gets another go once signal is back.
+  const prevConnectionRef = useRef(connection)
   useEffect(() => {
-    if (active && !wasActiveRef.current) api.getMap().then(setMapData)
-    wasActiveRef.current = active
-  }, [active])
-
-  // Follows every change, including the optimistic Set GPS drag move above, so the cached copy
-  // never snaps a just-corrected pin back to its old spot on the next visit.
-  useEffect(() => { setLastFetched('map', mapData) }, [mapData])
+    const cameBack = prevConnectionRef.current === 'offline' && connection === 'online'
+    prevConnectionRef.current = connection
+    if (cameBack && !window.google?.maps) setMapAttempt((n) => n + 1)
+  }, [connection])
 
   if (!mapData) return <div className="map-shell"><div className="stub-view">Loading map&hellip;</div></div>
 
@@ -231,7 +272,8 @@ export default function MapView({ active = true }) {
   return (
     <div className="map-shell">
       <div className="map-container" data-coach-id="map-navigation-area">
-        <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
+        <APIProvider key={mapAttempt} apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
+          <MapLoadFailedNote />
           <Map
             mapId={import.meta.env.VITE_GOOGLE_MAPS_MAP_ID}
             // Keeps the google.maps.Map instance (and its already-drawn tiles) in a pool when

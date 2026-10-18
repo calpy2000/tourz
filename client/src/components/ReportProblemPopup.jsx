@@ -1,35 +1,53 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import AnchoredPopup from './AnchoredPopup.jsx'
-import { api } from '../api.js'
+import { enqueue, useGameStore } from '../offline/gameStore.js'
+import { useConnection } from '../net/connection.js'
 
 // Free-text bug/problem report. The server attaches team/player/progress context itself (see
-// POST /api/game/problem-report) — this popup only collects the description. On success it swaps
-// its own body for a "sent" confirmation and auto-closes after 2s, per spec, rather than making
-// the caller manage that timing.
+// actProblemReport in server/index.js) — this popup only collects the description. Queued like
+// every other action (offline/gameStore.js), so it can be written with no signal: with signal it
+// waits for the server's confirmation and shows "sent"; without, it says it'll go when signal's
+// back. Either way the popup closes itself after a couple of seconds.
 export default function ReportProblemPopup({ anchorRect, onClose }) {
   const [text, setText] = useState('')
-  const [submitting, setSubmitting] = useState(false)
-  const [sent, setSent] = useState(false)
+  const [actionId, setActionId] = useState(null)
   const [error, setError] = useState('')
+  const { outcomes } = useGameStore()
+  const connection = useConnection()
+  const outcome = actionId ? outcomes[actionId] : null
+  const queuedOffline = Boolean(actionId) && !outcome && connection === 'offline'
+  const sent = outcome?.status === 'done'
 
-  async function handleSubmit() {
-    if (!text.trim() || submitting) return
-    setSubmitting(true)
+  useEffect(() => {
+    if (outcome?.status === 'rejected') {
+      setActionId(null)
+      setError(outcome.body?.error || 'Could not send the report — try again.')
+    }
+  }, [outcome])
+
+  useEffect(() => {
+    if (!sent && !queuedOffline) return
+    const id = setTimeout(onClose, sent ? 2000 : 3000)
+    return () => clearTimeout(id)
+  }, [sent, queuedOffline, onClose])
+
+  function handleSubmit() {
+    if (!text.trim() || actionId) return
     setError('')
-    const res = await api.sendProblemReport(text.trim())
-    if (res?.error) {
-      setSubmitting(false)
+    const res = enqueue('problem_report', { message: text.trim() })
+    if (res.error) {
       setError(res.error)
       return
     }
-    setSent(true)
-    setTimeout(onClose, 2000)
+    setActionId(res.id)
   }
 
-  if (sent) {
+  if (sent || queuedOffline) {
     return (
       <AnchoredPopup anchorRect={anchorRect} onClose={onClose} className="why-card">
-        <div className="why-popup-text"><p>Problem report sent</p></div>
+        <div className="why-popup-text">
+          <p>{sent ? 'Problem report sent' : "Saved — your report will send as soon as you're back in signal"}</p>
+        </div>
       </AnchoredPopup>
     )
   }
@@ -48,10 +66,10 @@ export default function ReportProblemPopup({ anchorRect, onClose }) {
       {error && <p className="captain-only-note">{error}</p>}
       <button
         className="primary captain-picker-submit"
-        disabled={!text.trim() || submitting}
+        disabled={!text.trim() || Boolean(actionId)}
         onClick={handleSubmit}
       >
-        {submitting ? 'Sending…' : 'Submit'}
+        {actionId ? 'Sending…' : 'Submit'}
       </button>
     </AnchoredPopup>
   )

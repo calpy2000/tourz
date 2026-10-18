@@ -15,7 +15,12 @@ export default function ChangeCaptainPopup({ anchorRect, players, onClose, onCha
     if (!selectedId || submitting) return
     setSubmitting(true)
     setError('')
-    const res = await api.changeCaptain(selectedId)
+    let res
+    try {
+      res = await api.changeCaptain(selectedId)
+    } catch {
+      res = { error: 'Changing captain needs signal — try again once you have some.' }
+    }
     if (res?.error) {
       setSubmitting(false)
       setError(res.error)

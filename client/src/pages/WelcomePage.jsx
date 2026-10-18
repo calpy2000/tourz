@@ -18,7 +18,15 @@ export default function WelcomePage() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    api.getSession().then(setStatus)
+    let cancelled = false
+    function load() {
+      api.getSession().then((res) => { if (!cancelled) setStatus(res) }).catch(() => {
+        // No signal — try again shortly (this page is only ever seen just after registering).
+        if (!cancelled) setTimeout(load, 5000)
+      })
+    }
+    load()
+    return () => { cancelled = true }
   }, [])
 
   if (!status) return <LoadingScreen />
@@ -32,7 +40,12 @@ export default function WelcomePage() {
     e.preventDefault()
     if (!teamNameInput.trim()) return
     setSaving(true)
-    const result = await api.setTeamName(teamNameInput.trim())
+    let result
+    try {
+      result = await api.setTeamName(teamNameInput.trim())
+    } catch {
+      result = { error: 'No signal — try again once you have some.' }
+    }
     setSaving(false)
     if (result.error) {
       setError(result.error)

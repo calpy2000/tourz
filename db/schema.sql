@@ -268,6 +268,22 @@ CREATE TABLE narration_listens (
 CREATE UNIQUE INDEX narration_listens_team_landmark_uq ON narration_listens(team_id, landmark_id) WHERE landmark_id IS NOT NULL;
 CREATE UNIQUE INDEX narration_listens_team_site_uq ON narration_listens(team_id, site_id) WHERE site_id IS NOT NULL;
 
+-- Offline play (2026-10-18): one row per action a phone queued and later synced via
+-- POST /api/game/sync. The client-generated id makes a re-sent action idempotent — the stored
+-- result is returned instead of applying it twice. status NULL = claimed, still being processed.
+CREATE TABLE client_actions (
+    id            TEXT PRIMARY KEY,
+    team_id       BIGINT NOT NULL REFERENCES teams(id),
+    player_id     BIGINT REFERENCES players(id),
+    action_type   TEXT NOT NULL,
+    client_time   TIMESTAMPTZ,
+    applied_time  TIMESTAMPTZ,
+    status        INT,
+    result        JSONB,
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX client_actions_team_idx ON client_actions(team_id);
+
 -- Post-MVP feature (GPS proximity), schema included now per the "cheap now, painful to
 -- retrofit" principle. Unused until that feature is built.
 CREATE TABLE location_pings (

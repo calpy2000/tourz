@@ -5,6 +5,8 @@ import { getSession, saveSession } from '../localSession.js'
 import { DEV_MODE } from '../devMode.js'
 import AvatarPicker from '../components/AvatarPicker.jsx'
 import LoadingScreen from '../components/LoadingScreen.jsx'
+import { startGameStore, serverNow } from '../offline/gameStore.js'
+import { certificateView } from '../offline/engine.js'
 
 // Used any time StartPage finds a session already ready to use (dev auto-login, or an existing
 // registered session on this device) — checks whether that team's tour is already complete before
@@ -28,24 +30,37 @@ function ResumeRedirect({ fallback = '/home' }) {
   const [destination, setDestination] = useState(null)
   const [state, setState] = useState(null)
   // DEV_MODE-only readout of what this fetch is doing — see LoadingScreen's debugInfo comment.
-  const [debugInfo, setDebugInfo] = useState('checking /api/game/certificate…')
+  const [debugInfo, setDebugInfo] = useState('loading saved game…')
   useEffect(() => {
-    api.getCertificateStatus()
-      .then((res) => {
-        setDebugInfo(`got response: ${JSON.stringify(res)}`)
-        // Finished either way — every landmark done, or the tour clock ran out.
-        if (res?.tourComplete || res?.timeUp) return setDestination('/certificate')
-        if (!res?.instructionsComplete) return setDestination('/instructions')
-        if (fallback === '/home' && !res?.coachComplete) {
-          setState({ startCoach: true })
-          return setDestination('/home')
-        }
-        setDestination(fallback)
-      })
-      .catch((err) => {
-        setDebugInfo(`/api/game/certificate threw: ${err?.message || err}`)
-        setDestination(fallback)
-      })
+    let cancelled = false
+    function decide(res) {
+      if (cancelled) return
+      // Finished either way — every landmark done, or the tour clock ran out.
+      if (res?.tourComplete || res?.timeUp) return setDestination('/certificate')
+      if (!res?.instructionsComplete) return setDestination('/instructions')
+      if (fallback === '/home' && !res?.coachComplete) {
+        setState({ startCoach: true })
+        return setDestination('/home')
+      }
+      setDestination(fallback)
+    }
+    // Decided from the phone's own copy of the game (offline/gameStore.js loads the saved copy,
+    // then refreshes it if there's signal) — so reopening the app in a dead spot goes straight back
+    // into the tour instead of hanging on this spinner. Only a phone with no saved game at all
+    // asks the server.
+    startGameStore().then((game) => {
+      if (game) {
+        setDebugInfo('decided from saved game state')
+        return decide(certificateView(game, serverNow()))
+      }
+      setDebugInfo('no saved game — checking /api/game/certificate…')
+      return api.getCertificateStatus()
+        .then((res) => { setDebugInfo(`got response: ${JSON.stringify(res)}`); decide(res) })
+    }).catch((err) => {
+      setDebugInfo(`resume check failed: ${err?.message || err}`)
+      if (!cancelled) setDestination(fallback)
+    })
+    return () => { cancelled = true }
   }, [fallback])
   return destination ? <Navigate to={destination} state={state} replace /> : <LoadingScreen debugInfo={DEV_MODE ? debugInfo : undefined} />
 }
@@ -121,7 +136,12 @@ export default function StartPage() {
     }
     setError('')
     setSubmitting(true)
-    const result = await api.register({ code: code.trim(), name: name.trim(), avatar, role })
+    let result
+    try {
+      result = await api.register({ code: code.trim(), name: name.trim(), avatar, role })
+    } catch {
+      result = { error: "No signal — registering needs a connection. Try again once you have signal (you'll only need it this once)." }
+    }
     setSubmitting(false)
     if (result.error) {
       setError(result.error)
