@@ -20,8 +20,14 @@ function authHeaders() {
 // whatever called it. clearSession() and the redirect are both idempotent, so firing them again
 // per concurrent 401 is harmless. The never-resolving promise is deliberate: navigation is about
 // to unmount everything, so no caller should act on this response.
-function handleResponse(res) {
-  if (res.status === 401) {
+//
+// Only when the request actually carried a token, though (sentToken) — a 401 for a request sent
+// with no session at all isn't an expired login, just a call made before registration. Found
+// 2026-10-18: NarrationPlayer's bonus poller fired straight after the GPS gate, before login, and
+// this reload made every new iPhone player's map ask for location a second time (a reloaded
+// page is a new document to Safari, so its earlier Allow no longer counts).
+function handleResponse(res, sentToken) {
+  if (res.status === 401 && sentToken) {
     clearSession();
     window.location.href = '/';
     return new Promise(() => {});
@@ -30,17 +36,19 @@ function handleResponse(res) {
 }
 
 async function get(path) {
-  const res = await fetch(path, { headers: authHeaders() });
-  return handleResponse(res);
+  const headers = authHeaders();
+  const res = await fetch(path, { headers });
+  return handleResponse(res, Boolean(headers['X-Session-Token']));
 }
 
 async function post(path, body) {
+  const auth = authHeaders();
   const res = await fetch(path, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    headers: { 'Content-Type': 'application/json', ...auth },
     body: body ? JSON.stringify(body) : undefined,
   });
-  return handleResponse(res);
+  return handleResponse(res, Boolean(auth['X-Session-Token']));
 }
 
 export const api = {

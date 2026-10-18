@@ -11,6 +11,7 @@ import { DEV_MODE } from './devMode.js'
 import { CoachProvider } from './coach/CoachContext.jsx'
 import CoachOverlay from './coach/CoachOverlay.jsx'
 import GpsGateScreen from './components/GpsGateScreen.jsx'
+import DebugOverlay from './components/DebugOverlay.jsx'
 import { useGpsPreflightStatus } from './gpsPreflight.js'
 import { NarrationPlayerProvider } from './components/NarrationPlayer.jsx'
 import { GameClockProvider, GameClockLayer } from './gameClock.jsx'
@@ -57,6 +58,7 @@ export default function App() {
             <Route path="/certificate" element={<RequireSession><CertificatePage /></RequireSession>} />
           </Routes>
           <GameClockLayer />
+          <DebugOverlay appWide />
           </GameClockProvider>
         </NarrationPlayerProvider>
       )}

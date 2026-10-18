@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { api } from '../api.js'
+import { getSession } from '../localSession.js'
 import { playScreenUpdatePing } from '../screenUpdatePing.js'
 
 // Persistent narration player — "Dock Bar" concept settled after the three-way mockup
@@ -107,6 +108,9 @@ export function NarrationPlayerProvider({ children }) {
   const autoCloseTimeoutRef = useRef(null)
 
   async function pollLatestBonus() {
+    // This provider is mounted app-wide, including the registration page — nothing to poll until
+    // there's a session (see api.js's handleResponse for what an unauthenticated call used to do).
+    if (!getSession()) return
     try {
       const data = await api.getLatestNarrationBonus()
       if (lastBonusIdRef.current === undefined) {

@@ -22,8 +22,10 @@ try {
   // sessionStorage can throw in some private/in-app contexts — the in-memory log still works.
 }
 
-export function isDebugMode() {
-  if (DEV_MODE) return true
+// explicitOnly: true ignores DEV_MODE — used for the app-wide copy of the panel (App.jsx), which
+// should only appear when someone deliberately opened the app with ?debug=1.
+export function isDebugMode({ explicitOnly = false } = {}) {
+  if (DEV_MODE && !explicitOnly) return true
   try {
     return sessionStorage.getItem('tourzDebug') === '1'
   } catch {

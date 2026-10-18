@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { logDebug } from './debugLog.js'
+import { startSharedWatch } from './geoWatch.js'
 
 const ua = typeof navigator !== 'undefined' ? navigator.userAgent || '' : ''
 export const isIOS = /iPhone|iPad|iPod/.test(ua)
@@ -44,6 +45,8 @@ let requesting = false
 const CONFIRMED_KEY = 'tourzGpsConfirmed'
 
 function markConfirmed() {
+  // Keep location continuously in use from this first Allow onwards — see geoWatch.js.
+  startSharedWatch('gate pass')
   try {
     sessionStorage.setItem(CONFIRMED_KEY, '1')
   } catch {
