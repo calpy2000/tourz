@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useGpsPreflightStatus, requestGpsPermission, isIOS } from '../gpsPreflight.js'
 import LoadingScreen from './LoadingScreen.jsx'
+import DebugOverlay from './DebugOverlay.jsx'
 
 // Hard-blocks the entire app (see App.jsx, rendered instead of <Routes>) for as long as
 // gpsPreflight.js hasn't confirmed GPS actually works — no page here is worth showing without
@@ -31,13 +32,13 @@ export default function GpsGateScreen() {
   useEffect(() => {
     if (!shownBlocked) return
     function onVisible() {
-      if (document.visibilityState === 'visible') requestGpsPermission()
+      if (document.visibilityState === 'visible') requestGpsPermission('auto re-check on return')
     }
     document.addEventListener('visibilitychange', onVisible)
     return () => document.removeEventListener('visibilitychange', onVisible)
   }, [shownBlocked])
 
-  if (status === 'unchecked' || status === 'checking') return <LoadingScreen />
+  if (status === 'unchecked' || status === 'checking') return <><LoadingScreen /><DebugOverlay /></>
 
   const working = status === 'requesting'
 
@@ -53,10 +54,11 @@ export default function GpsGateScreen() {
             out landmarks and points of interest as you progress.
           </p>
           <p className="subtitle">Tap below and allow location access when your phone asks.</p>
-          <button className="primary" type="button" disabled={working} onClick={() => requestGpsPermission()}>
+          <button className="primary" type="button" disabled={working} onClick={() => requestGpsPermission('Enable location tap')}>
             {working ? 'Checking…' : 'Enable location'}
           </button>
         </div>
+        <DebugOverlay />
       </div>
     )
   }
@@ -96,10 +98,11 @@ export default function GpsGateScreen() {
           </ol>
         )}
         <p className="subtitle">Then come back here to this tab — we'll check again automatically.</p>
-        <button className="primary" type="button" disabled={working} onClick={() => requestGpsPermission()}>
+        <button className="primary" type="button" disabled={working} onClick={() => requestGpsPermission('check again tap')}>
           {working ? 'Checking…' : "I've changed it — check again"}
         </button>
       </div>
+      <DebugOverlay />
     </div>
   )
 }

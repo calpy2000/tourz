@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { logDebug } from './debugLog.js'
 
 const ua = typeof navigator !== 'undefined' ? navigator.userAgent || '' : ''
 export const isIOS = /iPhone|iPad|iPod/.test(ua)
@@ -35,6 +36,7 @@ let listeners = []
 let requesting = false
 
 function setStatus(next) {
+  logDebug('status', `${status} -> ${next}`)
   status = next
   listeners.forEach((fn) => fn(status))
 }
@@ -82,21 +84,31 @@ export function initGpsCheck() {
   // "nothing's been decided yet" state so the player at least gets the tap-driven ask screen
   // instead of an infinite spinner.
   let settled = false
+  const queryStart = performance.now()
+  logDebug('permissions.query start')
   const stallTimer = setTimeout(() => {
     if (settled) return
     settled = true
+    logDebug('permissions.query STALLED (4s)')
     console.log('[gps] boot-time permissions.query() stalled — falling back to needs-gesture')
     setStatus('needs-gesture')
   }, 4000)
 
   navigator.permissions.query({ name: 'geolocation' })
     .then((result) => {
+      logDebug(`permissions.query result${settled ? ' (LATE, ignored)' : ''}`, { state: result.state, ms: Math.round(performance.now() - queryStart) })
+      try {
+        result.onchange = () => logDebug('permission state changed', result.state)
+      } catch {
+        // ignore
+      }
       if (settled) return
       settled = true
       clearTimeout(stallTimer)
       setStatus(result.state === 'granted' ? 'ok' : 'needs-gesture')
     })
-    .catch(() => {
+    .catch((err) => {
+      logDebug('permissions.query threw', String(err?.message || err))
       if (settled) return
       settled = true
       clearTimeout(stallTimer)
@@ -107,8 +119,14 @@ export function initGpsCheck() {
 // The only thing in this file allowed to call getCurrentPosition — always from a real tap
 // (GpsGateScreen's button, in either its "ask" or "blocked" state), never automatically. Safe to
 // call repeatedly, it no-ops while already in flight.
-export function requestGpsPermission() {
-  if (requesting) return
+export function requestGpsPermission(source = 'tap') {
+  if (requesting) {
+    logDebug('request ignored (already in flight)', source)
+    return
+  }
+  const tapAt = performance.now()
+  const since = () => Math.round(performance.now() - tapAt)
+  logDebug('getCurrentPosition request', source)
   requesting = true
   setStatus('requesting')
   let settled = false
@@ -120,12 +138,14 @@ export function requestGpsPermission() {
     if (settled) return
     settled = true
     requesting = false
+    logDebug('request STALLED (10s) -> blocked', { ms: since() })
     console.log('[gps] tap-triggered request stalled — no fix, no error, within 10s — treating as blocked')
     setStatus('blocked')
   }, 10000)
 
   navigator.geolocation.getCurrentPosition(
     (pos) => {
+      logDebug(`got position${settled ? ' (LATE, ignored)' : ''}`, { ms: since(), accuracyM: Math.round(pos.coords.accuracy) })
       if (settled) return
       settled = true
       requesting = false
@@ -134,6 +154,7 @@ export function requestGpsPermission() {
       setStatus('ok')
     },
     (err) => {
+      logDebug(`position error${settled ? ' (LATE, ignored)' : ''}`, { ms: since(), code: err.code, message: err.message })
       if (settled) return
       settled = true
       requesting = false

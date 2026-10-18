@@ -5,8 +5,12 @@ import './index.css'
 import App from './App.jsx'
 import { tryEscapeToSafari } from './escapeInAppBrowser.js'
 import { initGpsCheck } from './gpsPreflight.js'
+import { logBootContext, logDebug } from './debugLog.js'
+
+logBootContext()
 
 tryEscapeToSafari().then((handedOff) => {
+  logDebug('safari escape', { handedOff })
   // If the handoff worked, this tab is being abandoned for a fresh Safari tab — that fresh
   // load will run its own check (and won't match the in-app-browser UA check anyway), so
   // there's nothing useful to check here.
