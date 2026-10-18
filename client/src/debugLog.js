@@ -3,8 +3,8 @@ import { DEV_MODE } from './devMode.js'
 
 // Diagnostic log for the GPS gate (GpsGateScreen) — reinstated 2026-10-18 to debug an iPhone
 // "Enable location" -> Allow -> same screen -> Settings instructions -> back to start loop.
-// Shown by DebugOverlay on the gate screen whenever DEV_MODE is on, or the page was opened with
-// `?debug=1` (sticks in sessionStorage for the rest of the tab).
+// Shown by DebugOverlay only when DEV_MODE (the dev tools switch) is on — never to ordinary
+// players. Logging itself always runs; it's cheap and only ever lives in this tab's sessionStorage.
 //
 // Entries persist to sessionStorage, not just memory, so they survive a tab reload — whether
 // iOS reloads the tab (e.g. after a Settings change) is one of the things this needs to show.
@@ -14,23 +14,8 @@ const STORE_KEY = 'tourzDebugLog'
 const BOOT_KEY = 'tourzDebugBoot'
 const MAX_ENTRIES = 200
 
-try {
-  if (new URLSearchParams(window.location.search).get('debug') === '1') {
-    sessionStorage.setItem('tourzDebug', '1')
-  }
-} catch {
-  // sessionStorage can throw in some private/in-app contexts — the in-memory log still works.
-}
-
-// explicitOnly: true ignores DEV_MODE — used for the app-wide copy of the panel (App.jsx), which
-// should only appear when someone deliberately opened the app with ?debug=1.
-export function isDebugMode({ explicitOnly = false } = {}) {
-  if (DEV_MODE && !explicitOnly) return true
-  try {
-    return sessionStorage.getItem('tourzDebug') === '1'
-  } catch {
-    return false
-  }
+export function isDebugMode() {
+  return DEV_MODE
 }
 
 function load() {

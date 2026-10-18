@@ -3344,8 +3344,8 @@ button.primary.clock-banner-btn {
   color: var(--ink);
 }
 
-/* --- GPS gate debug overlay (see debugLog.js) — shown on GpsGateScreen only, when DEV_MODE is
-   on or the page was opened with ?debug=1. */
+/* --- GPS debug overlay (see debugLog.js) — on the GPS gate screen, and collapsed over every
+   other page, only when DEV_MODE is on. */
 .debug-overlay {
   position: fixed;
   left: 8px;

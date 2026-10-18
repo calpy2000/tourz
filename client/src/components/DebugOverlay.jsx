@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { isDebugMode, useDebugLog, clearDebugLog } from '../debugLog.js'
 
 // On-screen GPS diagnostic log — see debugLog.js. Built to be screenshotted from a real phone.
-// `appWide`: the copy App.jsx renders over every page after the gate — ?debug=1 only, and starts
-// collapsed so it doesn't cover the map until opened.
+// DEV_MODE only (see debugLog.js). `appWide`: the copy App.jsx renders over every page after the
+// gate — starts collapsed so it doesn't cover the map until opened.
 export default function DebugOverlay({ appWide = false }) {
   const entries = useDebugLog()
   const [collapsed, setCollapsed] = useState(appWide)
@@ -14,7 +14,7 @@ export default function DebugOverlay({ appWide = false }) {
     if (!collapsed) bottomRef.current?.scrollIntoView({ block: 'end' })
   }, [entries, collapsed])
 
-  if (!isDebugMode({ explicitOnly: appWide })) return null
+  if (!isDebugMode()) return null
 
   const fmt = (e) => `#${e.boot} ${e.time} +${e.t}ms ${e.label}${e.data !== undefined ? ' ' + JSON.stringify(e.data) : ''}`
 
