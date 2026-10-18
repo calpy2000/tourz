@@ -28,12 +28,36 @@ const isAndroid = /Android/.test(ua)
 // 'requesting': that button (or its "check again" twin in the blocked state) was just tapped —
 // a real getCurrentPosition() call, with a real user gesture behind it, is in flight.
 // 'blocked': requestGpsPermission() got back an explicit PERMISSION_DENIED, or its own call
-// stalled past the tap-triggered timeout. GpsGateScreen's instructions cover both causes, with
+// stalled past the tap-triggered timeout (a fix arriving after that still moves on to 'ok'). GpsGateScreen's instructions cover both causes, with
 // separate wording for iOS vs Android (see its own isIOS branch — Android's Settings steps vary
 // too much by phone maker to give exact ones, so that path is deliberately more generic).
 let status = 'unchecked'
 let listeners = []
 let requesting = false
+
+// Set once a tap-triggered request proves geolocation works in this tab, so a reload of the same
+// tab skips the gate. Added 2026-10-18 after a live iPhone log: with Safari Websites on "Ask Next
+// Time", permissions.query() never reports 'granted', so any reload (e.g. api.js's hard reload on
+// a stale-session 401, fired ~0.4s after the gate had just passed) dropped the player straight
+// back onto the ask screen, in a loop. sessionStorage, not localStorage: a new tab or a later
+// visit still goes through the gate once.
+const CONFIRMED_KEY = 'tourzGpsConfirmed'
+
+function markConfirmed() {
+  try {
+    sessionStorage.setItem(CONFIRMED_KEY, '1')
+  } catch {
+    // unavailable — the gate just shows again after a reload, as before
+  }
+}
+
+function isConfirmed() {
+  try {
+    return sessionStorage.getItem(CONFIRMED_KEY) === '1'
+  } catch {
+    return false
+  }
+}
 
 function setStatus(next) {
   logDebug('status', `${status} -> ${next}`)
@@ -64,6 +88,12 @@ export function useGpsPreflightStatus() {
 // on its own, since iOS Safari's implementation of this API is documented as unreliable for that.
 export function initGpsCheck() {
   if (!(isIOS || isAndroid) || !('geolocation' in navigator)) {
+    setStatus('ok')
+    return
+  }
+
+  if (isConfirmed()) {
+    logDebug('gps already confirmed in this tab — skipping gate')
     setStatus('ok')
     return
   }
@@ -131,22 +161,29 @@ export function requestGpsPermission(source = 'tap') {
   setStatus('requesting')
   let settled = false
 
-  // 10s, not 6s — this is a real tap now, with a real OS prompt either already answered or about
-  // to appear, so there's no good-faith "might just be a slow cold fix" reading of a stall left;
-  // it just needs enough slack for a genuinely slow GPS chip, not a snap decision.
+  // 30s, and the clock includes however long the player takes to read and answer the iOS
+  // prompt(s) — with Safari Websites on "Ask Next Time" there can be two in a row. A 10s timer
+  // here fired mid-prompt on a live iPhone (2026-10-18) and the real fix, at 38s, was thrown
+  // away. Even now, a stall only switches the screen to the Settings instructions — a position
+  // that arrives afterwards still lets the player through (see the success callback).
   const stallTimer = setTimeout(() => {
     if (settled) return
     settled = true
     requesting = false
-    logDebug('request STALLED (10s) -> blocked', { ms: since() })
-    console.log('[gps] tap-triggered request stalled — no fix, no error, within 10s — treating as blocked')
+    logDebug('request STALLED (30s) -> blocked (a late fix will still pass)', { ms: since() })
+    console.log('[gps] tap-triggered request stalled — no fix, no error, within 30s — treating as blocked')
     setStatus('blocked')
-  }, 10000)
+  }, 30000)
 
   navigator.geolocation.getCurrentPosition(
     (pos) => {
-      logDebug(`got position${settled ? ' (LATE, ignored)' : ''}`, { ms: since(), accuracyM: Math.round(pos.coords.accuracy) })
-      if (settled) return
+      logDebug(`got position${settled ? ' (late)' : ''}`, { ms: since(), accuracyM: Math.round(pos.coords.accuracy) })
+      markConfirmed()
+      // A late fix still wins — it's proof location works, whatever the stall timer decided.
+      if (settled) {
+        if (status !== 'ok') setStatus('ok')
+        return
+      }
       settled = true
       requesting = false
       clearTimeout(stallTimer)
@@ -160,9 +197,14 @@ export function requestGpsPermission(source = 'tap') {
       requesting = false
       clearTimeout(stallTimer)
       const denied = err.code === err.PERMISSION_DENIED
+      if (!denied) markConfirmed()
       console.log(`[gps] tap-triggered request failed: ${denied ? 'denied' : 'unavailable'}`)
       setStatus(denied ? 'blocked' : 'ok')
     },
-    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
+    // Coarse and cache-friendly on purpose: this call only has to prove permission was granted,
+    // not locate anyone precisely — useGeolocation's own watchPosition stays high-accuracy for
+    // the map. A precise cold fix took 38s indoors in the 2026-10-18 log; a coarse one is near
+    // instant.
+    { enableHighAccuracy: false, timeout: 30000, maximumAge: 60000 },
   )
 }

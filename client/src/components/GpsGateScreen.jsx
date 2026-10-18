@@ -83,7 +83,7 @@ export default function GpsGateScreen() {
             <li>Go to <strong>Privacy &amp; Security</strong> then <strong>Location Services</strong></li>
             <li>Make sure the Location Services toggle is switched <strong>On</strong></li>
             <li>Scroll down to <strong>Safari Websites</strong></li>
-            <li>Set it to <strong>Always</strong> or <strong>Ask Next Time Or When I Share</strong></li>
+            <li>Set it to <strong>While Using the App</strong> (or <strong>Ask Next Time Or When I Share</strong>)</li>
           </ol>
         ) : (
           // Android's exact Settings wording/layout varies too much by phone maker (Samsung,
