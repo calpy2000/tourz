@@ -18,12 +18,32 @@ const CONTENT_CACHE = 'tourz-content-v1'
 const SHELL_FILES = __SHELL_FILES__
 const NAVIGATION_TIMEOUT_MS = 3000
 
+// The type each saved file must come back as. During a Cloudflare rollout an edge can briefly
+// answer a brand-new /assets/ file with the HTML page (its single-page-app fallback) — seen live on
+// the 2026-10-18 V1.21 push. Saving that as the app's script would break the app on this phone until
+// the next version, so any mismatch fails the whole install; the browser simply tries again later.
+function expectedType(file) {
+  if (file.endsWith('.js')) return 'javascript'
+  if (file.endsWith('.css')) return 'css'
+  if (file === '/' || file.endsWith('.html')) return 'html'
+  return null
+}
+
+async function saveShell() {
+  const cache = await caches.open(SHELL_CACHE)
+  await Promise.all(SHELL_FILES.map(async (file) => {
+    const res = await fetch(file, { cache: 'no-cache' })
+    const type = res.headers.get('content-type') || ''
+    const want = expectedType(file)
+    if (!res.ok || (want && !type.includes(want)) || (!want && type.includes('text/html'))) {
+      throw new Error(`${file}: ${res.status} ${type}`)
+    }
+    await cache.put(file, res)
+  }))
+}
+
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(SHELL_CACHE)
-      .then((cache) => cache.addAll(SHELL_FILES))
-      .then(() => self.skipWaiting()),
-  )
+  event.waitUntil(saveShell().then(() => self.skipWaiting()))
 })
 
 self.addEventListener('activate', (event) => {
