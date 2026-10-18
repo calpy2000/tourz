@@ -30,10 +30,11 @@ async function deleteGameDataForCode(client, gameCode) {
       'DELETE FROM location_pings WHERE player_id IN (SELECT id FROM players WHERE team_id = $1)',
       [team.id]
     );
+    const { rowCount: listens } = await client.query('DELETE FROM narration_listens WHERE team_id = $1', [team.id]);
     const { rowCount: events } = await client.query('DELETE FROM progress_events WHERE team_id = $1', [team.id]);
     const { rowCount: players } = await client.query('DELETE FROM players WHERE team_id = $1', [team.id]);
     await client.query('DELETE FROM teams WHERE id = $1', [team.id]);
-    console.log(`  ${gameCode.code}: deleted 1 team, ${players} players, ${events} progress events, ${pings} location pings`);
+    console.log(`  ${gameCode.code}: deleted 1 team, ${players} players, ${events} progress events, ${listens} narration listens, ${pings} location pings`);
   } else {
     console.log(`  ${gameCode.code}: game existed with no team`);
   }

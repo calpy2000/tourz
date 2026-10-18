@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { api } from '../api.js'
 import GameHeader from '../components/GameHeader.jsx'
 import MapView from '../components/MapView.jsx'
 import LoadingScreen from '../components/LoadingScreen.jsx'
+import { getLastFetched, setLastFetched } from '../lastFetched.js'
 import { useRefreshOnResume } from '../useRefreshOnResume.js'
 import { useWakeLock } from '../useWakeLock.js'
 import { useCoach } from '../coach/CoachContext.jsx'
@@ -20,9 +21,12 @@ function HouseIcon() {
   )
 }
 
-export default function HomePage() {
+// `active` is false while this page is kept mounted but hidden behind /play (see App.jsx).
+export default function HomePage({ active = true }) {
   const location = useLocation()
-  const [data, setData] = useState(null)
+  // Seeded from the last response (see lastFetched.js) so coming back from CURRENT landmark skips
+  // the loading screen; the mount effect below still refetches fresh data right away.
+  const [data, setData] = useState(() => getLastFetched('home'))
   const [view, setView] = useState(location.state?.view || 'map')
   const navigate = useNavigate()
   const coach = useCoach()
@@ -32,6 +36,15 @@ export default function HomePage() {
   useEffect(() => {
     loadHome()
   }, [])
+
+  useEffect(() => { setLastFetched('home', data) }, [data])
+
+  // Shown again after being kept hidden — the score/found pills may have moved on meanwhile.
+  const wasActiveRef = useRef(active)
+  useEffect(() => {
+    if (active && !wasActiveRef.current) loadHome()
+    wasActiveRef.current = active
+  }, [active])
 
   // Set by StartPage's ResumeRedirect (fresh from finishing instructions, or reopening the app
   // with the coach walkthrough still unfinished) — see CoachContext's markCoachComplete call for
@@ -62,7 +75,7 @@ export default function HomePage() {
           <button data-coach-id="home-current-landmark-btn" className="view-seg" onClick={() => navigate('/play')}><HouseIcon /><strong>CURRENT</strong> landmark</button>
         </div>
 
-        {view === 'map' && <MapView />}
+        {view === 'map' && <MapView active={active} />}
       </div>
 
       <GameHeader

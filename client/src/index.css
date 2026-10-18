@@ -1276,6 +1276,31 @@ button.primary.quiz-submit {
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
 }
 
+/* Live distance scale (MapView's MapScaleBar), top-left opposite the compass. No container
+   and no halo. Bright red is a deliberate
+   off-palette choice (user's call) so it stands out against the map. Same z-index as the compass so
+   the GPS help banner (6) still covers it. */
+.map-scale {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 5;
+  pointer-events: none;
+}
+.map-scale-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #e60000;
+  line-height: 1.1;
+  margin-bottom: 3px;
+  font-variant-numeric: tabular-nums;
+}
+.map-scale-bar {
+  height: 6px;
+  border: 2px solid #e60000;
+  border-top: none;
+}
+
 /* Pin hierarchy — solved landmark (photo + forest ring), curated site (brass + star). "Here"
    marker is the one deliberate off-palette color. */
 .map-pin-landmark {
@@ -2889,7 +2914,12 @@ button.primary.instructions-next-btn {
   color: var(--ink);
   background: var(--stone-raised);
   border: 1px solid var(--stone-line);
-  padding: 7px 8px;
+  /* ~1.2x the pill's original width (text + 8px each side), the extra all added on the right,
+     then tucked under the icon: margin-right cancels .narration-entry's 10px gap plus half the
+     42px icon, so the pill's right end disappears behind the icon's center instead of ending
+     beside it. Text stays fully visible — the hidden 21px is all padding. */
+  padding: 7px 27px 7px 8px;
+  margin-right: -31px;
   border-radius: 999px;
   white-space: nowrap;
   box-shadow: 0 3px 8px rgba(20, 20, 20, 0.15);
@@ -2910,6 +2940,8 @@ button.primary.instructions-next-btn {
   box-shadow: 0 8px 16px -6px rgba(0, 0, 0, 0.5);
 }
 .narration-entry-icon {
+  position: relative;
+  z-index: 1; /* sits over the tucked-under right end of .narration-entry-label */
   border: none;
   cursor: pointer;
   /* Without this, a global base button rule's own padding (11px 15px) survives here since this
@@ -3009,6 +3041,17 @@ button.primary.instructions-next-btn {
   background: rgba(61, 42, 19, 0.3);
   cursor: pointer;
   flex: 1;
+  touch-action: none; /* sideways drag = scrub, not the browser's swipe-back/forward gesture */
+}
+/* Invisible taller hit area — the visible bar is only 4px, too thin to grab reliably with a
+   finger. Pseudo-element hits count as the bar itself, so the pointer handlers still fire. */
+.narration-progress::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -12px;
+  bottom: -12px;
 }
 .narration-progress-fill {
   position: absolute;
@@ -3068,7 +3111,8 @@ button.primary.instructions-next-btn {
 .narration-mini {
   position: absolute;
   right: 24px; /* matches .narration-entry's right inset — see .detail-popup-bottom-row */
-  bottom: 10px;
+  bottom: 24px; /* .detail-popup-bottom-row's bottom:71 minus .narration-player's own bottom:47, so
+                   the minimised icon lands exactly where .narration-entry-icon sits */
   cursor: pointer;
 }
 .narration-mini-close {

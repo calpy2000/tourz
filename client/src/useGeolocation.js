@@ -6,7 +6,10 @@ import { useEffect, useRef, useState } from 'react'
 // location: null until the first fix arrives, or permanently if unsupported/denied — callers
 // fall back to something else (see placeholderHereLocation in MapView.jsx) rather than this hook
 // making that call itself.
-export function useGeolocation() {
+// `enabled` false stops the watch (battery) but keeps the last fix in state, so a caller that's
+// only hidden — MapView while CURRENT landmark is showing, see App.jsx — still has a sensible
+// "here" point the instant it's shown again, while a fresh watch starts up behind it.
+export function useGeolocation(enabled = true) {
   const [location, setLocation] = useState(null)
   const [error, setError] = useState(null)
   // True right after the tab comes back to the foreground, until a fresh fix lands — mobile
@@ -24,6 +27,7 @@ export function useGeolocation() {
   const watchIdRef = useRef(null)
 
   useEffect(() => {
+    if (!enabled) return
     if (!('geolocation' in navigator)) {
       setError('unsupported')
       return
@@ -78,7 +82,7 @@ export function useGeolocation() {
       document.removeEventListener('visibilitychange', onVisible)
       clearTimeout(stallTimer)
     }
-  }, [])
+  }, [enabled])
 
   return { location, error, reacquiring, stalled }
 }

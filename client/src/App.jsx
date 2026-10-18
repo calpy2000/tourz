@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import StartPage from './pages/StartPage.jsx'
 import WelcomePage from './pages/WelcomePage.jsx'
 import InstructionsPage from './pages/InstructionsPage.jsx'
@@ -26,6 +26,13 @@ function RequireSession({ children }) {
 // project-landmark-detail-feature memory for the design history of the page this replaced.
 export default function App() {
   const gpsStatus = useGpsPreflightStatus()
+  // MAP view (HomePage) stays mounted — just hidden — while CURRENT landmark (/play) is showing,
+  // so toggling back is instant: no new Google Map, no re-adding every marker. Rendered outside
+  // <Routes> for that reason (a route element always unmounts when its path stops matching).
+  // Any other page (instructions, certificate, start) unmounts it as before.
+  const { pathname } = useLocation()
+  const onHome = pathname === '/home'
+  const keepHome = (onHome || pathname === '/play') && getSession()
 
   return (
     <CoachProvider>
@@ -35,11 +42,17 @@ export default function App() {
       ) : (
         <NarrationPlayerProvider>
           <GameClockProvider>
+          {keepHome && (
+            <div style={{ display: onHome ? 'contents' : 'none' }}>
+              <HomePage active={onHome} />
+            </div>
+          )}
           <Routes>
             <Route path="/" element={<StartPage />} />
             <Route path="/welcome" element={<RequireSession><WelcomePage /></RequireSession>} />
             <Route path="/instructions" element={<RequireSession><InstructionsPage /></RequireSession>} />
-            <Route path="/home" element={<RequireSession><HomePage /></RequireSession>} />
+            {/* Rendered above (kept-alive layer) — this route only keeps the session redirect. */}
+            <Route path="/home" element={<RequireSession>{null}</RequireSession>} />
             <Route path="/play" element={<RequireSession><PlayPage /></RequireSession>} />
             <Route path="/certificate" element={<RequireSession><CertificatePage /></RequireSession>} />
           </Routes>

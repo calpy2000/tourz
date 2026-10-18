@@ -70,6 +70,7 @@ export function NarrationPlayerProvider({ children }) {
   const [duration, setDuration] = useState(0)
   const [playbackRate, setPlaybackRate] = useState(1)
   const [bonusToast, setBonusToast] = useState(null) // { playerName } | null
+  const [dragFrac, setDragFrac] = useState(null) // progress-bar drag in progress: 0..1, else null
 
   // "Fully listened, not skipped" bonus tracking (see project_poi_narration_feature memory for
   // the coverage-based design this implements). coveredSecondsRef accumulates which integer
@@ -83,6 +84,9 @@ export function NarrationPlayerProvider({ children }) {
   const reportedRef = useRef(false)
   const lastBonusIdRef = useRef(undefined) // undefined = haven't polled yet (don't toast on first load)
   const toastTimeoutRef = useRef(null)
+  // Auto-close a few seconds after the track ends, unless the player rewinds/replays first —
+  // any 'play' or 'seeking' on the audio element (play button, ±10 skip, seek bar) cancels it.
+  const autoCloseTimeoutRef = useRef(null)
 
   async function pollLatestBonus() {
     try {
@@ -131,10 +135,13 @@ export function NarrationPlayerProvider({ children }) {
       lastTimeRef.current = t
     }
     const onLoaded = () => setDuration(audio.duration)
-    const onPlay = () => setIsPlaying(true)
+    const cancelAutoClose = () => clearTimeout(autoCloseTimeoutRef.current)
+    const onPlay = () => { cancelAutoClose(); setIsPlaying(true) }
     const onPause = () => setIsPlaying(false)
     const onEnded = () => {
       setIsPlaying(false)
+      cancelAutoClose()
+      autoCloseTimeoutRef.current = setTimeout(close, 3000)
       if (reportedRef.current) return
       const totalSeconds = Math.ceil(audio.duration || 0)
       const coverage = totalSeconds > 0 ? coveredSecondsRef.current.size / totalSeconds : 0
@@ -154,7 +161,9 @@ export function NarrationPlayerProvider({ children }) {
     audio.addEventListener('play', onPlay)
     audio.addEventListener('pause', onPause)
     audio.addEventListener('ended', onEnded)
+    audio.addEventListener('seeking', cancelAutoClose)
     return () => {
+      audio.removeEventListener('seeking', cancelAutoClose)
       audio.removeEventListener('timeupdate', onTime)
       audio.removeEventListener('loadedmetadata', onLoaded)
       audio.removeEventListener('play', onPlay)
@@ -198,6 +207,7 @@ export function NarrationPlayerProvider({ children }) {
   function minimize() { setPlayerState('mini') }
   function expand() { setPlayerState('expanded') }
   function close() {
+    clearTimeout(autoCloseTimeoutRef.current)
     const audio = audioRef.current
     audio.pause()
     audio.currentTime = 0
@@ -207,6 +217,11 @@ export function NarrationPlayerProvider({ children }) {
 
   const value = { track, playerState, isPlaying, currentTime, duration, playbackRate, open, togglePlay, skip, seekToFraction, setSpeed, minimize, expand, close }
   const frac = duration ? currentTime / duration : 0
+  const shownFrac = dragFrac !== null ? dragFrac : frac
+  function fracFromPointer(e) {
+    const rect = e.currentTarget.getBoundingClientRect()
+    return Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
+  }
 
   return (
     <NarrationPlayerContext.Provider value={value}>
@@ -233,16 +248,29 @@ export function NarrationPlayerProvider({ children }) {
                 </button>
               </div>
               <div className="narration-time-row">
-                <span className="narration-time">{fmt(currentTime)}</span>
+                <span className="narration-time">{fmt(dragFrac !== null ? dragFrac * duration : currentTime)}</span>
+                {/* Tap or drag. Pointer capture keeps the drag tracking even if the finger slides
+                    off the thin bar, and CSS touch-action:none stops the browser treating a
+                    sideways drag as its own swipe-back/forward gesture. While dragging only the
+                    thumb moves (dragFrac); the actual seek happens once, on release. */}
                 <div
                   className="narration-progress"
-                  onClick={(e) => {
-                    const rect = e.currentTarget.getBoundingClientRect()
-                    seekToFraction((e.clientX - rect.left) / rect.width)
+                  onPointerDown={(e) => {
+                    e.currentTarget.setPointerCapture(e.pointerId)
+                    setDragFrac(fracFromPointer(e))
                   }}
+                  onPointerMove={(e) => {
+                    if (dragFrac !== null) setDragFrac(fracFromPointer(e))
+                  }}
+                  onPointerUp={(e) => {
+                    if (dragFrac === null) return
+                    seekToFraction(fracFromPointer(e))
+                    setDragFrac(null)
+                  }}
+                  onPointerCancel={() => setDragFrac(null)}
                 >
-                  <div className="narration-progress-fill" style={{ width: `${frac * 100}%` }} />
-                  <div className="narration-progress-thumb" style={{ left: `${frac * 100}%` }} />
+                  <div className="narration-progress-fill" style={{ width: `${shownFrac * 100}%` }} />
+                  <div className="narration-progress-thumb" style={{ left: `${shownFrac * 100}%` }} />
                 </div>
                 <span className="narration-time">{fmt(duration)}</span>
               </div>

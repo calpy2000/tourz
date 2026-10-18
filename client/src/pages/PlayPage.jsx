@@ -14,6 +14,7 @@ import TourCompletePopup from '../components/TourCompletePopup.jsx'
 import LoadingScreen from '../components/LoadingScreen.jsx'
 import { rectFromEvent } from '../rect.js'
 import { isStartLandmark, landmarkDisplayNumber } from '../landmarkNumber.js'
+import { getLastFetched, setLastFetched } from '../lastFetched.js'
 import { getSession, saveSession } from '../localSession.js'
 import { DEV_MODE } from '../devMode.js'
 import { useRefreshOnResume } from '../useRefreshOnResume.js'
@@ -100,7 +101,8 @@ export default function PlayPage() {
   // GameHeader's found/score pills — /api/game/current (polled below) never carries this, only
   // /api/game/home does, so it's fetched here independently, same as HomePage/InstructionsPage.
   // (The clock pill reads the shared tour clock itself — see gameClock.jsx.)
-  const [headerData, setHeaderData] = useState(null)
+  // Seeded from the same cached /api/game/home response HomePage uses (see lastFetched.js).
+  const [headerData, setHeaderData] = useState(() => getLastFetched('home'))
   // Only the captain's device ever calls the hint/reveal/puzzle/quiz endpoints (server-gated —
   // see resolveCaptain in index.js), so on a non-captain device any change here between polls is
   // by definition the captain's doing, never our own action bouncing back.
@@ -128,6 +130,8 @@ export default function PlayPage() {
     const id = setInterval(refresh, 4000)
     return () => clearInterval(id)
   }, [])
+
+  useEffect(() => { setLastFetched('home', headerData) }, [headerData])
 
   useRefreshOnResume(() => { refresh(); loadHeaderData() })
   useWakeLock()
@@ -172,8 +176,12 @@ export default function PlayPage() {
     if (session && session.isCaptain !== state.isCaptain) saveSession({ ...session, isCaptain: state.isCaptain })
   }, [state])
 
+  // Also runs on first load (sequenceOrder null -> N): arriving at a landmark whose puzzle is
+  // already solved (e.g. back via the CURRENT landmark toggle) skips straight to the quiz instead
+  // of re-showing the solved puzzle + its "Take the quiz" popup. Solving it while on this page
+  // doesn't change sequenceOrder, so that still shows the popup as before.
   useEffect(() => {
-    setShowQuiz(false)
+    setShowQuiz(Boolean(state?.puzzle?.solved))
     setSelectedOptions({})
     setFiveRightPicks({})
     setWhyPopup(null)

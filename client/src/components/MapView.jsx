@@ -1,12 +1,13 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { APIProvider, Map, AdvancedMarker, Polyline, useMap, useMapsLibrary } from '@vis.gl/react-google-maps'
+import { APIProvider, Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps'
 import { api } from '../api.js'
 import { API_BASE } from '../apiBase.js'
 import { useGeolocation } from '../useGeolocation.js'
 import { saveGpsCorrection } from '../gpsCorrections.js'
 import DetailPopup from './DetailPopup.jsx'
 import { isStartLandmark, landmarkDisplayNumber } from '../landmarkNumber.js'
+import { getLastFetched, setLastFetched } from '../lastFetched.js'
 
 // Used only if the team has no solved landmarks yet (map needs some center before the first find).
 const FALLBACK_CENTER = { lat: 55.9535, lng: -3.197 }
@@ -17,10 +18,6 @@ const FALLBACK_CENTER = { lat: 55.9535, lng: -3.197 }
 // player left it. Resets on a full page reload, which is fine — this is "remember within this
 // visit," not something that needs to survive that.
 let lastCamera = null // { center: {lat,lng}, zoom }
-
-// Google Maps polylines have no native "dashed" stroke — the standard technique is a solid
-// line with strokeOpacity 0, plus a short line symbol repeated along the path instead.
-const DASH_ICON = { icon: { path: 'M 0,-1 0,1', strokeOpacity: 1, scale: 3 }, offset: '0', repeat: '12px' }
 
 // Fixed N/E/S/W reference, not a live heading — the map never rotates (no heading/tilt
 // interaction is enabled), so north is always straight up and this never needs to move.
@@ -39,6 +36,25 @@ function MapCompass() {
         <text x="32" y="55" fontSize="12" fill="var(--umber)" style={COMPASS_LETTER}>S</text>
         <text x="9" y="32" fontSize="12" fill="var(--umber)" style={COMPASS_LETTER}>W</text>
       </svg>
+    </div>
+  )
+}
+
+// Live distance scale, like Google Maps' own — that built-in control can't be moved or styled
+// (it'd sit tiny beside the bottom attribution), so this recomputes one from zoom + latitude.
+// Web Mercator: metres per screen pixel = 156543.03 × cos(lat) / 2^zoom. The label snaps to a
+// round 1/2/5 × 10ⁿ distance and the bar takes whatever width that works out to, ≤ max.
+const SCALE_BAR_MAX_PX = 280
+function MapScaleBar({ zoom, lat }) {
+  const metresPerPx = 156543.03392 * Math.cos(lat * Math.PI / 180) / Math.pow(2, zoom)
+  const maxMetres = metresPerPx * SCALE_BAR_MAX_PX
+  const pow = Math.pow(10, Math.floor(Math.log10(maxMetres)))
+  const lead = maxMetres / pow
+  const metres = (lead >= 5 ? 5 : lead >= 2 ? 2 : 1) * pow
+  return (
+    <div className="map-scale" aria-hidden="true">
+      <div className="map-scale-label">{metres >= 1000 ? `${metres / 1000} km` : `${metres} m`}</div>
+      <div className="map-scale-bar" style={{ width: `${metres / metresPerPx}px` }} />
     </div>
   )
 }
@@ -91,33 +107,6 @@ function FitBounds({ bounds }) {
   return null
 }
 
-// Real walking-route polyline between solved landmarks, one leg at a time (server sends one
-// encoded polyline per consecutive pair — see /api/game/route). Falls back to the straight
-// "as the crow flies" line while the route is still loading, or if it fails to load at all, so
-// there's always some path shown rather than nothing.
-function WalkingPath({ legs, fallbackPath }) {
-  const geometry = useMapsLibrary('geometry')
-
-  if (legs && legs.length > 0 && geometry) {
-    return legs.map((encoded, i) => (
-      <Polyline
-        key={i}
-        path={geometry.encoding.decodePath(encoded)}
-        strokeColor="#b8823a"
-        strokeOpacity={0}
-        strokeWeight={3}
-        icons={[DASH_ICON]}
-      />
-    ))
-  }
-
-  if (fallbackPath.length > 1) {
-    return <Polyline path={fallbackPath} strokeColor="#b8823a" strokeOpacity={0} strokeWeight={3} icons={[DASH_ICON]} />
-  }
-
-  return null
-}
-
 function StarIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -144,10 +133,13 @@ const SITE_TYPE_LABELS = {
   recurring_feature: 'Recurring feature',
 }
 
-export default function MapView() {
+// `active` is false while HomePage is kept mounted but hidden behind CURRENT landmark (see
+// App.jsx) — the map and its markers stay built so switching back is instant, but GPS pauses.
+export default function MapView({ active = true }) {
   const navigate = useNavigate()
-  const [mapData, setMapData] = useState(null)
-  const [routeLegs, setRouteLegs] = useState(null)
+  // Seeded from the last response (see lastFetched.js) so returning to MAP view draws the
+  // markers straight away instead of "Loading map…"; the mount effect below still refetches.
+  const [mapData, setMapData] = useState(() => getLastFetched('map'))
   // Set by DetailPopup's "Set GPS" button (Interests/sites) — identifies the one marker currently
   // draggable on the map, compared by id (sitePopup is a separately-fetched object, never the
   // same reference as its entry in mapData.sites). Cleared on drop or Cancel.
@@ -159,7 +151,9 @@ export default function MapView() {
   // lastCamera so a returning player doesn't get a one-frame flash of the wrong marker style
   // before the first onCameraChanged fires.
   const [zoom, setZoom] = useState(lastCamera?.zoom ?? null)
-  const { location: liveLocation, error: gpsError, reacquiring, stalled } = useGeolocation()
+  // Scale bar needs the camera's latitude too (metres-per-pixel shrinks away from the equator).
+  const [cameraLat, setCameraLat] = useState(lastCamera?.center.lat ?? null)
+  const { location: liveLocation, error: gpsError, reacquiring, stalled } = useGeolocation(active)
   const [gpsHelpDismissed, setGpsHelpDismissed] = useState(false)
 
   function openLandmark(sequenceOrder) {
@@ -194,15 +188,25 @@ export default function MapView() {
 
   useEffect(() => {
     api.getMap().then(setMapData)
-    api.getRoute().then((res) => setRouteLegs(res.legs || []))
   }, [])
+
+  // Shown again after being kept hidden — refetch so anything solved/revealed meanwhile appears.
+  const wasActiveRef = useRef(active)
+  useEffect(() => {
+    if (active && !wasActiveRef.current) api.getMap().then(setMapData)
+    wasActiveRef.current = active
+  }, [active])
+
+  // Follows every change, including the optimistic Set GPS drag move above, so the cached copy
+  // never snaps a just-corrected pin back to its old spot on the next visit.
+  useEffect(() => { setLastFetched('map', mapData) }, [mapData])
 
   if (!mapData) return <div className="map-shell"><div className="stub-view">Loading map&hellip;</div></div>
 
   const { solvedLandmarks, sites, currentRevealed } = mapData
   // The revealed-but-in-progress landmark (puzzle solved, quiz pending) counts as "known" for
-  // every map-display purpose below — the walking path and the initial camera fit both treat it
-  // the same as a fully solved landmark. The only thing it deliberately doesn't do is get its own
+  // every map-display purpose below — the initial camera fit treats it the same as a fully
+  // solved landmark. The only thing it deliberately doesn't do is get its own
   // separate marker treatment or affect scoring (see currentRevealed's own marker further down,
   // and the server's currentRevealedLandmark helper).
   const knownLandmarks = currentRevealed ? [...solvedLandmarks, currentRevealed] : solvedLandmarks
@@ -230,18 +234,22 @@ export default function MapView() {
         <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
           <Map
             mapId={import.meta.env.VITE_GOOGLE_MAPS_MAP_ID}
+            // Keeps the google.maps.Map instance (and its already-drawn tiles) in a pool when
+            // MapView unmounts and hands it back on the next mount, instead of building a fresh
+            // map every MAP <-> CURRENT toggle — a new map with a mapId takes ~1s before any
+            // AdvancedMarker can attach, which is the delay this removes.
+            reuseMaps
             defaultCenter={initialCenter}
             defaultZoom={initialZoom}
             disableDefaultUI
             gestureHandling="greedy"
-            onCameraChanged={(e) => { lastCamera = { center: e.detail.center, zoom: e.detail.zoom }; setZoom(e.detail.zoom) }}
+            onCameraChanged={(e) => { lastCamera = { center: e.detail.center, zoom: e.detail.zoom }; setZoom(e.detail.zoom); setCameraLat(e.detail.center.lat) }}
           >
             {/* Only auto-fit the very first time this session — once lastCamera exists, the
                 defaultCenter/defaultZoom above already restore exactly where the player left off,
                 and re-fitting would override that with the generic "show everything" view again. */}
             {shouldFitBounds && <FitBounds bounds={bounds} />}
 
-            <WalkingPath legs={routeLegs} fallbackPath={pathCoords} />
             {/* Solved landmarks — never the current/future one, mapData already excludes it.
                 zIndex explicit and deliberately huge: at least one POI (Frederick Street
                 Castle View) shares exact coordinates with a landmark by design ("same corner"
@@ -331,6 +339,7 @@ export default function MapView() {
         </APIProvider>
 
         <MapCompass />
+        <MapScaleBar zoom={zoom ?? initialZoom} lat={cameraLat ?? initialCenter.lat} />
 
         {!liveLocation && (gpsError === 'denied' || stalled) && !gpsHelpDismissed && (
           <div className="gps-help-banner">

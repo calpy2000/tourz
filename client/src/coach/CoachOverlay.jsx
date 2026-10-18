@@ -20,7 +20,9 @@ function StartLandmarkMarkerVisual() {
 
 function findTargetEls(coachId) {
   if (!coachId || coachId === '__anywhere__') return []
-  return Array.from(document.querySelectorAll(`[data-coach-id="${coachId}"]`))
+  // Skip anything not rendered (no client rects = display:none somewhere above it) — e.g. the
+  // kept-alive but hidden MAP view while CURRENT landmark is showing (see App.jsx).
+  return Array.from(document.querySelectorAll(`[data-coach-id="${coachId}"]`)).filter((el) => el.getClientRects().length > 0)
 }
 
 function rectsOverlap(a, b, margin = 0) {
