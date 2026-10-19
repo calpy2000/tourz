@@ -14,7 +14,10 @@ function tourzServiceWorker() {
     name: 'tourz-service-worker',
     apply: 'build',
     generateBundle(_, bundle) {
-      const publicFiles = fs.readdirSync(path.join(here, 'public')).map((f) => `/${f}`)
+      // Top-level files only: public/map/ (the OSM map files, a few MB per tour) is saved per tour
+      // by offline/contentCache.js instead, and a folder name isn't a fetchable file anyway.
+      const publicFiles = fs.readdirSync(path.join(here, 'public'), { withFileTypes: true })
+        .filter((d) => d.isFile()).map((d) => `/${d.name}`)
       const built = Object.keys(bundle).filter((f) => !f.endsWith('.map')).map((f) => `/${f}`)
       const shell = [...new Set(['/', ...built, ...publicFiles])]
       const source = fs.readFileSync(path.join(here, 'sw-template.js'), 'utf8')

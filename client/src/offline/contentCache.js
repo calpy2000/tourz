@@ -3,14 +3,17 @@ import { api } from '../api.js'
 import { API_BASE } from '../apiBase.js'
 import { isOnline, onReconnect } from '../net/connection.js'
 import { idbGet, idbSet } from './idb.js'
+import { mapAssetUrls } from '../map/mapFiles.js'
 
 // Saves the tour onto the phone for offline use, while there's signal (normally during the
 // instructions at the start):
 //   1. the tour pack — every POI's full card (GET /api/game/tour-pack), kept in IndexedDB;
-//   2. every photo and narration MP3 those cards and the landmarks this phone holds refer to, kept
-//      in Cache Storage ('tourz-content-v1'), which the service worker (sw-template.js) serves
-//      them from when they're requested with no signal.
-// Order: landmark files first (the ones needed next), then POI photos, then POI audio (biggest).
+//   2. every photo and narration MP3 those cards and the landmarks this phone holds refer to, plus
+//      the tour's OSM map file, fonts and icons (map/mapFiles.js), kept in Cache Storage
+//      ('tourz-content-v1'), which the service worker (sw-template.js) serves them from when
+//      they're requested with no signal.
+// Order: landmark files first (the ones needed next), then the map, then POI photos, then POI
+// audio (biggest).
 // Already-saved files are skipped, so this is cheap to re-run — it runs again whenever the phone
 // gets new landmarks (the rolling look-ahead) and whenever signal returns.
 
@@ -82,6 +85,7 @@ export function assetUrlsFor(state, tourPack) {
       }
       if (l.detail?.audioPath) urls.push(contentUrl('audio', l.detail.audioPath))
     }
+    if (state.tour?.tourCode) urls.push(...mapAssetUrls(state.tour.tourCode))
   }
   if (tourPack) {
     for (const s of tourPack.sites) if (s.imagePath) urls.push(contentUrl('photos', s.imagePath))

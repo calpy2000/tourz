@@ -5,8 +5,9 @@
    - The app itself (HTML/JS/CSS/fonts/icons) is saved at install and served from the phone.
      Page loads try the network first for up to 3s (so a new deploy shows up straight away with
      signal), then fall back to the saved copy.
-   - Tour photos and narration (/content-photos/, /content-audio/, on the API server's origin) are
-     served from the 'tourz-content-v1' cache that offline/contentCache.js fills in the background.
+   - Tour photos and narration (/content-photos/, /content-audio/, on the API server's origin) and
+     the OSM map's files (/map/ on this origin: the tour's .pmtiles, fonts, icons) are served from
+     the 'tourz-content-v1' cache that offline/contentCache.js fills in the background.
      Narration needs HTTP Range support (audio elements ask for byte ranges), done here by slicing
      the saved file.
    - API calls are never touched — the app handles offline itself (offline/gameStore.js).
@@ -120,7 +121,7 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return
   const url = new URL(request.url)
   if (url.pathname.startsWith('/api/')) return
-  if (/\/content-(photos|audio)\//.test(url.pathname)) {
+  if (/\/content-(photos|audio)\//.test(url.pathname) || (url.origin === self.location.origin && url.pathname.startsWith('/map/'))) {
     event.respondWith(contentResponse(request))
     return
   }

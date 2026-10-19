@@ -1262,6 +1262,12 @@ button.primary.quiz-submit {
   overflow: hidden;
 }
 
+/* OSM map engine's MapLibre container — fills .map-container like Google's map does. */
+.osm-map {
+  width: 100%;
+  height: 100%;
+}
+
 /* Fixed north-up compass (MapView's MapCompass). Frosted so it hides as little map as possible;
    z-index below the GPS banners (6) so a banner always reads on top of it. */
 .map-compass {
@@ -1422,6 +1428,43 @@ button.primary.quiz-submit {
 
 .map-dot-site.map-dot-site-nophoto {
   background: #22c55e;
+}
+
+/* Dev-only OSM review status: pin count per colour (or why review isn't showing). */
+.osm-review-chip {
+  position: absolute;
+  top: 64px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  display: flex;
+  gap: 10px;
+  max-width: calc(100% - 120px);
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: rgba(255, 253, 248, 0.92);
+  box-shadow: 0 1px 4px rgba(35, 32, 27, 0.25);
+  font-size: 0.78rem;
+  font-weight: 700;
+  pointer-events: none;
+}
+.osm-review-chip span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.osm-review-chip i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+/* Dev-only tester line in DetailPopup (e.g. the OSM review result for this pin). */
+.detail-popup-devnote {
+  font-size: 0.8rem;
+  color: #4169e1;
+  border-top: 1px dashed currentColor;
+  padding-top: 6px;
 }
 
 .poi-popup-address {

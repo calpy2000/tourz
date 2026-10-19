@@ -8,7 +8,8 @@
 //      the phone's saved copy, the puzzle, whole quiz and "next landmark" all work instantly
 //   3. true no-signal: both servers stopped, page reloaded — the app itself opens from the
 //      service worker, the next landmark is playable, saved photos and narration (with Range
-//      requests) are served from the phone
+//      requests) are served from the phone; Map view draws the real OSM map from the phone's saved
+//      map file (and, switched to the Google map, falls back to the nearby list)
 //   4. back in signal: servers restarted — the queue drains, the server's state matches the
 //      phone's, every action applied exactly once
 //   5. a teammate's phone (a throwaway "ZZ E2E Test Member" player) sees the captain's progress
@@ -205,7 +206,8 @@ try {
 
   const profile = path.join(OUT, 'chrome-profile')
   fs.rmSync(profile, { recursive: true, force: true })
-  chrome = spawn(CHROME, ['--headless=new', '--disable-gpu', `--remote-debugging-port=${CDP_PORT}`, `--user-data-dir=${profile}`, '--no-first-run', 'about:blank'], { stdio: 'ignore' })
+  // Software WebGL, so the OSM map (MapLibre) can draw in headless Chrome.
+  chrome = spawn(CHROME, ['--headless=new', '--enable-unsafe-swiftshader', '--use-angle=swiftshader', `--remote-debugging-port=${CDP_PORT}`, `--user-data-dir=${profile}`, '--no-first-run', 'about:blank'], { stdio: 'ignore' })
   let version
   for (let i = 0; i < 50 && !version; i++) {
     try { version = await (await fetch(`http://localhost:${CDP_PORT}/json/version`)).json() } catch { await sleep(200) }
@@ -236,6 +238,16 @@ try {
     if (s.imagePath) expected.add(`/content-photos/${s.imagePath}`)
     if (s.audioPath) expected.add(`/content-audio/${s.audioPath}`)
   }
+  // The tour's OSM map file, plus the fonts and icons it draws with (see client/src/map/mapFiles.js).
+  const mapAssets = JSON.parse(fs.readFileSync(path.join(root, 'client/src/map/mapAssets.json'), 'utf8'))
+  const tourMap = mapAssets.tours[serverState.tour.tourCode]
+  record('this tour has a built OSM map', Boolean(tourMap), serverState.tour.tourCode)
+  if (tourMap) {
+    expected.add(tourMap.file)
+    const ranges = new Set(tourMap.glyphRanges.map((r) => `/${r}-${r + 255}.pbf`))
+    for (const g of mapAssets.glyphs) if (ranges.has(g.slice(g.lastIndexOf('/')))) expected.add(g)
+    for (const sp of mapAssets.sprites) expected.add(sp)
+  }
   const expectedList = JSON.stringify([...expected])
   const t0 = Date.now()
   const missingJs = `caches.open('tourz-content-v1').then((c) => c.keys()).then((keys) => {
@@ -248,7 +260,7 @@ try {
     if (!missing.length) break
     await sleep(500)
   }
-  record('background save: EVERY landmark + POI photo and narration on the phone', missing.length === 0,
+  record('background save: EVERY landmark + POI photo and narration, and the OSM map, on the phone', missing.length === 0,
     `${expected.size - missing.length}/${expected.size} files in ${Math.round((Date.now() - t0) / 1000)}s${missing.length ? `; missing e.g. ${missing.slice(0, 3).join(', ')}` : ''}`)
   const pillDone = await page.eval(`document.body.innerText.includes('Tour saved for offline use') || !document.body.innerText.includes('Saving tour')`)
   record('background save: progress pill finished', pillDone)
@@ -351,11 +363,15 @@ try {
   await page.screenshot('3-offline-reload')
 
   const pack = await apiFetchPackFromPhone(page)
-  const site = pack.sites.find((s) => s.imagePath && s.audioPath)
+  // Prefer a POI with both a photo and narration; a tour with no narration yet (local Edinburgh)
+  // skips the Range check.
+  const site = pack.sites.find((s) => s.imagePath && s.audioPath) || pack.sites.find((s) => s.imagePath)
   const photo = await page.eval(`fetch('/content-photos/${site.imagePath}').then((r) => r.blob()).then((b) => b.size).catch((e) => 'ERR ' + e)`)
   record('no signal: a POI photo is served from the phone', typeof photo === 'number' && photo > 1000, `${photo} bytes`)
-  const audio = await page.eval(`fetch('/content-audio/${site.audioPath}', { headers: { Range: 'bytes=0-1023' } }).then((r) => r.status + ' ' + r.headers.get('content-range')).catch((e) => 'ERR ' + e)`)
-  record('no signal: narration Range request answered from the phone (206)', String(audio).startsWith('206 bytes 0-1023/'), audio)
+  if (site.audioPath) {
+    const audio = await page.eval(`fetch('/content-audio/${site.audioPath}', { headers: { Range: 'bytes=0-1023' } }).then((r) => r.status + ' ' + r.headers.get('content-range')).catch((e) => 'ERR ' + e)`)
+    record('no signal: narration Range request answered from the phone (206)', String(audio).startsWith('206 bytes 0-1023/'), audio)
+  } else console.log('SKIP  no signal: narration Range request — this tour has no narration files')
   record('no signal: every POI card is on the phone', pack.sites.length >= 100 && pack.sites.every((s) => s.aboutSiteText !== undefined), `${pack.sites.length} cards`)
 
   await page.click('Get a hint')
@@ -363,8 +379,54 @@ try {
   await page.waitText('Hint 1:', 3000)
   record('no signal: hint on the new landmark', true)
 
-  // Map view with no map: the nearby list stands in, and its cards open from the phone.
+  // Map view with no signal: the real OSM map, drawn from the map file saved on the phone.
   await page.click('MAP')
+  await page.waitFor(`document.querySelector('.osm-map canvas') && document.querySelectorAll('.osm-map .maplibregl-marker').length > 0`, 20000, 'OSM map with markers')
+  await sleep(3000) // let the tiles draw
+  const osm = await page.eval(`({
+    markers: document.querySelectorAll('.osm-map .maplibregl-marker').length,
+    nearby: document.querySelectorAll('.nearby-item').length,
+    attribution: document.querySelector('.maplibregl-ctrl-attrib-inner')?.textContent || '',
+  })`)
+  record('no signal: map view shows the real OSM map with every marker', osm.nearby === 0 && osm.markers >= pack.sites.length + 2,
+    `${osm.markers} markers for ${pack.sites.length} POIs + landmarks + you-are-here`)
+  record('no signal: OSM attribution shown', osm.attribution.includes('OpenStreetMap'), osm.attribution)
+  await page.screenshot('3a-osm-map-offline')
+  // The map really drew (not just an empty canvas): count pixels of the buildings' fill colour.
+  const { default: sharp } = await import('sharp')
+  const { data: px } = await sharp(path.join(OUT, '3a-osm-map-offline.png')).raw().toBuffer({ resolveWithObject: true })
+  let buildingPx = 0
+  for (let i = 0; i < px.length; i += 3) if (px[i] === 0xde && px[i + 1] === 0xde && px[i + 2] === 0xde) buildingPx++
+  record('no signal: OSM map tiles drawn from the phone (buildings visible)', buildingPx > 2000, `${buildingPx} building-fill pixels`)
+
+  // A real tap (coordinates, not element.click()) on a POI marker that's actually on top at its
+  // own centre — the Google map once shipped markers that looked fine but swallowed taps.
+  const tap = await page.eval(`(() => {
+    const vw = innerWidth, vh = innerHeight
+    for (const m of document.querySelectorAll('.osm-map .maplibregl-marker')) {
+      if (!m.querySelector('.map-dot-site, .map-pin-site')) continue
+      const r = m.getBoundingClientRect()
+      const x = r.left + r.width / 2, y = r.top + r.height / 2
+      if (x < 40 || y < 120 || x > vw - 40 || y > vh - 120) continue
+      if (m.contains(document.elementFromPoint(x, y))) return { x: Math.round(x), y: Math.round(y) }
+    }
+    return null
+  })()`)
+  record('no signal: a POI marker is tappable on the OSM map', Boolean(tap), JSON.stringify(tap))
+  if (tap) {
+    for (const type of ['mousePressed', 'mouseReleased']) await page.send('Input.dispatchMouseEvent', { type, x: tap.x, y: tap.y, button: 'left', clickCount: 1 })
+    await page.waitFor(`document.querySelector('.detail-popup')`, 5000, 'POI card from map marker')
+    record('no signal: tapping an OSM map marker opens its card', true)
+    await page.click('back')
+  }
+
+  // Switched to the Google map (Dev menu), with no signal its script can't load — the nearby list
+  // stands in, and its cards open from the phone.
+  await page.eval(`localStorage.setItem('tourz.mapProvider', 'google')`)
+  await page.send('Page.reload', {})
+  await sleep(500)
+  await page.waitFor(`[...document.querySelectorAll('button')].some((b) => b.offsetParent !== null && b.innerText.includes('MAP'))`, 15000, 'MAP switch after reload')
+  if (!(await page.eval(`document.querySelectorAll('.nearby-item').length`))) await page.click('MAP')
   await page.waitFor(`document.querySelectorAll('.nearby-item').length > 0`, 20000, 'nearby list')
   // Distances join once the GPS fix arrives (the list re-sorts nearest-first then).
   await page.waitFor(`document.querySelectorAll('.nearby-item-distance').length > 0`, 10000, 'nearby distances').catch(() => {})
@@ -372,7 +434,7 @@ try {
     const items = [...document.querySelectorAll('.nearby-item')]
     return { count: items.length, first: items[0].innerText.replace(/\\n/g, ' · '), withDistance: items.filter((i) => i.querySelector('.nearby-item-distance')).length }
   })()`)
-  record('no signal: map view shows the nearby list instead of a dead map', nearby.count >= pack.sites.length,
+  record('no signal, Google map: map view shows the nearby list instead of a dead map', nearby.count >= pack.sites.length,
     `${nearby.count} entries, ${nearby.withDistance} with distances; nearest: ${nearby.first}`)
   await page.screenshot('3b-nearby-list')
   await page.eval(`[...document.querySelectorAll('.nearby-item')].find((b) => !b.innerText.includes('Landmark')).click()`)
@@ -381,6 +443,7 @@ try {
   record('no signal: tapping a nearby POI opens its card (photo + Listen here)', Boolean(card.title) && card.listen && card.img !== false, JSON.stringify(card))
   await page.screenshot('3c-poi-card-offline')
   await page.click('back')
+  await page.eval(`localStorage.removeItem('tourz.mapProvider')`)
   await page.click('CURRENT')
   await page.send('Network.setBlockedURLs', { urls: [] })
 

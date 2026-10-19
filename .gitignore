@@ -32,3 +32,6 @@ backups/
 
 # One-off crisis-recovery scripts/tools/data, local-only reference — see its own README
 archive/
+
+# Map build downloads (pmtiles CLI, font ranges) — scripts/maps/build-map-assets.mjs
+scripts/maps/.cache/

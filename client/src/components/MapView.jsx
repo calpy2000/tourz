@@ -1,10 +1,12 @@
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef, lazy, Suspense } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { APIProvider, Map, AdvancedMarker, useMap, useApiLoadingStatus, APILoadingStatus } from '@vis.gl/react-google-maps'
+import GoogleMapEngine from './map/GoogleMapEngine.jsx'
 import { api } from '../api.js'
 import { API_BASE } from '../apiBase.js'
 import { useGeolocation } from '../useGeolocation.js'
-import { saveGpsCorrection } from '../gpsCorrections.js'
+import { saveGpsCorrection, loadGpsCorrections } from '../gpsCorrections.js'
+import { DEV_MODE } from '../devMode.js'
+import { useOsmReview, useOsmReviewData, seedPresetVerdicts, REVIEW_COLORS } from '../map/osmReview.js'
 import DetailPopup from './DetailPopup.jsx'
 import NearbyList from './NearbyList.jsx'
 import { isStartLandmark, landmarkDisplayNumber } from '../landmarkNumber.js'
@@ -13,16 +15,12 @@ import { useGameStore } from '../offline/gameStore.js'
 import { mapLandmarksView, landmarkDetailView } from '../offline/engine.js'
 import { useContentCache, siteDetailFromPack } from '../offline/contentCache.js'
 import { useConnection } from '../net/connection.js'
+import { useMapProvider } from '../map/mapProvider.js'
 
-// Google's map script is the one part of Map view that can't work with no signal (Google's terms
-// forbid saving its map for offline use). Reports when it fails to load — opening the app in a dead
-// spot — so MapView can show the NearbyList of cards instead of an empty box. Renders nothing.
-function MapLoadStatus({ onFailedChange }) {
-  const status = useApiLoadingStatus()
-  const failed = status === APILoadingStatus.FAILED || status === APILoadingStatus.AUTH_FAILURE
-  useEffect(() => { onFailedChange(failed) }, [failed, onFailedChange])
-  return null
-}
+// Two map engines draw the same markers: OSM (default — self-hosted OpenStreetMap, works with no
+// signal) and Google (the original, behind the Dev menu until OSM is proven; then removed). Both
+// take the same props, in Google zoom units. MapLibre is large, so the OSM engine is its own chunk.
+const OsmMapEngine = lazy(() => import('./map/OsmMapEngine.jsx'))
 
 // Used only if the team has no solved landmarks yet (map needs some center before the first find).
 const FALLBACK_CENTER = { lat: 55.9535, lng: -3.197 }
@@ -83,6 +81,27 @@ function placeholderHereLocation(solvedLandmarks) {
   return { lat: last.latitude + 0.0015, lng: last.longitude + 0.001 }
 }
 
+// OSM review (dev only): the latest Set GPS fix saved on this device for each site / landmark.
+function latestGpsFixes() {
+  seedPresetVerdicts(loadGpsCorrections, saveGpsCorrection)
+  const out = { sites: {}, landmarks: {} }
+  for (const c of loadGpsCorrections()) {
+    const [lat, lng] = String(c.enteredGps || '').split(',').map((v) => Number(v.trim()))
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue
+    if (c.type === 'site') out.sites[c.id] = { lat, lng }
+    else if (c.type === 'landmark') out.landmarks[c.sequenceOrder] = { lat, lng }
+  }
+  return out
+}
+
+const REVIEW_LABELS = { blue: 'not found in OSM — left as is', green: 'same spot as OSM', amber: 'moved 1–2 m to OSM', red: 'moved over 2 m to OSM' }
+function reviewNote(entry, fixed) {
+  if (fixed) return 'OSM review: checked by hand (Set GPS or GPS OK)'
+  if (!entry) return null
+  if (entry.s === 'blue') return `OSM review: ${REVIEW_LABELS.blue}`
+  return `OSM review: ${REVIEW_LABELS[entry.s]}${entry.d ? ` · ${entry.d} m ${entry.dir}` : ''}${entry.osm ? ` · matched "${entry.osm}"` : ''} · ${entry.conf} confidence`
+}
+
 // Game start (only the pre-found start landmark solved) should open focused tight on it, not
 // zoomed out to fit a bounding box against the "here" placeholder point — tune this once real
 // zoom feedback comes in.
@@ -108,18 +127,6 @@ function boundsFor(points) {
   const lats = points.map((p) => p.lat)
   const lngs = points.map((p) => p.lng)
   return { north: Math.max(...lats), south: Math.min(...lats), east: Math.max(...lngs), west: Math.min(...lngs) }
-}
-
-// The Map component's `defaultBounds` prop fits once at mount, before the container has settled
-// into its final flex-layout size — it visibly over-zooms-out here as a result. Calling
-// map.fitBounds() directly via useMap() runs after the map instance (and its real size) exist,
-// which fits correctly. Renders nothing — it's a side-effect-only child of <Map>.
-function FitBounds({ bounds }) {
-  const map = useMap()
-  useEffect(() => {
-    if (map) map.fitBounds(bounds, 56)
-  }, [map, JSON.stringify(bounds)])
-  return null
 }
 
 function StarIcon() {
@@ -162,6 +169,8 @@ export default function MapView({ active = true }) {
   const [fallbackSites, setFallbackSites] = useState(() => getLastFetched('map')?.sites || null)
   // Set GPS drag (dev tool) moves a pin for the rest of the session — kept as an override here.
   const [movedSites, setMovedSites] = useState({})
+  // Same as movedSites, for landmarks dragged with Set GPS (dev) — keyed by sequenceOrder.
+  const [movedLandmarks, setMovedLandmarks] = useState({})
   const mapData = useMemo(() => {
     if (!game) return null
     const baseSites = pack?.sites || fallbackSites
@@ -169,10 +178,16 @@ export default function MapView({ active = true }) {
     const sites = baseSites.map((s) => (movedSites[s.id] ? { ...s, ...movedSites[s.id] } : s))
     return { ...mapLandmarksView(game), sites }
   }, [game, pack, fallbackSites, movedSites])
-  // Bumped on reconnect after a failed map-script load, to try loading Google's map again.
+  const mapProvider = useMapProvider()
+  // Dev-only OSM review colours (see map/osmReview.js) — OSM map only.
+  const osmReviewOn = useOsmReview()
+  const review = useOsmReviewData(game?.tour?.tourCode, DEV_MODE && osmReviewOn && mapProvider === 'osm')
+  // Bumped on reconnect after a failed map load, to try loading the map again.
   const [mapAttempt, setMapAttempt] = useState(0)
-  // Google's map couldn't load (no signal on open) — NearbyList stands in for it.
+  // The map couldn't load (Google: no signal on open; OSM: map file neither saved on the phone yet
+  // nor reachable) — NearbyList stands in for it.
   const [mapFailed, setMapFailed] = useState(false)
+  useEffect(() => { setMapFailed(false) }, [mapProvider])
   // Set by DetailPopup's "Set GPS" button (Interests/sites) — identifies the one marker currently
   // draggable on the map, compared by id (sitePopup is a separately-fetched object, never the
   // same reference as its entry in mapData.sites). Cleared on drop or Cancel.
@@ -209,18 +224,29 @@ export default function MapView({ active = true }) {
     setTimeout(() => setGpsDragSavedName(null), 1500)
   }
 
-  // Fires once, on drop. `event` is the raw google.maps 'dragend' MapMouseEvent — event.latLng is
-  // the only place the corrected position is observable (AdvancedMarkerElement doesn't sync its
-  // `position` prop while draggable). Saves the correction through the same pipeline the
-  // paste-text Set GPS flow uses, then optimistically moves the pin to where it was dropped so the
-  // map reflects the fix for the rest of this session, rather than snapping back to the old
-  // (wrong) position it would otherwise re-render at.
-  function handleSiteGpsDragEnd(site, event) {
-    const lat = event.latLng.lat()
-    const lng = event.latLng.lng()
+  // Fires once, on drop, with the dropped { lat, lng } (each engine reads it from its own drag
+  // event). Saves the correction through the same pipeline the paste-text Set GPS flow uses, then
+  // optimistically moves the pin to where it was dropped so the map reflects the fix for the rest
+  // of this session, rather than snapping back to the old (wrong) position it would otherwise
+  // re-render at.
+  function handleSiteGpsDragEnd(site, { lat, lng }) {
     saveGpsCorrection({ type: 'site', id: site.id, name: site.title, enteredGps: `${lat}, ${lng}`, capturedAt: new Date().toISOString() })
     setMovedSites((prev) => ({ ...prev, [site.id]: { latitude: lat, longitude: lng } }))
     finishGpsDrag(site.title)
+  }
+
+  function handleLandmarkGpsDragEnd(l, title, { lat, lng }) {
+    saveGpsCorrection({ type: 'landmark', sequenceOrder: l.sequenceOrder, name: title, enteredGps: `${lat}, ${lng}`, capturedAt: new Date().toISOString() })
+    setMovedLandmarks((prev) => ({ ...prev, [l.sequenceOrder]: { lat, lng } }))
+    finishGpsDrag(title)
+  }
+
+  // Dev "GPS OK": the pin is right where it's drawn now — saved like a Set GPS fix (so it's in the
+  // Export and shows purple in OSM review), position = wherever the map currently shows it.
+  function confirmGps(ref, name, pos) {
+    saveGpsCorrection({ ...ref, name, enteredGps: `${pos.lat}, ${pos.lng}`, confirmed: true, capturedAt: new Date().toISOString() })
+    if (ref.type === 'site') setMovedSites((prev) => ({ ...prev, [ref.id]: { latitude: pos.lat, longitude: pos.lng } }))
+    else setMovedLandmarks((prev) => ({ ...prev, [ref.sequenceOrder]: { lat: pos.lat, lng: pos.lng } }))
   }
 
   // Only while the tour pack hasn't been saved yet — sites from the server, as before.
@@ -234,13 +260,13 @@ export default function MapView({ active = true }) {
     }).catch(() => {})
   }, [pack, fallbackSites, connection])
 
-  // A map script that failed to load (opened with no signal) gets another go once signal is back.
+  // A map that failed to load (opened with no signal) gets another go once signal is back.
   const prevConnectionRef = useRef(connection)
   useEffect(() => {
     const cameBack = prevConnectionRef.current === 'offline' && connection === 'online'
     prevConnectionRef.current = connection
-    if (cameBack && !window.google?.maps) setMapAttempt((n) => n + 1)
-  }, [connection])
+    if (cameBack && mapFailed) setMapAttempt((n) => n + 1)
+  }, [connection, mapFailed])
 
   if (!mapData) return <div className="map-shell"><div className="stub-view">Loading map&hellip;</div></div>
 
@@ -269,116 +295,174 @@ export default function MapView({ active = true }) {
   const showDots = (zoom ?? initialZoom) < ICON_ZOOM_THRESHOLD
   const showLabels = (zoom ?? initialZoom) >= LABEL_ZOOM_THRESHOLD
 
+  // Every marker on the map, in a form either engine can draw: `content` is the pin's own markup,
+  // `layer` sets the OSM engine's default stacking (Google stacks by its own rules), and an
+  // explicit zIndex wins in both.
+  //
+  // Landmarks: zIndex explicit and deliberately huge — at least one POI (Frederick Street Castle
+  // View) shares exact coordinates with a landmark by design ("same corner" — see POI.csv), and the
+  // coincident site's star pin was silently winning every click on top of it — a real bug caught
+  // while testing the reveal feature. Google's own default zIndex (when unset) is computed from
+  // latitude and was already bigger than a modest explicit value like 10; this has to clear that.
+  // OSM review (dev only): where each pin is drawn, its colour, and the old-position lines.
+  // Set GPS fixes (saved this device, any session) win over everything and show purple.
+  const reviewLines = []
+  const reviewTally = {}
+  const fixes = review ? latestGpsFixes() : null
+  function reviewPlace(entry, fix, original, osmPos) {
+    const status = fix ? 'purple' : entry?.s
+    if (status) reviewTally[status] = (reviewTally[status] || 0) + 1
+    if (fix) return { ...fix, color: REVIEW_COLORS.purple }
+    if (!entry) return { ...original, color: null }
+    if (osmPos && (entry.s === 'amber' || entry.s === 'red')) {
+      reviewLines.push({ from: original, to: osmPos, color: REVIEW_COLORS[entry.s] })
+    }
+    return { ...(osmPos || original), color: REVIEW_COLORS[entry.s] }
+  }
+  function landmarkPlace(l) {
+    const moved = movedLandmarks[l.sequenceOrder]
+    const original = moved || { lat: l.latitude, lng: l.longitude }
+    if (!review) return { ...original, color: null }
+    const e = review.landmarks[l.sequenceOrder]
+    const osmPos = e && e.dLat != null ? { lat: l.latitude + e.dLat, lng: l.longitude + e.dLng } : null
+    return reviewPlace(e, moved || fixes.landmarks[l.sequenceOrder], original, osmPos)
+  }
+  function sitePlace(s) {
+    const original = { lat: s.latitude, lng: s.longitude }
+    if (!review) return { ...original, color: null }
+    const e = review.sites[s.id]
+    const fix = movedSites[s.id] ? original : fixes.sites[s.id]
+    return reviewPlace(e, fix, original, e && e.lat != null ? { lat: e.lat, lng: e.lng } : null)
+  }
+
+  const markers = [
+    // Solved landmarks — never the current/future one, mapData already excludes it.
+    ...solvedLandmarks.map((l) => {
+      const place = landmarkPlace(l)
+      const dragging = gpsDragTarget?.kind === 'landmark' && gpsDragTarget.sequenceOrder === l.sequenceOrder
+      return {
+      key: `landmark-${l.sequenceOrder}`,
+      layer: 'landmark',
+      lat: place.lat,
+      lng: place.lng,
+      zIndex: 999999,
+      draggable: dragging,
+      onDragEnd: dragging ? (pos) => handleLandmarkGpsDragEnd(l, gpsDragTarget.title, pos) : undefined,
+      onClick: () => openLandmark(l.sequenceOrder),
+      content: (
+        <div
+          data-coach-id={isStartLandmark(l.sequenceOrder) ? 'map-rbs-landmark-marker' : undefined}
+          className={'map-pin-landmark' + (dragging ? ' map-pin-site-dragging' : '')}
+          style={{ backgroundImage: `url(${API_BASE}/content-photos/${l.imagePath})`, ...(place.color && { borderColor: place.color }) }}
+        >
+          {!isStartLandmark(l.sequenceOrder) && <div className="map-pin-badge">{landmarkDisplayNumber(l.sequenceOrder)}</div>}
+        </div>
+      ),
+    }
+    }),
+    // Puzzle solved, quiz not finished yet — same "revealed but in progress" state as the Home tile
+    // grid. A real pin at its real location, tapping resumes the quiz rather than opening the
+    // detail popup.
+    ...(currentRevealed ? [(() => {
+      const place = landmarkPlace(currentRevealed)
+      const dragging = gpsDragTarget?.kind === 'landmark' && gpsDragTarget.sequenceOrder === currentRevealed.sequenceOrder
+      return {
+      key: 'landmark-current',
+      layer: 'landmark',
+      lat: place.lat,
+      lng: place.lng,
+      zIndex: 999999,
+      draggable: dragging,
+      onDragEnd: dragging ? (pos) => handleLandmarkGpsDragEnd(currentRevealed, gpsDragTarget.title, pos) : undefined,
+      onClick: () => navigate('/play'),
+      content: (
+        <div className="map-pin-landmark map-pin-landmark-current" style={{ backgroundImage: `url(${API_BASE}/content-photos/${currentRevealed.imagePath})`, ...(place.color && { borderColor: place.color }) }}>
+          {!isStartLandmark(currentRevealed.sequenceOrder) && (
+            <div className="map-pin-badge map-pin-badge-current">{landmarkDisplayNumber(currentRevealed.sequenceOrder)}</div>
+          )}
+        </div>
+      ),
+    }
+    })()] : []),
+    {
+      key: 'here',
+      layer: 'here',
+      lat: hereLocation.lat,
+      lng: hereLocation.lng,
+      content: (
+        <div className={
+          !liveLocation ? 'map-pin-here map-pin-here-fallback'
+            : reacquiring ? 'map-pin-here map-pin-here-reacquiring'
+            : 'map-pin-here'
+        } />
+      ),
+    },
+    ...sites.map((s) => {
+      const dragging = gpsDragTarget?.kind === 'site' && gpsDragTarget.id === s.id
+      const hasPhoto = Boolean(s.imagePath)
+      const place = sitePlace(s)
+      const reviewStyle = place.color ? { background: place.color } : undefined
+      return {
+        key: `site-${s.id}`,
+        layer: 'site',
+        lat: place.lat,
+        lng: place.lng,
+        draggable: dragging,
+        onDragEnd: dragging ? (pos) => handleSiteGpsDragEnd(s, pos) : undefined,
+        onClick: () => openSite(s.id),
+        zIndex: dragging ? 999999 : undefined,
+        content: showDots ? (
+          <div
+            data-coach-id="map-poi-marker"
+            className={
+              'map-dot map-dot-site'
+              + (hasPhoto ? '' : ' map-dot-site-nophoto')
+              + (dragging ? ' map-pin-site-dragging' : '')
+            }
+            style={reviewStyle}
+          />
+        ) : (
+          <div
+            data-coach-id="map-poi-marker"
+            className={
+              'map-pin-site'
+              + (hasPhoto ? '' : ' map-pin-site-nophoto')
+              + (dragging ? ' map-pin-site-dragging' : '')
+            }
+            style={reviewStyle}
+          >
+            <StarIcon />
+            {showLabels && <span className="map-pin-label">{s.title}</span>}
+          </div>
+        ),
+      }
+    }),
+  ]
+
+  const engineProps = {
+    attempt: mapAttempt,
+    initialCenter,
+    initialZoom,
+    // Only auto-fit the very first time this session — once lastCamera exists, initialCenter/
+    // initialZoom above already restore exactly where the player left off, and re-fitting would
+    // override that with the generic "show everything" view again.
+    fitBounds: shouldFitBounds ? bounds : null,
+    markers,
+    lines: reviewLines,
+    onCamera: ({ center, zoom: z }) => { lastCamera = { center, zoom: z }; setZoom(z); setCameraLat(center.lat) },
+    onFailedChange: setMapFailed,
+  }
+
   return (
     <div className="map-shell">
       <div className="map-container" data-coach-id="map-navigation-area">
-        <APIProvider key={mapAttempt} apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
-          <MapLoadStatus onFailedChange={setMapFailed} />
-          <Map
-            mapId={import.meta.env.VITE_GOOGLE_MAPS_MAP_ID}
-            // Keeps the google.maps.Map instance (and its already-drawn tiles) in a pool when
-            // MapView unmounts and hands it back on the next mount, instead of building a fresh
-            // map every MAP <-> CURRENT toggle — a new map with a mapId takes ~1s before any
-            // AdvancedMarker can attach, which is the delay this removes.
-            reuseMaps
-            defaultCenter={initialCenter}
-            defaultZoom={initialZoom}
-            disableDefaultUI
-            gestureHandling="greedy"
-            onCameraChanged={(e) => { lastCamera = { center: e.detail.center, zoom: e.detail.zoom }; setZoom(e.detail.zoom); setCameraLat(e.detail.center.lat) }}
-          >
-            {/* Only auto-fit the very first time this session — once lastCamera exists, the
-                defaultCenter/defaultZoom above already restore exactly where the player left off,
-                and re-fitting would override that with the generic "show everything" view again. */}
-            {shouldFitBounds && <FitBounds bounds={bounds} />}
-
-            {/* Solved landmarks — never the current/future one, mapData already excludes it.
-                zIndex explicit and deliberately huge: at least one POI (Frederick Street
-                Castle View) shares exact coordinates with a landmark by design ("same corner"
-                — see POI.csv), and the coincident site's star pin was silently winning every
-                click on top of it — a real bug caught while testing the reveal feature.
-                Google's own default zIndex (when unset) is computed from latitude and was
-                already bigger than a modest explicit value like 10; this has to clear that. */}
-            {solvedLandmarks.map((l) => (
-              <AdvancedMarker
-                key={l.sequenceOrder}
-                position={{ lat: l.latitude, lng: l.longitude }}
-                onClick={() => openLandmark(l.sequenceOrder)}
-                zIndex={999999}
-              >
-                <div
-                  data-coach-id={isStartLandmark(l.sequenceOrder) ? 'map-rbs-landmark-marker' : undefined}
-                  className="map-pin-landmark"
-                  style={{ backgroundImage: `url(${API_BASE}/content-photos/${l.imagePath})` }}
-                >
-                  {!isStartLandmark(l.sequenceOrder) && <div className="map-pin-badge">{landmarkDisplayNumber(l.sequenceOrder)}</div>}
-                </div>
-              </AdvancedMarker>
-            ))}
-            {/* Puzzle solved, quiz not finished yet — same "revealed but in progress" state
-                as the Home tile grid. A real pin at its real location (kept separate from
-                solvedLandmarks so it doesn't extend the walking path), tapping resumes the
-                quiz rather than opening the detail popup. */}
-            {currentRevealed && (
-              <AdvancedMarker
-                position={{ lat: currentRevealed.latitude, lng: currentRevealed.longitude }}
-                onClick={() => navigate('/play')}
-                zIndex={999999}
-              >
-                <div className="map-pin-landmark map-pin-landmark-current" style={{ backgroundImage: `url(${API_BASE}/content-photos/${currentRevealed.imagePath})` }}>
-                  {!isStartLandmark(currentRevealed.sequenceOrder) && (
-                    <div className="map-pin-badge map-pin-badge-current">{landmarkDisplayNumber(currentRevealed.sequenceOrder)}</div>
-                  )}
-                </div>
-              </AdvancedMarker>
-            )}
-            <AdvancedMarker position={hereLocation}>
-              <div className={
-                !liveLocation ? 'map-pin-here map-pin-here-fallback'
-                  : reacquiring ? 'map-pin-here map-pin-here-reacquiring'
-                  : 'map-pin-here'
-              } />
-            </AdvancedMarker>
-
-            {sites.map((s) => {
-              const dragging = gpsDragTarget?.kind === 'site' && gpsDragTarget.id === s.id
-              const hasPhoto = Boolean(s.imagePath)
-              return (
-                <AdvancedMarker
-                  key={s.id}
-                  position={{ lat: s.latitude, lng: s.longitude }}
-                  draggable={dragging}
-                  onDragEnd={dragging ? (e) => handleSiteGpsDragEnd(s, e) : undefined}
-                  onClick={() => openSite(s.id)}
-                  zIndex={dragging ? 999999 : undefined}
-                >
-                  {showDots ? (
-                    <div
-                      data-coach-id="map-poi-marker"
-                      className={
-                        'map-dot map-dot-site'
-                        + (hasPhoto ? '' : ' map-dot-site-nophoto')
-                        + (dragging ? ' map-pin-site-dragging' : '')
-                      }
-                    />
-                  ) : (
-                    <div
-                      data-coach-id="map-poi-marker"
-                      className={
-                        'map-pin-site'
-                        + (hasPhoto ? '' : ' map-pin-site-nophoto')
-                        + (dragging ? ' map-pin-site-dragging' : '')
-                      }
-                    >
-                      <StarIcon />
-                      {showLabels && <span className="map-pin-label">{s.title}</span>}
-                    </div>
-                  )}
-                </AdvancedMarker>
-              )
-            })}
-          </Map>
-        </APIProvider>
+        <Suspense fallback={<div className="stub-view">Loading map&hellip;</div>}>
+          {mapProvider === 'google' ? (
+            <GoogleMapEngine {...engineProps} />
+          ) : (
+            <OsmMapEngine tourCode={game.tour?.tourCode} {...engineProps} />
+          )}
+        </Suspense>
 
         {mapFailed ? (
           <NearbyList
@@ -402,6 +486,15 @@ export default function MapView({ active = true }) {
             another app, tap the <strong>&bull;&bull;&bull;</strong> or Safari icon in that
             browser and choose <strong>Open in Safari</strong>, then reopen the link there.
             <button type="button" className="ghost" onClick={() => setGpsHelpDismissed(true)}>Dismiss</button>
+          </div>
+        )}
+        {DEV_MODE && osmReviewOn && (
+          <div className="osm-review-chip">
+            {mapProvider !== 'osm' ? 'OSM review is on, but this is the Google map — Dev → Map: Google (tap for OSM)'
+              : !review ? 'OSM review: no review data for this tour'
+              : ['blue', 'green', 'amber', 'red', 'purple'].map((k) => (
+                <span key={k}><i style={{ background: REVIEW_COLORS[k] }} />{reviewTally[k] || 0}</span>
+              ))}
           </div>
         )}
         {gpsDragTarget && (
@@ -428,7 +521,13 @@ export default function MapView({ active = true }) {
           ]}
           interestingFact={landmarkPopup.interestingFact}
           externalLink={landmarkPopup.externalLink}
+          devNote={review ? reviewNote(review.landmarks[landmarkPopup.sequenceOrder], movedLandmarks[landmarkPopup.sequenceOrder] || latestGpsFixes().landmarks[landmarkPopup.sequenceOrder]) : null}
           gpsRef={{ type: 'landmark', sequenceOrder: landmarkPopup.sequenceOrder }}
+          onConfirmGps={() => {
+            const l = knownLandmarks.find((k) => k.sequenceOrder === landmarkPopup.sequenceOrder)
+            if (l) confirmGps({ type: 'landmark', sequenceOrder: l.sequenceOrder }, landmarkPopup.title, landmarkPlace(l))
+          }}
+          onDragToSetGps={() => setGpsDragTarget({ kind: 'landmark', sequenceOrder: landmarkPopup.sequenceOrder, title: landmarkPopup.title })}
           onClose={() => setLandmarkPopup(null)}
         />
       )}
@@ -446,7 +545,12 @@ export default function MapView({ active = true }) {
           ]}
           interestingFact={sitePopup.interestingFact}
           externalLink={sitePopup.externalLink}
+          devNote={review ? reviewNote(review.sites[sitePopup.id], movedSites[sitePopup.id] || latestGpsFixes().sites[sitePopup.id]) : null}
           gpsRef={{ type: 'site', id: sitePopup.id }}
+          onConfirmGps={() => {
+            const s = sites.find((x) => x.id === sitePopup.id)
+            if (s) confirmGps({ type: 'site', id: s.id }, sitePopup.title, sitePlace(s))
+          }}
           onDragToSetGps={() => setGpsDragTarget({ kind: 'site', id: sitePopup.id })}
           onClose={() => setSitePopup(null)}
         />

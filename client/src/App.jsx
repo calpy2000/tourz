@@ -56,7 +56,7 @@ function RequireSession({ children }) {
 export default function App() {
   const gpsStatus = useGpsPreflightStatus()
   // MAP view (HomePage) stays mounted — just hidden — while CURRENT landmark (/play) is showing,
-  // so toggling back is instant: no new Google Map, no re-adding every marker. Rendered outside
+  // so toggling back is instant: no new map, no re-adding every marker. Rendered outside
   // <Routes> for that reason (a route element always unmounts when its path stops matching).
   // Any other page (instructions, certificate, start) unmounts it as before.
   const { pathname } = useLocation()

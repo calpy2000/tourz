@@ -21,9 +21,13 @@ import { useNarrationPlayer, NarrationSpeakerIcon } from './NarrationPlayer.jsx'
 // paste-a-coordinate panel below to closing this popup and making the POI's own map pin
 // draggable — dragging the pin to its correct spot is far more precise than typing what you read
 // off a phone's Maps app. Landmarks/sites (no callback passed) keep the paste-text flow.
-export default function DetailPopup({ eyebrow, title, address, imagePath, audioPath, sections, interestingFact, warning, externalLink, gpsRef, onDragToSetGps, onClose }) {
+// `devNote` (dev mode only): one line of tester info, e.g. the OSM review result for this pin.
+// `onConfirmGps` (dev mode only, passed by MapView): adds a "GPS OK" button — the pin is right
+// where it's drawn; MapView saves that position as a confirmed fix (shown purple like a moved pin).
+export default function DetailPopup({ eyebrow, title, address, imagePath, audioPath, sections, interestingFact, warning, externalLink, gpsRef, devNote, onDragToSetGps, onConfirmGps, onClose }) {
   const [gpsPanelAnchor, setGpsPanelAnchor] = useState(null)
   const [gpsSaved, setGpsSaved] = useState(false)
+  const [gpsConfirmed, setGpsConfirmed] = useState(false)
   const narration = useNarrationPlayer()
 
   function handleGpsSubmit(enteredGps) {
@@ -72,6 +76,7 @@ export default function DetailPopup({ eyebrow, title, address, imagePath, audioP
             <p><strong>Interesting fact:</strong> {interestingFact}</p>
           )}
           {warning && <p className="detail-popup-warning">{warning}</p>}
+          {DEV_MODE && devNote && <p className="detail-popup-devnote">{devNote}</p>}
         </div>
 
         {(audioPath || externalLink || (DEV_MODE && gpsRef)) && (
@@ -91,6 +96,19 @@ export default function DetailPopup({ eyebrow, title, address, imagePath, audioP
                     onClick={handleSetGpsClick}
                   >
                     {gpsSaved ? 'Saved ✓' : 'Set GPS'}
+                  </button>
+                )}
+                {DEV_MODE && gpsRef && onConfirmGps && (
+                  <button
+                    type="button"
+                    className="primary detail-popup-setgps"
+                    onClick={() => {
+                      onConfirmGps()
+                      setGpsConfirmed(true)
+                      setTimeout(onClose, 700)
+                    }}
+                  >
+                    {gpsConfirmed ? 'Confirmed ✓' : 'GPS OK'}
                   </button>
                 )}
               </div>

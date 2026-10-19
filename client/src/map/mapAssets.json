@@ -1,0 +1,54 @@
+{
+  "generatedAt": "2026-10-19T10:17:07.199Z",
+  "tours": {
+    "edinburgh": {
+      "file": "/map/edinburgh.pmtiles",
+      "bytes": 2096987,
+      "bbox": [
+        -3.2169,
+        55.939,
+        -3.1772,
+        55.9602
+      ],
+      "build": "20261019",
+      "glyphRanges": [
+        0,
+        256,
+        8192
+      ]
+    },
+    "port-louis": {
+      "file": "/map/port-louis.pmtiles",
+      "bytes": 1061728,
+      "bbox": [
+        57.465,
+        -20.1844,
+        57.534,
+        -20.1428
+      ],
+      "build": "20261019",
+      "glyphRanges": [
+        0,
+        256,
+        8192
+      ]
+    }
+  },
+  "glyphs": [
+    "/map/fonts/Noto Sans Regular/0-255.pbf",
+    "/map/fonts/Noto Sans Regular/256-511.pbf",
+    "/map/fonts/Noto Sans Regular/8192-8447.pbf",
+    "/map/fonts/Noto Sans Medium/0-255.pbf",
+    "/map/fonts/Noto Sans Medium/256-511.pbf",
+    "/map/fonts/Noto Sans Medium/8192-8447.pbf",
+    "/map/fonts/Noto Sans Italic/0-255.pbf",
+    "/map/fonts/Noto Sans Italic/256-511.pbf",
+    "/map/fonts/Noto Sans Italic/8192-8447.pbf"
+  ],
+  "sprites": [
+    "/map/sprites/light.json",
+    "/map/sprites/light.png",
+    "/map/sprites/light@2x.json",
+    "/map/sprites/light@2x.png"
+  ]
+}

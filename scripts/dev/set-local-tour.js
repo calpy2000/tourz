@@ -52,6 +52,10 @@ async function main() {
     if ((await client.query("SELECT to_regclass('public.client_actions') AS t")).rows[0].t) {
       await client.query('DELETE FROM client_actions WHERE team_id IN (SELECT t.id FROM teams t JOIN games g ON t.game_id = g.id WHERE g.game_code_id = $1)', [gameCode.id]);
     }
+    // narration_listens (narration bonus) references teams + players — same guard as above.
+    if ((await client.query("SELECT to_regclass('public.narration_listens') AS t")).rows[0].t) {
+      await client.query('DELETE FROM narration_listens WHERE team_id IN (SELECT t.id FROM teams t JOIN games g ON t.game_id = g.id WHERE g.game_code_id = $1)', [gameCode.id]);
+    }
     await client.query(`
       DELETE FROM progress_events WHERE team_id IN (
         SELECT t.id FROM teams t JOIN games g ON t.game_id = g.id WHERE g.game_code_id = $1
