@@ -6,6 +6,7 @@ import { API_BASE } from '../apiBase.js'
 import { useGeolocation } from '../useGeolocation.js'
 import { saveGpsCorrection } from '../gpsCorrections.js'
 import DetailPopup from './DetailPopup.jsx'
+import NearbyList from './NearbyList.jsx'
 import { isStartLandmark, landmarkDisplayNumber } from '../landmarkNumber.js'
 import { getLastFetched, setLastFetched } from '../lastFetched.js'
 import { useGameStore } from '../offline/gameStore.js'
@@ -14,16 +15,13 @@ import { useContentCache, siteDetailFromPack } from '../offline/contentCache.js'
 import { useConnection } from '../net/connection.js'
 
 // Google's map script is the one part of Map view that can't work with no signal (Google's terms
-// forbid saving its map for offline use). When it fails to load — opening the app in a dead spot —
-// say so plainly instead of leaving an empty box; markers and cards return with the map.
-function MapLoadFailedNote() {
+// forbid saving its map for offline use). Reports when it fails to load — opening the app in a dead
+// spot — so MapView can show the NearbyList of cards instead of an empty box. Renders nothing.
+function MapLoadStatus({ onFailedChange }) {
   const status = useApiLoadingStatus()
-  if (status !== APILoadingStatus.FAILED && status !== APILoadingStatus.AUTH_FAILURE) return null
-  return (
-    <div className="map-offline-note">
-      The map needs signal to load. Everything else still works &mdash; use <strong>&nbsp;CURRENT landmark&nbsp;</strong> to carry on, and the map will be back once you have signal.
-    </div>
-  )
+  const failed = status === APILoadingStatus.FAILED || status === APILoadingStatus.AUTH_FAILURE
+  useEffect(() => { onFailedChange(failed) }, [failed, onFailedChange])
+  return null
 }
 
 // Used only if the team has no solved landmarks yet (map needs some center before the first find).
@@ -173,6 +171,8 @@ export default function MapView({ active = true }) {
   }, [game, pack, fallbackSites, movedSites])
   // Bumped on reconnect after a failed map-script load, to try loading Google's map again.
   const [mapAttempt, setMapAttempt] = useState(0)
+  // Google's map couldn't load (no signal on open) — NearbyList stands in for it.
+  const [mapFailed, setMapFailed] = useState(false)
   // Set by DetailPopup's "Set GPS" button (Interests/sites) — identifies the one marker currently
   // draggable on the map, compared by id (sitePopup is a separately-fetched object, never the
   // same reference as its entry in mapData.sites). Cleared on drop or Cancel.
@@ -273,7 +273,7 @@ export default function MapView({ active = true }) {
     <div className="map-shell">
       <div className="map-container" data-coach-id="map-navigation-area">
         <APIProvider key={mapAttempt} apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
-          <MapLoadFailedNote />
+          <MapLoadStatus onFailedChange={setMapFailed} />
           <Map
             mapId={import.meta.env.VITE_GOOGLE_MAPS_MAP_ID}
             // Keeps the google.maps.Map instance (and its already-drawn tiles) in a pool when
@@ -380,8 +380,21 @@ export default function MapView({ active = true }) {
           </Map>
         </APIProvider>
 
-        <MapCompass />
-        <MapScaleBar zoom={zoom ?? initialZoom} lat={cameraLat ?? initialCenter.lat} />
+        {mapFailed ? (
+          <NearbyList
+            landmarks={currentRevealed ? [...solvedLandmarks, currentRevealed] : solvedLandmarks}
+            sites={sites}
+            here={liveLocation}
+            typeLabels={SITE_TYPE_LABELS}
+            onOpenLandmark={(seq) => (currentRevealed && seq === currentRevealed.sequenceOrder ? navigate('/play') : openLandmark(seq))}
+            onOpenSite={openSite}
+          />
+        ) : (
+          <>
+            <MapCompass />
+            <MapScaleBar zoom={zoom ?? initialZoom} lat={cameraLat ?? initialCenter.lat} />
+          </>
+        )}
 
         {!liveLocation && (gpsError === 'denied' || stalled) && !gpsHelpDismissed && (
           <div className="gps-help-banner">

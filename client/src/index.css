@@ -3511,17 +3511,75 @@ button.primary.clock-banner-btn {
 .waiting-content-card {
   text-align: center;
 }
-/* MapView: Google's map script couldn't load (no signal on a fresh open). */
-.map-offline-note {
+/* MapView: Google's map script couldn't load (no signal on a fresh open) — NearbyList.jsx covers
+   the map area with a scrollable, nearest-first list of found landmarks and POIs instead. Above the
+   (empty) map but below the GPS banners (z 6). */
+.nearby-list {
   position: absolute;
   inset: 0;
+  z-index: 5;
+  overflow-y: auto;
+  padding: 10px 13px 16px;
+  background: var(--oat);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.nearby-list-intro {
+  margin: 0 0 4px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--ink-soft);
+}
+.nearby-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 7px 10px 7px 7px;
+  border: 1px solid var(--stone-line);
+  border-radius: 12px;
+  background: var(--stone-raised);
+  font: inherit;
+  text-align: left;
+  color: var(--ink);
+  cursor: pointer;
+}
+.nearby-item-photo {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: var(--brass-tint);
+}
+.nearby-item-photo-none {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
-  text-align: center;
-  background: var(--stone);
+  color: var(--brass-deep);
+  font-size: 18px;
+}
+.nearby-item-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.nearby-item-label {
+  font-size: 11px;
   color: var(--ink-soft);
+}
+.nearby-item-title {
   font-size: 14px;
-  line-height: 1.5;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nearby-item-distance {
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--brass-deep);
 }

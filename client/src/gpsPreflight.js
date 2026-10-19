@@ -44,6 +44,14 @@ let requesting = false
 // visit still goes through the gate once.
 const CONFIRMED_KEY = 'tourzGpsConfirmed'
 
+// Unlike CONFIRMED_KEY (this tab only), this survives closing the app: "location has worked on
+// this phone before". Used only to soften a STALL (no fix, no error within 30s) — likely indoors
+// with no signal, where an iPhone can't get a quick fix — from the blocked screen into letting the
+// player through. Added 2026-10-19 after the airplane-mode phone test: reopening the app in a dead
+// spot must never be stopped by this gate. An explicit PERMISSION_DENIED still shows the blocked
+// screen; the map's "you are here" dot simply appears once a fix arrives.
+const EVER_CONFIRMED_KEY = 'tourzGpsEverConfirmed'
+
 function markConfirmed() {
   // Keep location continuously in use from this first Allow onwards — see geoWatch.js.
   startSharedWatch('gate pass')
@@ -51,6 +59,19 @@ function markConfirmed() {
     sessionStorage.setItem(CONFIRMED_KEY, '1')
   } catch {
     // unavailable — the gate just shows again after a reload, as before
+  }
+  try {
+    localStorage.setItem(EVER_CONFIRMED_KEY, '1')
+  } catch {
+    // unavailable — a stall falls back to the blocked screen, as before
+  }
+}
+
+function everConfirmed() {
+  try {
+    return localStorage.getItem(EVER_CONFIRMED_KEY) === '1'
+  } catch {
+    return false
   }
 }
 
@@ -173,6 +194,14 @@ export function requestGpsPermission(source = 'tap') {
     if (settled) return
     settled = true
     requesting = false
+    if (everConfirmed()) {
+      // Location has worked on this phone before — a stall now is far more likely a slow fix
+      // (e.g. indoors with no signal) than a block. Let the player into the game.
+      logDebug('request STALLED (30s) but location worked here before -> ok', { ms: since() })
+      startSharedWatch('stall, previously confirmed')
+      setStatus('ok')
+      return
+    }
     logDebug('request STALLED (30s) -> blocked (a late fix will still pass)', { ms: since() })
     console.log('[gps] tap-triggered request stalled — no fix, no error, within 30s — treating as blocked')
     setStatus('blocked')

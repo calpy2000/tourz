@@ -325,6 +325,10 @@ try {
   killPort(4173)
   await waitPort(3001, false)
   await waitPort(4173, false)
+  // This machine still has internet, but a phone with no signal can't reach Google's map either —
+  // block it so MapView takes its no-map path (the nearby list) exactly as on a real phone.
+  await page.send('Network.enable', {})
+  await page.send('Network.setBlockedURLs', { urls: ['*googleapis.com*', '*gstatic.com*', '*google.com/maps*'] })
   await page.eval(`sessionStorage.removeItem('tourzSimulateDeadSignal')`)
   const offlineReloadAt = Date.now()
   await page.send('Page.reload', {})
@@ -358,6 +362,27 @@ try {
   await page.click('Use hint')
   await page.waitText('Hint 1:', 3000)
   record('no signal: hint on the new landmark', true)
+
+  // Map view with no map: the nearby list stands in, and its cards open from the phone.
+  await page.click('MAP')
+  await page.waitFor(`document.querySelectorAll('.nearby-item').length > 0`, 20000, 'nearby list')
+  // Distances join once the GPS fix arrives (the list re-sorts nearest-first then).
+  await page.waitFor(`document.querySelectorAll('.nearby-item-distance').length > 0`, 10000, 'nearby distances').catch(() => {})
+  const nearby = await page.eval(`(() => {
+    const items = [...document.querySelectorAll('.nearby-item')]
+    return { count: items.length, first: items[0].innerText.replace(/\\n/g, ' · '), withDistance: items.filter((i) => i.querySelector('.nearby-item-distance')).length }
+  })()`)
+  record('no signal: map view shows the nearby list instead of a dead map', nearby.count >= pack.sites.length,
+    `${nearby.count} entries, ${nearby.withDistance} with distances; nearest: ${nearby.first}`)
+  await page.screenshot('3b-nearby-list')
+  await page.eval(`[...document.querySelectorAll('.nearby-item')].find((b) => !b.innerText.includes('Landmark')).click()`)
+  await page.waitFor(`document.querySelector('.detail-popup')`, 5000, 'POI card')
+  const card = await page.eval(`({ title: document.querySelector('.detail-popup h3').innerText, listen: Boolean(document.querySelector('.narration-entry-icon')), img: (() => { const i = document.querySelector('.detail-popup-image'); return i ? i.complete && i.naturalWidth > 0 : null })() })`)
+  record('no signal: tapping a nearby POI opens its card (photo + Listen here)', Boolean(card.title) && card.listen && card.img !== false, JSON.stringify(card))
+  await page.screenshot('3c-poi-card-offline')
+  await page.click('back')
+  await page.click('CURRENT')
+  await page.send('Network.setBlockedURLs', { urls: [] })
 
   // ---- 4. back in signal ----
   startApi()
