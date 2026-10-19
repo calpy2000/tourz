@@ -29,7 +29,9 @@ export default function DebugOverlay({ appWide = false }) {
   }
 
   return (
-    <div className="debug-overlay">
+    // Collapsed = a compact chip sitting just above the footer (it used to span the bottom of the
+    // screen and hide the footer — score, clock, Help and Dev buttons — reported 2026-10-19).
+    <div className={collapsed ? 'debug-overlay debug-overlay-collapsed' : 'debug-overlay'}>
       <div className="debug-overlay-header">
         <strong>gps debug ({entries.length})</strong>
         <button type="button" onClick={copyAll}>{copied ? 'copied' : 'copy'}</button>
