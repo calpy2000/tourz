@@ -1,0 +1,2411 @@
+{
+  "capturedFrom": "Chrome localStorage tourz.gpsCorrections (localhost:5183), 2026-10-19",
+  "corrections": [
+    {
+      "type": "site",
+      "id": 3444,
+      "name": "National Portrait Gallery",
+      "enteredGps": "55.955568, -3.193605",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:33:05.604Z"
+    },
+    {
+      "type": "landmark",
+      "sequenceOrder": 1,
+      "name": "Royal Bank of Scotland Headquarters",
+      "enteredGps": "55.95451115727076, -3.191061702430062",
+      "capturedAt": "2026-10-19T11:37:26.342Z"
+    },
+    {
+      "type": "site",
+      "id": 3440,
+      "name": "Statue of John Hope, 4th Earl of Hopetoun",
+      "enteredGps": "55.954429, -3.191717",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:37:41.926Z"
+    },
+    {
+      "type": "site",
+      "id": 3723,
+      "name": "St Andrew Square",
+      "enteredGps": "55.954571, -3.192473",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:38:06.822Z"
+    },
+    {
+      "type": "site",
+      "id": 3441,
+      "name": "Lion of Scotland",
+      "enteredGps": "55.954562, -3.192994",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:38:44.385Z"
+    },
+    {
+      "type": "site",
+      "id": 3442,
+      "name": "Melville Monument",
+      "enteredGps": "55.95420693449296, -3.193155720386329",
+      "capturedAt": "2026-10-19T11:39:05.434Z"
+    },
+    {
+      "type": "site",
+      "id": 3443,
+      "name": "Paddington Bear Statue",
+      "enteredGps": "55.954163, -3.19349",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:39:32.877Z"
+    },
+    {
+      "type": "site",
+      "id": 3724,
+      "name": "George Street",
+      "enteredGps": "55.95409440641265, -3.1942162800149276",
+      "capturedAt": "2026-10-19T11:39:55.649Z"
+    },
+    {
+      "type": "site",
+      "id": 3446,
+      "name": "James Clerk Maxwell statue",
+      "enteredGps": "55.95398613707911, -3.19443982364146",
+      "capturedAt": "2026-10-19T11:40:15.915Z"
+    },
+    {
+      "type": "site",
+      "id": 3445,
+      "name": "The Capital Building",
+      "enteredGps": "55.953852, -3.194303",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:40:25.947Z"
+    },
+    {
+      "type": "site",
+      "id": 3447,
+      "name": "Thistle Court",
+      "enteredGps": "55.954485, -3.19565",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:40:42.274Z"
+    },
+    {
+      "type": "site",
+      "id": 3449,
+      "name": "St Andrew's and St George's West Church",
+      "enteredGps": "55.953945010006265, -3.195815947682121",
+      "capturedAt": "2026-10-19T11:40:56.200Z"
+    },
+    {
+      "type": "site",
+      "id": 3448,
+      "name": "The Dome",
+      "enteredGps": "55.953636, -3.195595",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:41:01.184Z"
+    },
+    {
+      "type": "site",
+      "id": 3450,
+      "name": "Caledonian Insurance Building",
+      "enteredGps": "55.9538, -3.1963",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:41:12.461Z"
+    },
+    {
+      "type": "site",
+      "id": 3452,
+      "name": "Susan Ferrier's Home",
+      "enteredGps": "55.953803, -3.196602",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:41:28.538Z"
+    },
+    {
+      "type": "site",
+      "id": 3451,
+      "name": "Royal Society of Edinburgh",
+      "enteredGps": "55.953367760718635, -3.196667001125263",
+      "capturedAt": "2026-10-19T11:41:52.626Z"
+    },
+    {
+      "type": "site",
+      "id": 3618,
+      "name": "Hard Rock Cafe",
+      "enteredGps": "55.953462, -3.1963",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:42:04.792Z"
+    },
+    {
+      "type": "site",
+      "id": 3677,
+      "name": "All Bar One, George Street",
+      "enteredGps": "55.953776, -3.197077",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:42:11.098Z"
+    },
+    {
+      "type": "site",
+      "id": 3453,
+      "name": "King George IV Statue",
+      "enteredGps": "55.953518, -3.197258",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:42:18.194Z"
+    },
+    {
+      "type": "site",
+      "id": 3721,
+      "name": "Milnes Bar",
+      "enteredGps": "55.952974, -3.196719",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:42:28.859Z"
+    },
+    {
+      "type": "site",
+      "id": 3623,
+      "name": "Thistle Street Bar",
+      "enteredGps": "55.9540441638093, -3.1989217402091583",
+      "capturedAt": "2026-10-19T11:42:58.278Z"
+    },
+    {
+      "type": "site",
+      "id": 3624,
+      "name": "Fishers in the City",
+      "enteredGps": "55.953842, -3.199534",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:43:04.118Z"
+    },
+    {
+      "type": "site",
+      "id": 3454,
+      "name": "The Assembly Rooms",
+      "enteredGps": "55.953137, -3.198689",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:43:13.771Z"
+    },
+    {
+      "type": "site",
+      "id": 3676,
+      "name": "Former TSB Bank, Hanover Street",
+      "enteredGps": "55.952814076609286, -3.197261738685114",
+      "capturedAt": "2026-10-19T11:43:28.512Z"
+    },
+    {
+      "type": "site",
+      "id": 3675,
+      "name": "The Merchants' Hall",
+      "enteredGps": "55.95258, -3.197128",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:43:33.872Z"
+    },
+    {
+      "type": "site",
+      "id": 3719,
+      "name": "Sir Chris Hoy Gold Post Box (Hanover Street)",
+      "enteredGps": "55.95230358236259, -3.1964635732862803",
+      "capturedAt": "2026-10-19T11:43:54.896Z"
+    },
+    {
+      "type": "site",
+      "id": 3619,
+      "name": "The Standing Order",
+      "enteredGps": "55.952917, -3.199577",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:44:17.545Z"
+    },
+    {
+      "type": "site",
+      "id": 3455,
+      "name": "Pink Sandstone Among Yellow Free-Stone",
+      "enteredGps": "55.95320032760151, -3.199834096174669",
+      "capturedAt": "2026-10-19T11:44:44.663Z"
+    },
+    {
+      "type": "landmark",
+      "sequenceOrder": 2,
+      "name": "William Pitt the Younger statue",
+      "enteredGps": "55.952925702881146, -3.200396375434508",
+      "capturedAt": "2026-10-19T11:44:53.011Z"
+    },
+    {
+      "type": "site",
+      "id": 3616,
+      "name": "View Down Frederick Street to St Stephen's and the Kingdom of Fife",
+      "enteredGps": "55.95315, -3.200548",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:45:00.287Z"
+    },
+    {
+      "type": "site",
+      "id": 3625,
+      "name": "Cafe Marlayne",
+      "enteredGps": "55.953708, -3.2003",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:45:11.883Z"
+    },
+    {
+      "type": "site",
+      "id": 3456,
+      "name": "Hidden Back-Lane White Tiles",
+      "enteredGps": "55.952338, -3.200912",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:45:18.315Z"
+    },
+    {
+      "type": "site",
+      "id": 3457,
+      "name": "The Giant Caryatids",
+      "enteredGps": "55.952698, -3.201264",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:45:28.699Z"
+    },
+    {
+      "type": "site",
+      "id": 3458,
+      "name": "Micro-Lighthouse Above the Doorway",
+      "enteredGps": "55.952652, -3.201538",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:45:36.914Z"
+    },
+    {
+      "type": "site",
+      "id": 3459,
+      "name": "Freemasons' Hall",
+      "enteredGps": "55.95236801147243, -3.2025466301441554",
+      "capturedAt": "2026-10-19T11:45:48.704Z"
+    },
+    {
+      "type": "site",
+      "id": 3463,
+      "name": "Walter Scott's House",
+      "enteredGps": "55.952856, -3.203376",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:45:58.510Z"
+    },
+    {
+      "type": "site",
+      "id": 3461,
+      "name": "Thomas Chalmers Statue",
+      "enteredGps": "55.95242934605804, -3.2035222910888876",
+      "capturedAt": "2026-10-19T11:46:17.896Z"
+    },
+    {
+      "type": "site",
+      "id": 3462,
+      "name": "View Down Castle Street to the Castle",
+      "enteredGps": "55.952332, -3.203474",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:46:25.367Z"
+    },
+    {
+      "type": "site",
+      "id": 3460,
+      "name": "Early Modernist Steel Anomaly",
+      "enteredGps": "55.95228514670967, -3.203150493646575",
+      "capturedAt": "2026-10-19T11:46:43.938Z"
+    },
+    {
+      "type": "site",
+      "id": 3476,
+      "name": "McVitie's Original Shop",
+      "enteredGps": "55.951901, -3.202594",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:46:48.682Z"
+    },
+    {
+      "type": "site",
+      "id": 3500,
+      "name": "Social Bite",
+      "enteredGps": "55.951875, -3.202686",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:46:54.131Z"
+    },
+    {
+      "type": "site",
+      "id": 3475,
+      "name": "Rose Street's First Pedestrianised Stretch",
+      "enteredGps": "55.951720486174366, -3.2030181399984485",
+      "capturedAt": "2026-10-19T11:47:09.083Z"
+    },
+    {
+      "type": "site",
+      "id": 3477,
+      "name": "The Kenilworth",
+      "enteredGps": "55.951788, -3.202276",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:47:20.940Z"
+    },
+    {
+      "type": "site",
+      "id": 3465,
+      "name": "Church of Scotland Offices",
+      "enteredGps": "55.95240877953634, -3.2046877254918513",
+      "capturedAt": "2026-10-19T11:47:50.107Z"
+    },
+    {
+      "type": "site",
+      "id": 3464,
+      "name": "The Oxford Bar",
+      "enteredGps": "55.952964, -3.204715",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:47:57.459Z"
+    },
+    {
+      "type": "site",
+      "id": 3626,
+      "name": "The Cambridge Bar",
+      "enteredGps": "55.952743, -3.206009",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:48:05.164Z"
+    },
+    {
+      "type": "site",
+      "id": 3722,
+      "name": "Browns Restaurant",
+      "enteredGps": "55.952252, -3.205739",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:48:16.349Z"
+    },
+    {
+      "type": "site",
+      "id": 3620,
+      "name": "The Alexander Graham Bell",
+      "enteredGps": "55.951871, -3.205316",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:48:22.535Z"
+    },
+    {
+      "type": "site",
+      "id": 3466,
+      "name": "Kimpton Charlotte Square Hotel",
+      "enteredGps": "55.951608, -3.206211",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:48:27.038Z"
+    },
+    {
+      "type": "site",
+      "id": 3725,
+      "name": "Charlotte Square",
+      "enteredGps": "55.951783160484524, -3.2070515344470323",
+      "capturedAt": "2026-10-19T11:48:46.129Z"
+    },
+    {
+      "type": "site",
+      "id": 3467,
+      "name": "Prince Albert Memorial",
+      "enteredGps": "55.95171756886256, -3.2076426543385423",
+      "capturedAt": "2026-10-19T11:48:54.900Z"
+    },
+    {
+      "type": "site",
+      "id": 3469,
+      "name": "The Georgian House",
+      "enteredGps": "55.952488, -3.208214",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:49:45.932Z"
+    },
+    {
+      "type": "landmark",
+      "sequenceOrder": 3,
+      "name": "Bute House",
+      "enteredGps": "55.952504, -3.208054",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:49:50.934Z"
+    },
+    {
+      "type": "site",
+      "id": 3468,
+      "name": "West Register House",
+      "enteredGps": "55.951551, -3.208869",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:51:17.884Z"
+    },
+    {
+      "type": "site",
+      "id": 3470,
+      "name": "Bute House",
+      "enteredGps": "55.952504, -3.208054",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:51:29.709Z"
+    },
+    {
+      "type": "site",
+      "id": 3478,
+      "name": "Alexander Graham Bell Birthplace",
+      "enteredGps": "55.951122, -3.206478",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:51:47.800Z"
+    },
+    {
+      "type": "site",
+      "id": 3471,
+      "name": "Rose Street (West End)",
+      "enteredGps": "55.951209812257986, -3.206074589434536",
+      "capturedAt": "2026-10-19T11:51:58.345Z"
+    },
+    {
+      "type": "site",
+      "id": 3726,
+      "name": "Princes Street",
+      "enteredGps": "55.950316, -3.206209",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:52:14.000Z"
+    },
+    {
+      "type": "site",
+      "id": 3479,
+      "name": "St John's Episcopal Church",
+      "enteredGps": "55.950036, -3.206593",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:52:18.027Z"
+    },
+    {
+      "type": "site",
+      "id": 3617,
+      "name": "Dean Ramsay Memorial",
+      "enteredGps": "55.9503, -3.205651",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:52:23.650Z"
+    },
+    {
+      "type": "site",
+      "id": 3480,
+      "name": "St Cuthbert's Parish Church",
+      "enteredGps": "55.949638, -3.205093",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:52:29.221Z"
+    },
+    {
+      "type": "site",
+      "id": 3622,
+      "name": "Statue of Sir James Young Simpson",
+      "enteredGps": "55.950386, -3.205061",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:52:35.102Z"
+    },
+    {
+      "type": "site",
+      "id": 3481,
+      "name": "Ross Fountain",
+      "enteredGps": "55.9500393600876, -3.203044882700084",
+      "capturedAt": "2026-10-19T11:52:45.433Z"
+    },
+    {
+      "type": "site",
+      "id": 3482,
+      "name": "Norwegian Memorial Stone",
+      "enteredGps": "55.950227, -3.202063",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:52:59.062Z"
+    },
+    {
+      "type": "site",
+      "id": 3501,
+      "name": "Statue of the Royal Regiment of Scotland",
+      "enteredGps": "55.95028563143845, -3.20221890192704",
+      "capturedAt": "2026-10-19T11:53:05.692Z"
+    },
+    {
+      "type": "landmark",
+      "sequenceOrder": 4,
+      "name": "Wojtek the Soldier Bear Memorial",
+      "enteredGps": "55.95085, -3.202106",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:53:13.528Z"
+    },
+    {
+      "type": "site",
+      "id": 3483,
+      "name": "Scottish American War Memorial",
+      "enteredGps": "55.951047, -3.201029",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:53:19.806Z"
+    },
+    {
+      "type": "site",
+      "id": 3485,
+      "name": "Ross Bandstand",
+      "enteredGps": "55.950561, -3.200081",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:53:25.581Z"
+    },
+    {
+      "type": "site",
+      "id": 3486,
+      "name": "Royal Scots Greys Monument",
+      "enteredGps": "55.951379, -3.199398",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:53:29.832Z"
+    },
+    {
+      "type": "site",
+      "id": 3498,
+      "name": "Castle View",
+      "enteredGps": "55.951306, -3.200209",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:53:46.693Z"
+    },
+    {
+      "type": "site",
+      "id": 3490,
+      "name": "Floral Clock",
+      "enteredGps": "55.951724, -3.197253",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:53:58.606Z"
+    },
+    {
+      "type": "site",
+      "id": 3488,
+      "name": "Allan Ramsay Monument",
+      "enteredGps": "55.951689, -3.197301",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:54:02.483Z"
+    },
+    {
+      "type": "site",
+      "id": 3489,
+      "name": "Gardener's Cottage",
+      "enteredGps": "55.951424, -3.19723",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:54:06.164Z"
+    },
+    {
+      "type": "site",
+      "id": 3491,
+      "name": "Royal Scottish Academy Building",
+      "enteredGps": "55.951675, -3.196289",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:54:12.490Z"
+    },
+    {
+      "type": "site",
+      "id": 3487,
+      "name": "The Mound",
+      "enteredGps": "55.951052, -3.196364",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:54:16.463Z"
+    },
+    {
+      "type": "site",
+      "id": 3493,
+      "name": "Scottish National Gallery",
+      "enteredGps": "55.950902, -3.195686",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:54:21.389Z"
+    },
+    {
+      "type": "site",
+      "id": 3674,
+      "name": "Edinburgh City Relief Map",
+      "enteredGps": "55.95141148735189, -3.195492549964513",
+      "capturedAt": "2026-10-19T11:54:29.341Z"
+    },
+    {
+      "type": "site",
+      "id": 3492,
+      "name": "John Wilson Statue",
+      "enteredGps": "55.952002, -3.195457",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:54:40.686Z"
+    },
+    {
+      "type": "site",
+      "id": 3495,
+      "name": "Adam Black Statue",
+      "enteredGps": "55.952172, -3.194396",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:54:46.706Z"
+    },
+    {
+      "type": "landmark",
+      "sequenceOrder": 5,
+      "name": "The Scott Monument",
+      "enteredGps": "55.95246060320409, -3.1930782423648623",
+      "capturedAt": "2026-10-19T11:54:57.785Z"
+    },
+    {
+      "type": "site",
+      "id": 3497,
+      "name": "The Scott Monument",
+      "enteredGps": "55.95233729857625, -3.193264287309802",
+      "capturedAt": "2026-10-19T11:55:09.502Z"
+    },
+    {
+      "type": "landmark",
+      "sequenceOrder": 5,
+      "name": "The Scott Monument",
+      "enteredGps": "55.95231886154406, -3.1932668042639705",
+      "capturedAt": "2026-10-19T11:55:15.892Z"
+    },
+    {
+      "type": "site",
+      "id": 3496,
+      "name": "David Livingstone Statue",
+      "enteredGps": "55.952462, -3.192736",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:55:21.679Z"
+    },
+    {
+      "type": "site",
+      "id": 3627,
+      "name": "Old Waverley Hotel",
+      "enteredGps": "55.952841, -3.193019",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:55:28.575Z"
+    },
+    {
+      "type": "site",
+      "id": 3508,
+      "name": "Waverley Market",
+      "enteredGps": "55.952751, -3.190739",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:55:37.482Z"
+    },
+    {
+      "type": "site",
+      "id": 3519,
+      "name": "Waverley Steps",
+      "enteredGps": "55.952957, -3.190092",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:55:41.793Z"
+    },
+    {
+      "type": "site",
+      "id": 3505,
+      "name": "The Balmoral Hotel",
+      "enteredGps": "55.953036, -3.189537",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:55:48.319Z"
+    },
+    {
+      "type": "site",
+      "id": 3503,
+      "name": "Duke of Wellington Statue",
+      "enteredGps": "55.953486, -3.189153",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:55:53.847Z"
+    },
+    {
+      "type": "site",
+      "id": 3504,
+      "name": "General Register House",
+      "enteredGps": "55.95375044517627, -3.189325226211878",
+      "capturedAt": "2026-10-19T11:56:00.943Z"
+    },
+    {
+      "type": "site",
+      "id": 3506,
+      "name": "Waverley Bridge",
+      "enteredGps": "55.951885, -3.191787",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:56:18.464Z"
+    },
+    {
+      "type": "site",
+      "id": 3515,
+      "name": "The Booking Office",
+      "enteredGps": "55.951720045808884, -3.1914703009913694",
+      "capturedAt": "2026-10-19T11:56:26.761Z"
+    },
+    {
+      "type": "site",
+      "id": 3516,
+      "name": "The Edinburgh Dungeon",
+      "enteredGps": "55.951078, -3.190878",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:56:36.446Z"
+    },
+    {
+      "type": "site",
+      "id": 3507,
+      "name": "Edinburgh Waverley Station",
+      "enteredGps": "55.951933, -3.189568",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:56:43.039Z"
+    },
+    {
+      "type": "site",
+      "id": 3509,
+      "name": "Fruitmarket Gallery",
+      "enteredGps": "55.951240605168806, -3.1894436501488883",
+      "capturedAt": "2026-10-19T11:56:51.204Z"
+    },
+    {
+      "type": "site",
+      "id": 3518,
+      "name": "Metal Thistle Sculpture",
+      "enteredGps": "55.951053, -3.189573",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:56:54.691Z"
+    },
+    {
+      "type": "site",
+      "id": 3518,
+      "name": "Metal Thistle Sculpture",
+      "enteredGps": "55.951009959186024, -3.1895917310761206",
+      "capturedAt": "2026-10-19T11:57:05.471Z"
+    },
+    {
+      "type": "site",
+      "id": 3517,
+      "name": "City Art Centre",
+      "enteredGps": "55.95103873132592, -3.1893264019082608",
+      "capturedAt": "2026-10-19T11:57:11.197Z"
+    },
+    {
+      "type": "landmark",
+      "sequenceOrder": 6,
+      "name": "Fleshmarket Close",
+      "enteredGps": "55.95122442327903, -3.1889342864149626",
+      "capturedAt": "2026-10-19T11:57:56.429Z"
+    },
+    {
+      "type": "site",
+      "id": 3514,
+      "name": "Fleshmarket Close",
+      "enteredGps": "55.95122745810292, -3.1889331967703924",
+      "capturedAt": "2026-10-19T11:58:10.591Z"
+    },
+    {
+      "type": "landmark",
+      "sequenceOrder": 6,
+      "name": "Fleshmarket Close",
+      "enteredGps": "55.95115712538575, -3.188907268754292",
+      "capturedAt": "2026-10-19T11:59:24.771Z"
+    },
+    {
+      "type": "site",
+      "id": 3514,
+      "name": "Fleshmarket Close",
+      "enteredGps": "55.95115973784462, -3.1889045306688217",
+      "capturedAt": "2026-10-19T11:59:30.824Z"
+    },
+    {
+      "type": "site",
+      "id": 3510,
+      "name": "Scotsman Steps",
+      "enteredGps": "55.951171, -3.188504",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T11:59:53.349Z"
+    },
+    {
+      "type": "site",
+      "id": 3633,
+      "name": "Margaret Tait Filmmaker Plaque",
+      "enteredGps": "55.95119774436438, -3.1885204647112175",
+      "capturedAt": "2026-10-19T12:00:00.815Z"
+    },
+    {
+      "type": "site",
+      "id": 3511,
+      "name": "The Scotsman Hotel",
+      "enteredGps": "55.95106903600211, -3.188322601091187",
+      "capturedAt": "2026-10-19T12:00:54.843Z"
+    },
+    {
+      "type": "site",
+      "id": 3635,
+      "name": "The Scotsman Picturehouse",
+      "enteredGps": "55.95114927118783, -3.1885241859052087",
+      "capturedAt": "2026-10-19T12:01:07.818Z"
+    },
+    {
+      "type": "site",
+      "id": 3512,
+      "name": "Jinglin' Geordie",
+      "enteredGps": "55.95095723139252, -3.188835321693631",
+      "capturedAt": "2026-10-19T12:01:22.493Z"
+    },
+    {
+      "type": "site",
+      "id": 3513,
+      "name": "Halfway House",
+      "enteredGps": "55.95098027131081, -3.18885448789905",
+      "capturedAt": "2026-10-19T12:01:30.828Z"
+    },
+    {
+      "type": "site",
+      "id": 3628,
+      "name": "North Bridge",
+      "enteredGps": "55.951912, -3.18838",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:01:51.221Z"
+    },
+    {
+      "type": "site",
+      "id": 3525,
+      "name": "The Milkman",
+      "enteredGps": "55.950379, -3.188528",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:02:13.144Z"
+    },
+    {
+      "type": "site",
+      "id": 3714,
+      "name": "The Albanach",
+      "enteredGps": "55.950156, -3.188432",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:02:18.082Z"
+    },
+    {
+      "type": "site",
+      "id": 3727,
+      "name": "Royal Mile",
+      "enteredGps": "55.94998619950235, -3.1888845755602233",
+      "capturedAt": "2026-10-19T12:02:39.069Z"
+    },
+    {
+      "type": "site",
+      "id": 3687,
+      "name": "New Assembly Close",
+      "enteredGps": "55.949938, -3.188693",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:02:50.492Z"
+    },
+    {
+      "type": "site",
+      "id": 3687,
+      "name": "New Assembly Close",
+      "enteredGps": "55.95000148075653, -3.1887211394541453",
+      "capturedAt": "2026-10-19T12:03:11.831Z"
+    },
+    {
+      "type": "site",
+      "id": 3686,
+      "name": "Stevenlaw's Close",
+      "enteredGps": "55.95002583826431, -3.188531484922038",
+      "capturedAt": "2026-10-19T12:03:20.213Z"
+    },
+    {
+      "type": "site",
+      "id": 3718,
+      "name": "The Scotsman's Lounge",
+      "enteredGps": "55.95033768020869, -3.1881645609941813",
+      "capturedAt": "2026-10-19T12:03:39.305Z"
+    },
+    {
+      "type": "site",
+      "id": 3681,
+      "name": "North Bridge Arcade",
+      "enteredGps": "55.950671, -3.188045",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:03:51.936Z"
+    },
+    {
+      "type": "site",
+      "id": 3638,
+      "name": "Landy's Fish and Chips",
+      "enteredGps": "55.95030850375443, -3.1873572953585665",
+      "capturedAt": "2026-10-19T12:04:03.291Z"
+    },
+    {
+      "type": "site",
+      "id": 3684,
+      "name": "Bailie Fyfe's Close",
+      "enteredGps": "55.950355676434384, -3.1861847313711564",
+      "capturedAt": "2026-10-19T12:04:16.755Z"
+    },
+    {
+      "type": "site",
+      "id": 3685,
+      "name": "The Nutcracker Christmas Shop",
+      "enteredGps": "55.95027, -3.185902",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:04:29.957Z"
+    },
+    {
+      "type": "site",
+      "id": 3688,
+      "name": "Netherbow Wellhead",
+      "enteredGps": "55.950476, -3.185246",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:04:44.808Z"
+    },
+    {
+      "type": "site",
+      "id": 3683,
+      "name": "The Mitre Bar",
+      "enteredGps": "55.95034509408481, -3.186891865090473",
+      "capturedAt": "2026-10-19T12:05:07.280Z"
+    },
+    {
+      "type": "site",
+      "id": 3682,
+      "name": "Bishop's Close",
+      "enteredGps": "55.9503123302087, -3.1868018485748166",
+      "capturedAt": "2026-10-19T12:05:25.276Z"
+    },
+    {
+      "type": "site",
+      "id": 3679,
+      "name": "Radisson Blu Hotel",
+      "enteredGps": "55.95009, -3.186916",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:05:31.962Z"
+    },
+    {
+      "type": "site",
+      "id": 3637,
+      "name": "The Inn on the Mile",
+      "enteredGps": "55.950041, -3.187301",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:05:37.569Z"
+    },
+    {
+      "type": "landmark",
+      "sequenceOrder": 7,
+      "name": "Tron Kirk Market",
+      "enteredGps": "55.94996185129082, -3.187727427732028",
+      "capturedAt": "2026-10-19T12:05:52.755Z"
+    },
+    {
+      "type": "site",
+      "id": 3524,
+      "name": "Tron Kirk Market",
+      "enteredGps": "55.949972314271974, -3.1877300972747094",
+      "capturedAt": "2026-10-19T12:05:58.992Z"
+    },
+    {
+      "type": "site",
+      "id": 3526,
+      "name": "Sir Chris Hoy Gold Post Box",
+      "enteredGps": "55.949894, -3.187895",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:06:04.267Z"
+    },
+    {
+      "type": "site",
+      "id": 3717,
+      "name": "The Piper's Rest",
+      "enteredGps": "55.9497373446012, -3.1880713698889167",
+      "capturedAt": "2026-10-19T12:06:13.303Z"
+    },
+    {
+      "type": "site",
+      "id": 3636,
+      "name": "O'Neill's Bar",
+      "enteredGps": "55.949584, -3.187614",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:06:18.852Z"
+    },
+    {
+      "type": "site",
+      "id": 3715,
+      "name": "The Advocate",
+      "enteredGps": "55.94949561725849, -3.1878983844334527",
+      "capturedAt": "2026-10-19T12:06:28.286Z"
+    },
+    {
+      "type": "site",
+      "id": 3689,
+      "name": "Old Assembly Close",
+      "enteredGps": "55.949769547261724, -3.1893030161544402",
+      "capturedAt": "2026-10-19T12:06:45.625Z"
+    },
+    {
+      "type": "site",
+      "id": 3690,
+      "name": "Borthwick's Close",
+      "enteredGps": "55.94973576651623, -3.1895587570319037",
+      "capturedAt": "2026-10-19T12:06:52.386Z"
+    },
+    {
+      "type": "site",
+      "id": 3522,
+      "name": "Old Fishmarket Close",
+      "enteredGps": "55.94969953442481, -3.1896778180842205",
+      "capturedAt": "2026-10-19T12:07:06.055Z"
+    },
+    {
+      "type": "site",
+      "id": 3527,
+      "name": "Adam Smith Statue",
+      "enteredGps": "55.94979812630888, -3.1899818240154616",
+      "capturedAt": "2026-10-19T12:07:14.278Z"
+    },
+    {
+      "type": "site",
+      "id": 3612,
+      "name": "Hugh Miller Plaque",
+      "enteredGps": "55.94987141320118, -3.190344659495338",
+      "capturedAt": "2026-10-19T12:08:07.126Z"
+    },
+    {
+      "type": "site",
+      "id": 3530,
+      "name": "Real Mary King's Close",
+      "enteredGps": "55.949936853744305, -3.19047544069943",
+      "capturedAt": "2026-10-19T12:08:12.507Z"
+    },
+    {
+      "type": "site",
+      "id": 3613,
+      "name": "General Stanislaw Maczek Statue",
+      "enteredGps": "55.95014894920931, -3.190210938443471",
+      "capturedAt": "2026-10-19T12:08:33.559Z"
+    },
+    {
+      "type": "site",
+      "id": 3529,
+      "name": "Edinburgh City Chambers",
+      "enteredGps": "55.950278, -3.190311",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:08:44.091Z"
+    },
+    {
+      "type": "site",
+      "id": 3611,
+      "name": "Alexander and Bucephalus Statue",
+      "enteredGps": "55.950071389108416, -3.1902535329833484",
+      "capturedAt": "2026-10-19T12:08:51.910Z"
+    },
+    {
+      "type": "site",
+      "id": 3631,
+      "name": "The Doric Bar",
+      "enteredGps": "55.950891153968286, -3.190620851798542",
+      "capturedAt": "2026-10-19T12:09:09.187Z"
+    },
+    {
+      "type": "site",
+      "id": 3716,
+      "name": "Malt Shovel Inn",
+      "enteredGps": "55.95063856231957, -3.19068227327449",
+      "capturedAt": "2026-10-19T12:09:14.554Z"
+    },
+    {
+      "type": "site",
+      "id": 3521,
+      "name": "Craig's Close",
+      "enteredGps": "55.950970054178526, -3.1900585711851477",
+      "capturedAt": "2026-10-19T12:09:24.740Z"
+    },
+    {
+      "type": "site",
+      "id": 3520,
+      "name": "Cockburn Street",
+      "enteredGps": "55.9506, -3.189837",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:09:29.640Z"
+    },
+    {
+      "type": "site",
+      "id": 3523,
+      "name": "Anchor Close",
+      "enteredGps": "55.95052, -3.189519",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:09:35.885Z"
+    },
+    {
+      "type": "site",
+      "id": 3630,
+      "name": "Warriston's Close",
+      "enteredGps": "55.950542, -3.191001",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:09:48.554Z"
+    },
+    {
+      "type": "site",
+      "id": 3694,
+      "name": "Roxburgh's Close",
+      "enteredGps": "55.949814605582446, -3.1910296194806733",
+      "capturedAt": "2026-10-19T12:10:08.167Z"
+    },
+    {
+      "type": "site",
+      "id": 3629,
+      "name": "Advocate's Close",
+      "enteredGps": "55.9497663389719, -3.19122827831103",
+      "capturedAt": "2026-10-19T12:10:15.475Z"
+    },
+    {
+      "type": "site",
+      "id": 3534,
+      "name": "Heart of Midlothian Mosaic",
+      "enteredGps": "55.949552, -3.191578",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:10:24.033Z"
+    },
+    {
+      "type": "site",
+      "id": 3537,
+      "name": "Statue of Walter Francis Montagu Douglas Scott",
+      "enteredGps": "55.94951, -3.191723",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:10:30.166Z"
+    },
+    {
+      "type": "site",
+      "id": 3533,
+      "name": "Signet Library",
+      "enteredGps": "55.949168, -3.191304",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:10:36.122Z"
+    },
+    {
+      "type": "site",
+      "id": 3532,
+      "name": "St Giles' Cathedral",
+      "enteredGps": "55.949484, -3.190892",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:10:42.063Z"
+    },
+    {
+      "type": "site",
+      "id": 3693,
+      "name": "Charles II Statue",
+      "enteredGps": "55.94923, -3.190517",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:10:46.723Z"
+    },
+    {
+      "type": "site",
+      "id": 3531,
+      "name": "Parliament House",
+      "enteredGps": "55.94906, -3.190771",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:11:10.636Z"
+    },
+    {
+      "type": "site",
+      "id": 3692,
+      "name": "The Supreme Courts",
+      "enteredGps": "55.94894, -3.190711",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:11:13.760Z"
+    },
+    {
+      "type": "site",
+      "id": 3575,
+      "name": "National Library of Scotland",
+      "enteredGps": "55.948568, -3.191936",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:11:25.898Z"
+    },
+    {
+      "type": "site",
+      "id": 3576,
+      "name": "Edinburgh Central Library",
+      "enteredGps": "55.948322, -3.192301",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:11:30.501Z"
+    },
+    {
+      "type": "site",
+      "id": 3502,
+      "name": "Police Box Cafe",
+      "enteredGps": "55.951515, -3.204517",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:12:15.019Z"
+    },
+    {
+      "type": "site",
+      "id": 3473,
+      "name": "Beachcomber by George Mackay Brown",
+      "enteredGps": "55.95154570944004, -3.2044675095571904",
+      "capturedAt": "2026-10-19T12:12:23.249Z"
+    },
+    {
+      "type": "site",
+      "id": 3474,
+      "name": "Rose Street's Last Original Block",
+      "enteredGps": "55.951487, -3.204369",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:12:27.963Z"
+    },
+    {
+      "type": "site",
+      "id": 3472,
+      "name": "Charlotte Chapel / Rose Theatre",
+      "enteredGps": "55.95126517782097, -3.2055224879466664",
+      "capturedAt": "2026-10-19T12:12:39.065Z"
+    },
+    {
+      "type": "site",
+      "id": 3499,
+      "name": "The Johnnie Walker Experience",
+      "enteredGps": "55.950343, -3.207608",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:12:50.593Z"
+    },
+    {
+      "type": "site",
+      "id": 3621,
+      "name": "Mather's Bar",
+      "enteredGps": "55.950226, -3.208692",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:12:58.238Z"
+    },
+    {
+      "type": "site",
+      "id": 3615,
+      "name": "The Caledonian Hotel",
+      "enteredGps": "55.94973445071642, -3.207289623989851",
+      "capturedAt": "2026-10-19T12:13:08.065Z"
+    },
+    {
+      "type": "site",
+      "id": 3494,
+      "name": "Playfair Steps",
+      "enteredGps": "55.950422, -3.194893",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:42:16.787Z"
+    },
+    {
+      "type": "site",
+      "id": 3672,
+      "name": "Museum on the Mound",
+      "enteredGps": "55.95014621579841, -3.1934964450622942",
+      "capturedAt": "2026-10-19T12:42:45.842Z"
+    },
+    {
+      "type": "site",
+      "id": 3697,
+      "name": "Author's Phrases in the Flagstones",
+      "enteredGps": "55.949720812357555, -3.193621467250864",
+      "capturedAt": "2026-10-19T12:42:57.019Z"
+    },
+    {
+      "type": "site",
+      "id": 3539,
+      "name": "Makars' Court",
+      "enteredGps": "55.949697, -3.19348",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:42:59.522Z"
+    },
+    {
+      "type": "site",
+      "id": 3540,
+      "name": "The Writers' Museum",
+      "enteredGps": "55.949691, -3.193742",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:43:04.228Z"
+    },
+    {
+      "type": "site",
+      "id": 3698,
+      "name": "Scottish War Poets Memorial",
+      "enteredGps": "55.949591, -3.19366",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:43:14.442Z"
+    },
+    {
+      "type": "site",
+      "id": 3536,
+      "name": "Deacon Brodies Tavern",
+      "enteredGps": "55.949535, -3.192949",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:43:24.143Z"
+    },
+    {
+      "type": "site",
+      "id": 3695,
+      "name": "Bank of Scotland",
+      "enteredGps": "55.950203, -3.192987",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:43:35.038Z"
+    },
+    {
+      "type": "site",
+      "id": 3634,
+      "name": "Sir Robert W Philip Plaque",
+      "enteredGps": "55.94990957428428, -3.1930291938015785",
+      "capturedAt": "2026-10-19T12:43:47.475Z"
+    },
+    {
+      "type": "site",
+      "id": 3528,
+      "name": "Mercat Cross",
+      "enteredGps": "55.94963698909851, -3.1901831907858877",
+      "capturedAt": "2026-10-19T12:44:03.691Z"
+    },
+    {
+      "type": "site",
+      "id": 3691,
+      "name": "Statue of James Braidwood",
+      "enteredGps": "55.94949, -3.189989",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:44:08.526Z"
+    },
+    {
+      "type": "site",
+      "id": 3614,
+      "name": "The News Steps",
+      "enteredGps": "55.950235, -3.192167",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:44:31.427Z"
+    },
+    {
+      "type": "site",
+      "id": 3696,
+      "name": "Wardrop's Court",
+      "enteredGps": "55.94946076834569, -3.1931731466294195",
+      "capturedAt": "2026-10-19T12:44:51.072Z"
+    },
+    {
+      "type": "site",
+      "id": 3535,
+      "name": "Brodie's Close",
+      "enteredGps": "55.949232321387655, -3.1931613966339967",
+      "capturedAt": "2026-10-19T12:44:57.741Z"
+    },
+    {
+      "type": "site",
+      "id": 3538,
+      "name": "Robert Burns House Plaque",
+      "enteredGps": "55.949400011971505, -3.193538555045336",
+      "capturedAt": "2026-10-19T12:45:21.265Z"
+    },
+    {
+      "type": "site",
+      "id": 3538,
+      "name": "Robert Burns House Plaque",
+      "enteredGps": "55.94939982666588, -3.1935565937567105",
+      "capturedAt": "2026-10-19T12:45:31.264Z"
+    },
+    {
+      "type": "site",
+      "id": 3541,
+      "name": "Gladstone's Land",
+      "enteredGps": "55.9494220350399, -3.1936781207080287",
+      "capturedAt": "2026-10-19T12:45:36.655Z"
+    },
+    {
+      "type": "site",
+      "id": 3700,
+      "name": "James' Court",
+      "enteredGps": "55.949335892461846, -3.1937663956359756",
+      "capturedAt": "2026-10-19T12:45:50.664Z"
+    },
+    {
+      "type": "site",
+      "id": 3701,
+      "name": "The Jolly Judge",
+      "enteredGps": "55.94952, -3.193948",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:46:01.005Z"
+    },
+    {
+      "type": "site",
+      "id": 3702,
+      "name": "Susannah Alice Stephen Memorial",
+      "enteredGps": "55.949598, -3.194125",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:46:05.521Z"
+    },
+    {
+      "type": "site",
+      "id": 3699,
+      "name": "Milne's Court",
+      "enteredGps": "55.949199482695974, -3.1943105928277475",
+      "capturedAt": "2026-10-19T12:46:23.743Z"
+    },
+    {
+      "type": "site",
+      "id": 3703,
+      "name": "The Ensign Ewart",
+      "enteredGps": "55.949203, -3.194462",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:46:30.986Z"
+    },
+    {
+      "type": "site",
+      "id": 3542,
+      "name": "The Hub",
+      "enteredGps": "55.94884672187584, -3.1949090982282087",
+      "capturedAt": "2026-10-19T12:46:45.866Z"
+    },
+    {
+      "type": "site",
+      "id": 3704,
+      "name": "Boswell's Court",
+      "enteredGps": "55.94884, -3.195543",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:46:56.086Z"
+    },
+    {
+      "type": "site",
+      "id": 3544,
+      "name": "The Witchery by the Castle",
+      "enteredGps": "55.948807, -3.195626",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:47:01.965Z"
+    },
+    {
+      "type": "site",
+      "id": 3705,
+      "name": "Ramsay Lane",
+      "enteredGps": "55.948986, -3.195798",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:47:12.800Z"
+    },
+    {
+      "type": "site",
+      "id": 3543,
+      "name": "Camera Obscura & World of Illusions",
+      "enteredGps": "55.94894610582773, -3.1955983002716266",
+      "capturedAt": "2026-10-19T12:47:19.733Z"
+    },
+    {
+      "type": "site",
+      "id": 3545,
+      "name": "The Scotch Whisky Experience",
+      "enteredGps": "55.948743, -3.195875",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:47:24.130Z"
+    },
+    {
+      "type": "site",
+      "id": 3546,
+      "name": "Tartan Weaving Mill",
+      "enteredGps": "55.948917902315344, -3.1960148918025197",
+      "capturedAt": "2026-10-19T12:47:38.012Z"
+    },
+    {
+      "type": "site",
+      "id": 3551,
+      "name": "The Witches' Well",
+      "enteredGps": "55.948882, -3.196423",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:47:51.847Z"
+    },
+    {
+      "type": "site",
+      "id": 3547,
+      "name": "Cannonball House",
+      "enteredGps": "55.948692, -3.196206",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:48:04.416Z"
+    },
+    {
+      "type": "site",
+      "id": 3548,
+      "name": "Ramsay Garden",
+      "enteredGps": "55.949335, -3.196322",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:48:10.171Z"
+    },
+    {
+      "type": "site",
+      "id": 3552,
+      "name": "The India Cross",
+      "enteredGps": "55.948961, -3.196917",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:48:16.715Z"
+    },
+    {
+      "type": "site",
+      "id": 3553,
+      "name": "Scottish Horse Memorial",
+      "enteredGps": "55.948927, -3.197592",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:48:20.710Z"
+    },
+    {
+      "type": "site",
+      "id": 3549,
+      "name": "Castle Esplanade",
+      "enteredGps": "55.9487, -3.1975",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:48:25.940Z"
+    },
+    {
+      "type": "site",
+      "id": 3556,
+      "name": "Princess Louise's Fountain Memorial",
+      "enteredGps": "55.948456, -3.198122",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:48:30.479Z"
+    },
+    {
+      "type": "site",
+      "id": 3559,
+      "name": "Ensign Ewart Memorial and Grave",
+      "enteredGps": "55.948875, -3.197997",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:48:36.873Z"
+    },
+    {
+      "type": "site",
+      "id": 3554,
+      "name": "The Afghan Needle",
+      "enteredGps": "55.948925, -3.198056",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:48:41.186Z"
+    },
+    {
+      "type": "site",
+      "id": 3558,
+      "name": "William Wallace Statue",
+      "enteredGps": "55.948592, -3.19869",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:48:53.177Z"
+    },
+    {
+      "type": "site",
+      "id": 3557,
+      "name": "Robert the Bruce Statue",
+      "enteredGps": "55.94854, -3.198678",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:48:55.854Z"
+    },
+    {
+      "type": "site",
+      "id": 3555,
+      "name": "The Gatehouse",
+      "enteredGps": "55.948567, -3.198679",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:49:02.773Z"
+    },
+    {
+      "type": "site",
+      "id": 3550,
+      "name": "Edinburgh Castle",
+      "enteredGps": "55.948595, -3.199914",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:49:10.991Z"
+    },
+    {
+      "type": "site",
+      "id": 3707,
+      "name": "St Columba's by the Castle",
+      "enteredGps": "55.948311, -3.195466",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:49:33.645Z"
+    },
+    {
+      "type": "site",
+      "id": 3560,
+      "name": "Johnston Terrace Wildlife Garden",
+      "enteredGps": "55.948112, -3.196281",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:49:40.138Z"
+    },
+    {
+      "type": "site",
+      "id": 3566,
+      "name": "Patrick Geddes Steps",
+      "enteredGps": "55.948036, -3.196137",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:49:53.401Z"
+    },
+    {
+      "type": "site",
+      "id": 3706,
+      "name": "Castle Rock Hostel",
+      "enteredGps": "55.948206, -3.195937",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:49:57.405Z"
+    },
+    {
+      "type": "site",
+      "id": 3565,
+      "name": "Petit Paris",
+      "enteredGps": "55.947549, -3.196582",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:50:13.671Z"
+    },
+    {
+      "type": "site",
+      "id": 3564,
+      "name": "White Hart Inn",
+      "enteredGps": "55.947505, -3.196776",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:50:18.232Z"
+    },
+    {
+      "type": "site",
+      "id": 3563,
+      "name": "Beehive Inn",
+      "enteredGps": "55.947417, -3.197165",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:50:26.665Z"
+    },
+    {
+      "type": "site",
+      "id": 3670,
+      "name": "The Black Bull",
+      "enteredGps": "55.94734, -3.197487",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:50:31.664Z"
+    },
+    {
+      "type": "site",
+      "id": 3712,
+      "name": "Granny's Green Steps",
+      "enteredGps": "55.947314, -3.197885",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:50:37.952Z"
+    },
+    {
+      "type": "site",
+      "id": 3708,
+      "name": "Fiddler's Arms",
+      "enteredGps": "55.946896, -3.197872",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:50:43.637Z"
+    },
+    {
+      "type": "site",
+      "id": 3562,
+      "name": "Tanner's Close, West Port",
+      "enteredGps": "55.9468, -3.1983",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:50:59.300Z"
+    },
+    {
+      "type": "site",
+      "id": 3710,
+      "name": "Portsburgh Square",
+      "enteredGps": "55.946691, -3.198872",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:51:08.389Z"
+    },
+    {
+      "type": "site",
+      "id": 3709,
+      "name": "West Port Garden",
+      "enteredGps": "55.946710385114244, -3.1979663710500006",
+      "capturedAt": "2026-10-19T12:51:24.280Z"
+    },
+    {
+      "type": "site",
+      "id": 3569,
+      "name": "Portsburgh Stone",
+      "enteredGps": "55.946583, -3.197923",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:51:29.059Z"
+    },
+    {
+      "type": "site",
+      "id": 3711,
+      "name": "Salvation Army Womens Hostel",
+      "enteredGps": "55.946746, -3.197708",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:51:33.905Z"
+    },
+    {
+      "type": "site",
+      "id": 3728,
+      "name": "Grassmarket",
+      "enteredGps": "55.9474974760347, -3.1959609230235344",
+      "capturedAt": "2026-10-19T12:51:53.677Z"
+    },
+    {
+      "type": "site",
+      "id": 3570,
+      "name": "The Last Drop",
+      "enteredGps": "55.947837, -3.195347",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:52:02.462Z"
+    },
+    {
+      "type": "site",
+      "id": 3571,
+      "name": "Maggie Dicksons",
+      "enteredGps": "55.947919, -3.195074",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:52:07.806Z"
+    },
+    {
+      "type": "site",
+      "id": 3567,
+      "name": "Covenanters' Memorial",
+      "enteredGps": "55.947808, -3.194777",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:52:17.224Z"
+    },
+    {
+      "type": "site",
+      "id": 3640,
+      "name": "Hunter's Close",
+      "enteredGps": "55.94764571905412, -3.1945813424952973",
+      "capturedAt": "2026-10-19T12:52:26.700Z"
+    },
+    {
+      "type": "site",
+      "id": 3568,
+      "name": "W. Armstrong & Son (Armstrongs Vintage)",
+      "enteredGps": "55.947693, -3.194339",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:52:31.789Z"
+    },
+    {
+      "type": "site",
+      "id": 3642,
+      "name": "West Bow Well",
+      "enteredGps": "55.947988, -3.194474",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:52:39.946Z"
+    },
+    {
+      "type": "site",
+      "id": 3671,
+      "name": "Victoria Street's Cobbles",
+      "enteredGps": "55.948247, -3.194585",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:52:46.755Z"
+    },
+    {
+      "type": "site",
+      "id": 3578,
+      "name": "The Red Door Gallery",
+      "enteredGps": "55.94849238528133, -3.194500159594895",
+      "capturedAt": "2026-10-19T12:53:14.451Z"
+    },
+    {
+      "type": "site",
+      "id": 3643,
+      "name": "Museum Context",
+      "enteredGps": "55.94851567991654, -3.194455009062409",
+      "capturedAt": "2026-10-19T12:53:35.028Z"
+    },
+    {
+      "type": "site",
+      "id": 3644,
+      "name": "The Enchanted Galaxy",
+      "enteredGps": "55.948471023727166, -3.1940770837952357",
+      "capturedAt": "2026-10-19T12:53:49.872Z"
+    },
+    {
+      "type": "site",
+      "id": 3579,
+      "name": "Victoria Terrace",
+      "enteredGps": "55.948661, -3.194043",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:53:53.728Z"
+    },
+    {
+      "type": "site",
+      "id": 3645,
+      "name": "Bertie's Proper Fish & Chips",
+      "enteredGps": "55.948588, -3.193656",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:53:59.616Z"
+    },
+    {
+      "type": "site",
+      "id": 3713,
+      "name": "Quaker Meeting House",
+      "enteredGps": "55.948772, -3.193688",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:54:05.386Z"
+    },
+    {
+      "type": "site",
+      "id": 3646,
+      "name": "Finnegan's Wake",
+      "enteredGps": "55.94856242926224, -3.19354623982008",
+      "capturedAt": "2026-10-19T12:54:14.484Z"
+    },
+    {
+      "type": "site",
+      "id": 3577,
+      "name": "Victoria Street",
+      "enteredGps": "55.948725, -3.193325",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:54:20.376Z"
+    },
+    {
+      "type": "site",
+      "id": 3647,
+      "name": "John Kay's Shop",
+      "enteredGps": "55.948797, -3.193146",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:54:26.310Z"
+    },
+    {
+      "type": "site",
+      "id": 3648,
+      "name": "India Buildings",
+      "enteredGps": "55.948617814227106, -3.1929815051547052",
+      "capturedAt": "2026-10-19T12:54:36.320Z"
+    },
+    {
+      "type": "site",
+      "id": 3649,
+      "name": "George IV Bar",
+      "enteredGps": "55.948137, -3.191638",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:54:48.913Z"
+    },
+    {
+      "type": "site",
+      "id": 3574,
+      "name": "George IV Bridge",
+      "enteredGps": "55.947759, -3.191681",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:54:55.277Z"
+    },
+    {
+      "type": "site",
+      "id": 3650,
+      "name": "Augustine United Church",
+      "enteredGps": "55.947654, -3.191398",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:55:02.418Z"
+    },
+    {
+      "type": "site",
+      "id": 3729,
+      "name": "Chambers Street",
+      "enteredGps": "55.947205, -3.190781",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:55:14.137Z"
+    },
+    {
+      "type": "site",
+      "id": 3653,
+      "name": "Crown Office",
+      "enteredGps": "55.947547, -3.190055",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:55:20.127Z"
+    },
+    {
+      "type": "site",
+      "id": 3654,
+      "name": "William Chambers Monument",
+      "enteredGps": "55.947391, -3.189792",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:55:24.774Z"
+    },
+    {
+      "type": "site",
+      "id": 3655,
+      "name": "William Henry Playfair Monument",
+      "enteredGps": "55.947547, -3.188902",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:55:31.786Z"
+    },
+    {
+      "type": "site",
+      "id": 3652,
+      "name": "Edinburgh Sheriff Court",
+      "enteredGps": "55.947919, -3.190749",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:55:45.427Z"
+    },
+    {
+      "type": "site",
+      "id": 3573,
+      "name": "The Elephant House",
+      "enteredGps": "55.94757, -3.191785",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:56:01.126Z"
+    },
+    {
+      "type": "site",
+      "id": 3641,
+      "name": "The Oz Bar",
+      "enteredGps": "55.947502, -3.191999",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:56:06.298Z"
+    },
+    {
+      "type": "site",
+      "id": 3641,
+      "name": "The Oz Bar",
+      "enteredGps": "55.947490505134795, -3.192032632764068",
+      "capturedAt": "2026-10-19T12:56:12.008Z"
+    },
+    {
+      "type": "site",
+      "id": 3572,
+      "name": "Candlemaker Row",
+      "enteredGps": "55.947354, -3.191963",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:56:15.213Z"
+    },
+    {
+      "type": "site",
+      "id": 3651,
+      "name": "Frankenstein & Bier Keller",
+      "enteredGps": "55.947387, -3.191645",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:56:21.488Z"
+    },
+    {
+      "type": "site",
+      "id": 3730,
+      "name": "Cowgate",
+      "enteredGps": "55.94803, -3.192747",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:56:29.959Z"
+    },
+    {
+      "type": "site",
+      "id": 3580,
+      "name": "Greyfriars Hall",
+      "enteredGps": "55.94800003784624, -3.193385358401059",
+      "capturedAt": "2026-10-19T12:56:40.304Z"
+    },
+    {
+      "type": "site",
+      "id": 3582,
+      "name": "Greyfriars Kirk",
+      "enteredGps": "55.94658634176764, -3.1922074161724083",
+      "capturedAt": "2026-10-19T12:57:24.086Z"
+    },
+    {
+      "type": "site",
+      "id": 3598,
+      "name": "Greyfriars Bobby Statue",
+      "enteredGps": "55.946922, -3.191304",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:57:38.697Z"
+    },
+    {
+      "type": "site",
+      "id": 3586,
+      "name": "Greyfriars Bobby's Bar",
+      "enteredGps": "55.946823, -3.191508",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:57:44.496Z"
+    },
+    {
+      "type": "site",
+      "id": 3599,
+      "name": "Greyfriars Bobby's Grave",
+      "enteredGps": "55.946672, -3.191633",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:57:50.942Z"
+    },
+    {
+      "type": "site",
+      "id": 3583,
+      "name": "Greyfriars Kirkyard",
+      "enteredGps": "55.946643, -3.191539",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T12:57:56.413Z"
+    },
+    {
+      "type": "site",
+      "id": 3589,
+      "name": "Bristo Port (Flodden Wall)",
+      "enteredGps": "55.946399, -3.191143",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T13:05:05.317Z"
+    },
+    {
+      "type": "site",
+      "id": 3588,
+      "name": "Sandy Bell's",
+      "enteredGps": "55.946081, -3.19129",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T13:05:20.962Z"
+    },
+    {
+      "type": "site",
+      "id": 3610,
+      "name": "Little Free Library",
+      "enteredGps": "55.946118, -3.190877",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T13:05:27.705Z"
+    },
+    {
+      "type": "site",
+      "id": 3585,
+      "name": "The Black Mausoleum",
+      "enteredGps": "55.946167119598215, -3.1921594334208123",
+      "capturedAt": "2026-10-19T13:05:44.905Z"
+    },
+    {
+      "type": "site",
+      "id": 3584,
+      "name": "Covenanters' Prison",
+      "enteredGps": "55.94604919388115, -3.192475617999065",
+      "capturedAt": "2026-10-19T13:06:12.812Z"
+    },
+    {
+      "type": "site",
+      "id": 3608,
+      "name": "Adam Family Mausoleum",
+      "enteredGps": "55.946044, -3.192742",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T13:06:55.106Z"
+    },
+    {
+      "type": "site",
+      "id": 3609,
+      "name": "James Hutton's Grave",
+      "enteredGps": "55.94579344029688, -3.1924685905113392",
+      "capturedAt": "2026-10-19T13:07:11.154Z"
+    },
+    {
+      "type": "site",
+      "id": 3595,
+      "name": "George Heriot's School (Main Building)",
+      "enteredGps": "55.945185, -3.193733",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T13:07:22.058Z"
+    },
+    {
+      "type": "site",
+      "id": 3607,
+      "name": "William McGonagall's Tombstone",
+      "enteredGps": "55.94638191784537, -3.1935439638196215",
+      "capturedAt": "2026-10-19T13:08:13.872Z"
+    },
+    {
+      "type": "site",
+      "id": 3606,
+      "name": "Elizabeth Moodie's Gravestone",
+      "enteredGps": "55.946536195830845, -3.1933862044267016",
+      "capturedAt": "2026-10-19T13:08:40.622Z"
+    },
+    {
+      "type": "site",
+      "id": 3600,
+      "name": "Thomas Riddell's Grave",
+      "enteredGps": "55.94690109272224, -3.193654042980654",
+      "capturedAt": "2026-10-19T13:09:12.022Z"
+    },
+    {
+      "type": "site",
+      "id": 3601,
+      "name": "Captain John Porteous's Grave",
+      "enteredGps": "55.946708, -3.193317",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T13:09:28.732Z"
+    },
+    {
+      "type": "site",
+      "id": 3605,
+      "name": "John Watson's Grave",
+      "enteredGps": "55.946894630817184, -3.192064086261098",
+      "capturedAt": "2026-10-19T13:10:35.451Z"
+    },
+    {
+      "type": "site",
+      "id": 3604,
+      "name": "John Gray's Grave",
+      "enteredGps": "55.946896527915925, -3.1924832795228895",
+      "capturedAt": "2026-10-19T13:11:03.826Z"
+    },
+    {
+      "type": "site",
+      "id": 3603,
+      "name": "The Scrymgeour Gravestone",
+      "enteredGps": "55.94696239823543, -3.19263172030864",
+      "capturedAt": "2026-10-19T13:11:17.476Z"
+    },
+    {
+      "type": "site",
+      "id": 3602,
+      "name": "The Potter Grave (Anne and Robert Potter)",
+      "enteredGps": "55.94692123482659, -3.1925927191277594",
+      "capturedAt": "2026-10-19T13:11:22.524Z"
+    },
+    {
+      "type": "site",
+      "id": 3602,
+      "name": "The Potter Grave (Anne and Robert Potter)",
+      "enteredGps": "55.94691355804136, -3.1925919312296003",
+      "capturedAt": "2026-10-19T13:11:46.768Z"
+    },
+    {
+      "type": "site",
+      "id": 3581,
+      "name": "Tomb of John Bayne of Pitcairlie",
+      "enteredGps": "55.947297, -3.192282",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T13:12:21.137Z"
+    },
+    {
+      "type": "site",
+      "id": 3587,
+      "name": "Bedlam Theatre",
+      "enteredGps": "55.946288, -3.190727",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T13:12:33.905Z"
+    },
+    {
+      "type": "site",
+      "id": 3656,
+      "name": "Hotel du Vin & Bistro",
+      "enteredGps": "55.945998, -3.190277",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T13:12:37.928Z"
+    },
+    {
+      "type": "site",
+      "id": 3658,
+      "name": "Doctors",
+      "enteredGps": "55.94548396139439, -3.190917531896588",
+      "capturedAt": "2026-10-19T13:12:43.988Z"
+    },
+    {
+      "type": "site",
+      "id": 3657,
+      "name": "The Gilded Saloon",
+      "enteredGps": "55.94613835628931, -3.189198835025536",
+      "capturedAt": "2026-10-19T13:12:54.640Z"
+    },
+    {
+      "type": "site",
+      "id": 3590,
+      "name": "Teviot Row House",
+      "enteredGps": "55.944971, -3.188886",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T13:13:14.088Z"
+    },
+    {
+      "type": "site",
+      "id": 3591,
+      "name": "Reid Concert Hall",
+      "enteredGps": "55.944923, -3.189362",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T13:13:19.288Z"
+    },
+    {
+      "type": "site",
+      "id": 3593,
+      "name": "The Next Big Thing is a Series of Little Things",
+      "enteredGps": "55.945448, -3.188675",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T13:13:24.472Z"
+    },
+    {
+      "type": "site",
+      "id": 3592,
+      "name": "McEwan Lantern Pillar",
+      "enteredGps": "55.945338, -3.188262",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T13:13:29.365Z"
+    },
+    {
+      "type": "site",
+      "id": 3594,
+      "name": "Old Medical School",
+      "enteredGps": "55.945356, -3.190298",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T13:13:51.517Z"
+    },
+    {
+      "type": "landmark",
+      "sequenceOrder": 13,
+      "name": "McEwan Hall",
+      "enteredGps": "55.945323, -3.189479",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T13:14:23.639Z"
+    },
+    {
+      "type": "landmark",
+      "sequenceOrder": 12,
+      "name": "Greyfriars Bobby",
+      "enteredGps": "55.946922, -3.1913039999999997",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T13:14:39.091Z"
+    },
+    {
+      "type": "landmark",
+      "sequenceOrder": 8,
+      "name": "Deacon Brodies Tavern",
+      "enteredGps": "55.949535, -3.192949",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T13:14:55.373Z"
+    },
+    {
+      "type": "landmark",
+      "sequenceOrder": 10,
+      "name": "Petit Paris",
+      "enteredGps": "55.947548999999995, -3.1965820000000003",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T13:19:01.022Z"
+    },
+    {
+      "type": "landmark",
+      "sequenceOrder": 9,
+      "name": "The Gatehouse",
+      "enteredGps": "55.948567, -3.198679",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T13:19:11.971Z"
+    },
+    {
+      "type": "landmark",
+      "sequenceOrder": 14,
+      "name": "Lt David Stuart McGregor VC",
+      "enteredGps": "55.94497200753449, -3.19508349058745",
+      "capturedAt": "2026-10-19T13:19:48.441Z"
+    },
+    {
+      "type": "site",
+      "id": 3596,
+      "name": "Middle Meadow Walk",
+      "enteredGps": "55.945218, -3.191212",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T13:20:01.666Z"
+    },
+    {
+      "type": "site",
+      "id": 3659,
+      "name": "The Kid's Secret Garden",
+      "enteredGps": "55.945159, -3.19136",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T13:20:07.271Z"
+    },
+    {
+      "type": "site",
+      "id": 3659,
+      "name": "The Kid's Secret Garden",
+      "enteredGps": "55.94523743584429, -3.1912621386036335",
+      "capturedAt": "2026-10-19T13:20:16.043Z"
+    },
+    {
+      "type": "site",
+      "id": 3660,
+      "name": "Edinburgh Futures Institute",
+      "enteredGps": "55.944602, -3.192813",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T13:20:28.338Z"
+    },
+    {
+      "type": "site",
+      "id": 3662,
+      "name": "Lister Square",
+      "enteredGps": "55.944716, -3.194522",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T13:20:42.932Z"
+    },
+    {
+      "type": "site",
+      "id": 3597,
+      "name": "Lister Housing Co-operative (Georgian Tenements)",
+      "enteredGps": "55.945086, -3.196762",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T13:20:55.322Z"
+    },
+    {
+      "type": "site",
+      "id": 3663,
+      "name": "George Heriot's School Turrets",
+      "enteredGps": "55.945474, -3.195646",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T13:21:12.955Z"
+    },
+    {
+      "type": "site",
+      "id": 3561,
+      "name": "The Vennel and Flodden Wall",
+      "enteredGps": "55.94621, -3.196841",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T13:21:21.512Z"
+    },
+    {
+      "type": "site",
+      "id": 3664,
+      "name": "Ornate Iron Railings",
+      "enteredGps": "55.94579, -3.196611",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T13:21:36.441Z"
+    },
+    {
+      "type": "site",
+      "id": 3678,
+      "name": "Stone Basements and Area Wells",
+      "enteredGps": "55.945744, -3.197349",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T13:21:48.831Z"
+    },
+    {
+      "type": "site",
+      "id": 3665,
+      "name": "Iron Boot Scraper",
+      "enteredGps": "55.94566758198425, -3.1973808711159393",
+      "capturedAt": "2026-10-19T13:22:05.760Z"
+    },
+    {
+      "type": "site",
+      "id": 3666,
+      "name": "Flower-Decorated Tenement Steps",
+      "enteredGps": "55.945541482389814, -3.1973818965875296",
+      "capturedAt": "2026-10-19T13:22:17.242Z"
+    },
+    {
+      "type": "site",
+      "id": 3667,
+      "name": "Argyle House - 60s architectural eyesore",
+      "enteredGps": "55.945816340072355, -3.1975809316255948",
+      "capturedAt": "2026-10-19T13:22:30.401Z"
+    },
+    {
+      "type": "site",
+      "id": 3669,
+      "name": "Brown's Place",
+      "enteredGps": "55.94645743904127, -3.1972059153323187",
+      "capturedAt": "2026-10-19T13:22:57.116Z"
+    },
+    {
+      "type": "site",
+      "id": 3668,
+      "name": "6VT Edinburgh City Youth Cafe",
+      "enteredGps": "55.946269, -3.197336",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T13:23:11.725Z"
+    },
+    {
+      "type": "site",
+      "id": 3639,
+      "name": "Bain's Retro Sweets",
+      "enteredGps": "55.9472364876427, -3.1961806843473823",
+      "capturedAt": "2026-10-19T13:23:35.263Z"
+    },
+    {
+      "type": "site",
+      "id": 3673,
+      "name": "Assembly Hall",
+      "enteredGps": "55.949794, -3.195285",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T13:23:51.790Z"
+    },
+    {
+      "type": "site",
+      "id": 3661,
+      "name": "Simpson Loan",
+      "enteredGps": "55.94346, -3.194096",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T13:24:25.185Z"
+    },
+    {
+      "type": "landmark",
+      "sequenceOrder": 15,
+      "name": "The Wee Pub - Smallest Pub in Scotland",
+      "enteredGps": "55.947938, -3.194998",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T13:25:50.341Z"
+    },
+    {
+      "type": "site",
+      "id": 3680,
+      "name": "Carrubber's Close",
+      "enteredGps": "55.95030465849959, -3.1869782709555636",
+      "capturedAt": "2026-10-19T13:27:11.929Z"
+    },
+    {
+      "type": "site",
+      "id": 3632,
+      "name": "Old Saint Paul's Scottish Episcopal Church",
+      "enteredGps": "55.950827, -3.187133",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T13:27:30.739Z"
+    },
+    {
+      "type": "landmark",
+      "sequenceOrder": 11,
+      "name": "Edinburgh Central Library",
+      "enteredGps": "55.948314419196976, -3.192302773092763",
+      "capturedAt": "2026-10-19T13:30:57.012Z"
+    },
+    {
+      "type": "site",
+      "id": 3720,
+      "name": "Harvey Nichols Edinburgh",
+      "enteredGps": "55.954802, -3.192127",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T13:31:16.187Z"
+    },
+    {
+      "type": "site",
+      "id": 3484,
+      "name": "Wojtek the Soldier Bear Memorial",
+      "enteredGps": "55.95085, -3.202106",
+      "confirmed": true,
+      "capturedAt": "2026-10-19T13:31:46.691Z"
+    }
+  ]
+}

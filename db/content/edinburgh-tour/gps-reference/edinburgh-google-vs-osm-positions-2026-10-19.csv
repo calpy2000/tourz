@@ -1,0 +1,307 @@
+type,db_id,sequence_order,title,google_latitude,google_longitude,osm_latitude,osm_longitude,moved_m,review_action
+landmark,181,1,"Royal Bank of Scotland Headquarters",55.954623,-3.190952,55.954511,-3.191062,14.2,Set GPS
+landmark,182,2,"William Pitt the Younger statue",55.953058,-3.200416,55.952926,-3.200396,14.7,Set GPS
+landmark,183,3,"Bute House",55.952478,-3.208063,55.952504,-3.208054,2.9,GPS OK
+landmark,184,4,"Wojtek the Soldier Bear Memorial",55.950850,-3.202106,55.950850,-3.202106,0.0,GPS OK
+landmark,185,5,"The Scott Monument",55.952486,-3.193300,55.952319,-3.193267,18.7,Set GPS
+landmark,186,6,"Fleshmarket Close",55.951229,-3.188933,55.951157,-3.188907,8.2,Set GPS
+landmark,187,7,"Tron Kirk Market",55.950033,-3.187752,55.949962,-3.187727,8.1,Set GPS
+landmark,188,8,"Deacon Brodies Tavern",55.949535,-3.192917,55.949535,-3.192949,2.0,GPS OK
+landmark,189,9,"The Gatehouse",55.948567,-3.198679,55.948567,-3.198679,0.0,GPS OK
+landmark,190,10,"Petit Paris",55.947551,-3.196575,55.947549,-3.196582,0.5,GPS OK
+landmark,191,11,"Edinburgh Central Library",55.948264,-3.192507,55.948314,-3.192303,13.9,Set GPS
+landmark,192,12,"Greyfriars Bobby",55.946945,-3.191315,55.946922,-3.191304,2.7,GPS OK
+landmark,193,13,"McEwan Hall",55.945323,-3.189479,55.945323,-3.189479,0.0,GPS OK
+landmark,194,14,"Lt David Stuart McGregor VC",55.945028,-3.195073,55.944972,-3.195083,6.3,Set GPS
+landmark,195,15,"The Wee Pub - Smallest Pub in Scotland",55.947983,-3.194931,55.947938,-3.194998,6.5,GPS OK
+site,3440,,"Statue of John Hope, 4th Earl of Hopetoun",55.954429,-3.191717,55.954429,-3.191717,0.0,GPS OK
+site,3441,,"Lion of Scotland",55.954562,-3.192994,55.954562,-3.192994,0.0,GPS OK
+site,3442,,"Melville Monument",55.954209,-3.193155,55.954207,-3.193156,0.2,Set GPS
+site,3443,,"Paddington Bear Statue",55.954163,-3.193490,55.954163,-3.193490,0.0,GPS OK
+site,3444,,"National Portrait Gallery",55.955679,-3.193556,55.955568,-3.193605,12.7,GPS OK
+site,3445,,"The Capital Building",55.953857,-3.194273,55.953852,-3.194303,2.0,GPS OK
+site,3446,,"James Clerk Maxwell statue",55.954004,-3.194402,55.953986,-3.194440,3.1,Set GPS
+site,3447,,"Thistle Court",55.954485,-3.195650,55.954485,-3.195650,0.0,GPS OK
+site,3448,,"The Dome",55.953660,-3.195608,55.953636,-3.195595,2.8,GPS OK
+site,3449,,"St Andrew's and St George's West Church",55.953895,-3.195773,55.953945,-3.195816,6.2,Set GPS
+site,3450,,"Caledonian Insurance Building",55.953800,-3.196300,55.953800,-3.196300,0.0,GPS OK
+site,3451,,"Royal Society of Edinburgh",55.953469,-3.196679,55.953368,-3.196667,11.3,Set GPS
+site,3452,,"Susan Ferrier's Home",55.953803,-3.196602,55.953803,-3.196602,0.0,GPS OK
+site,3453,,"King George IV Statue",55.953523,-3.197268,55.953518,-3.197258,0.8,GPS OK
+site,3454,,"The Assembly Rooms",55.953137,-3.198689,55.953137,-3.198689,0.0,GPS OK
+site,3455,,"Pink Sandstone Among Yellow Free-Stone",55.953000,-3.199800,55.953200,-3.199834,22.4,Set GPS
+site,3456,,"Hidden Back-Lane White Tiles",55.952338,-3.200912,55.952338,-3.200912,0.0,GPS OK
+site,3457,,"The Giant Caryatids",55.952698,-3.201264,55.952698,-3.201264,0.0,GPS OK
+site,3458,,"Micro-Lighthouse Above the Doorway",55.952652,-3.201538,55.952652,-3.201538,0.0,GPS OK
+site,3459,,"Freemasons' Hall",55.952280,-3.202446,55.952368,-3.202547,11.6,Set GPS
+site,3460,,"Early Modernist Steel Anomaly",55.952215,-3.203321,55.952285,-3.203150,13.2,Set GPS
+site,3461,,"Thomas Chalmers Statue",55.952466,-3.203521,55.952429,-3.203522,4.1,Set GPS
+site,3462,,"View Down Castle Street to the Castle",55.952332,-3.203474,55.952332,-3.203474,0.0,GPS OK
+site,3463,,"Walter Scott's House",55.952856,-3.203376,55.952856,-3.203376,0.0,GPS OK
+site,3464,,"The Oxford Bar",55.952969,-3.204650,55.952964,-3.204715,4.1,GPS OK
+site,3465,,"Church of Scotland Offices",55.952466,-3.204766,55.952409,-3.204688,8.0,Set GPS
+site,3466,,"Kimpton Charlotte Square Hotel",55.951601,-3.206254,55.951608,-3.206211,2.8,GPS OK
+site,3467,,"Prince Albert Memorial",55.951764,-3.207635,55.951718,-3.207643,5.1,Set GPS
+site,3468,,"West Register House",55.951551,-3.208869,55.951551,-3.208869,0.0,GPS OK
+site,3469,,"The Georgian House",55.952414,-3.208457,55.952488,-3.208214,17.2,GPS OK
+site,3470,,"Bute House",55.952442,-3.208274,55.952504,-3.208054,15.4,GPS OK
+site,3471,,"Rose Street (West End)",55.951224,-3.206265,55.951210,-3.206075,11.9,Set GPS
+site,3472,,"Charlotte Chapel / Rose Theatre",55.951169,-3.205496,55.951265,-3.205522,10.8,Set GPS
+site,3473,,"Beachcomber by George Mackay Brown",55.951566,-3.204537,55.951546,-3.204468,4.8,Set GPS
+site,3474,,"Rose Street's Last Original Block",55.951487,-3.204369,55.951487,-3.204369,0.0,GPS OK
+site,3475,,"Rose Street's First Pedestrianised Stretch",55.951750,-3.203137,55.951720,-3.203018,8.1,Set GPS
+site,3476,,"McVitie's Original Shop",55.951901,-3.202594,55.951901,-3.202594,0.0,GPS OK
+site,3477,,"The Kenilworth",55.951841,-3.202286,55.951788,-3.202276,5.9,GPS OK
+site,3478,,"Alexander Graham Bell Birthplace",55.951113,-3.206488,55.951122,-3.206478,1.2,GPS OK
+site,3479,,"St John's Episcopal Church",55.950036,-3.206593,55.950036,-3.206593,0.0,GPS OK
+site,3480,,"St Cuthbert's Parish Church",55.949638,-3.205093,55.949638,-3.205093,0.0,GPS OK
+site,3481,,"Ross Fountain",55.950075,-3.203062,55.950039,-3.203045,4.1,Set GPS
+site,3482,,"Norwegian Memorial Stone",55.950227,-3.202063,55.950227,-3.202063,0.0,GPS OK
+site,3483,,"Scottish American War Memorial",55.951047,-3.201029,55.951047,-3.201029,0.0,GPS OK
+site,3484,,"Wojtek the Soldier Bear Memorial",55.950850,-3.202106,55.950850,-3.202106,0.0,GPS OK
+site,3485,,"Ross Bandstand",55.950561,-3.200081,55.950561,-3.200081,0.0,GPS OK
+site,3486,,"Royal Scots Greys Monument",55.951379,-3.199398,55.951379,-3.199398,0.0,GPS OK
+site,3487,,"The Mound",55.951052,-3.196364,55.951052,-3.196364,0.0,GPS OK
+site,3488,,"Allan Ramsay Monument",55.951708,-3.197313,55.951689,-3.197301,2.2,GPS OK
+site,3489,,"Gardener's Cottage",55.951424,-3.197230,55.951424,-3.197230,0.0,GPS OK
+site,3490,,"Floral Clock",55.951724,-3.197253,55.951724,-3.197253,0.0,GPS OK
+site,3491,,"Royal Scottish Academy Building",55.951675,-3.196289,55.951675,-3.196289,0.0,GPS OK
+site,3492,,"John Wilson Statue",55.951953,-3.196100,55.952002,-3.195457,40.4,GPS OK
+site,3493,,"Scottish National Gallery",55.950902,-3.195686,55.950902,-3.195686,0.0,GPS OK
+site,3494,,"Playfair Steps",55.950420,-3.194904,55.950422,-3.194893,0.7,GPS OK
+site,3495,,"Adam Black Statue",55.952213,-3.194415,55.952172,-3.194396,4.7,GPS OK
+site,3496,,"David Livingstone Statue",55.952472,-3.192737,55.952462,-3.192736,1.1,GPS OK
+site,3497,,"The Scott Monument",55.952369,-3.193265,55.952337,-3.193264,3.6,Set GPS
+site,3498,,"Castle View",55.951306,-3.200209,55.951306,-3.200209,0.0,GPS OK
+site,3499,,"The Johnnie Walker Experience",55.950343,-3.207608,55.950343,-3.207608,0.0,GPS OK
+site,3500,,"Social Bite",55.951883,-3.202645,55.951875,-3.202686,2.7,GPS OK
+site,3501,,"Statue of the Royal Regiment of Scotland",55.950300,-3.202133,55.950286,-3.202219,5.6,Set GPS
+site,3502,,"Police Box Cafe",55.951515,-3.204517,55.951515,-3.204517,0.0,GPS OK
+site,3503,,"Duke of Wellington Statue",55.953486,-3.189153,55.953486,-3.189153,0.0,GPS OK
+site,3504,,"General Register House",55.953826,-3.189325,55.953750,-3.189325,8.5,Set GPS
+site,3505,,"The Balmoral Hotel",55.953036,-3.189537,55.953036,-3.189537,0.0,GPS OK
+site,3506,,"Waverley Bridge",55.951885,-3.191787,55.951885,-3.191787,0.0,GPS OK
+site,3507,,"Edinburgh Waverley Station",55.951933,-3.189568,55.951933,-3.189568,0.0,GPS OK
+site,3508,,"Waverley Market",55.952751,-3.190739,55.952751,-3.190739,0.0,GPS OK
+site,3509,,"Fruitmarket Gallery",55.951309,-3.189443,55.951241,-3.189444,7.6,Set GPS
+site,3510,,"Scotsman Steps",55.951171,-3.188506,55.951171,-3.188504,0.1,GPS OK
+site,3511,,"The Scotsman Hotel",55.951068,-3.188246,55.951069,-3.188323,4.8,Set GPS
+site,3512,,"Jinglin' Geordie",55.950964,-3.188842,55.950957,-3.188835,0.9,Set GPS
+site,3513,,"Halfway House",55.950995,-3.188861,55.950980,-3.188854,1.7,Set GPS
+site,3514,,"Fleshmarket Close",55.951181,-3.188936,55.951160,-3.188905,3.0,Set GPS
+site,3515,,"The Booking Office",55.951772,-3.191508,55.951720,-3.191470,6.3,Set GPS
+site,3516,,"The Edinburgh Dungeon",55.951130,-3.190911,55.951078,-3.190878,6.1,GPS OK
+site,3517,,"City Art Centre",55.951082,-3.189403,55.951039,-3.189326,6.8,Set GPS
+site,3518,,"Metal Thistle Sculpture",55.951053,-3.189573,55.951010,-3.189592,4.9,Set GPS
+site,3519,,"Waverley Steps",55.952956,-3.190100,55.952957,-3.190092,0.5,GPS OK
+site,3520,,"Cockburn Street",55.950604,-3.189837,55.950600,-3.189837,0.4,GPS OK
+site,3521,,"Craig's Close",55.950804,-3.190008,55.950970,-3.190059,18.8,Set GPS
+site,3522,,"Old Fishmarket Close",55.949828,-3.189740,55.949700,-3.189678,14.8,Set GPS
+site,3523,,"Anchor Close",55.950517,-3.189546,55.950520,-3.189519,1.7,GPS OK
+site,3524,,"Tron Kirk Market",55.950033,-3.187752,55.949972,-3.187730,6.9,Set GPS
+site,3525,,"The Milkman",55.950385,-3.188547,55.950379,-3.188528,1.4,GPS OK
+site,3526,,"Sir Chris Hoy Gold Post Box",55.949894,-3.187895,55.949894,-3.187895,0.0,GPS OK
+site,3527,,"Adam Smith Statue",55.949838,-3.189960,55.949798,-3.189982,4.7,Set GPS
+site,3528,,"Mercat Cross",55.949663,-3.190192,55.949637,-3.190183,2.9,Set GPS
+site,3529,,"Edinburgh City Chambers",55.950244,-3.190299,55.950278,-3.190311,3.9,GPS OK
+site,3530,,"Real Mary King's Close",55.949921,-3.190506,55.949937,-3.190475,2.6,Set GPS
+site,3531,,"Parliament House",55.949139,-3.190800,55.949060,-3.190771,9.0,GPS OK
+site,3532,,"St Giles' Cathedral",55.949484,-3.190892,55.949484,-3.190892,0.0,GPS OK
+site,3533,,"Signet Library",55.949174,-3.191257,55.949168,-3.191304,3.0,GPS OK
+site,3534,,"Heart of Midlothian Mosaic",55.949579,-3.191607,55.949552,-3.191578,3.5,GPS OK
+site,3535,,"Brodie's Close",55.949292,-3.193207,55.949232,-3.193161,7.3,Set GPS
+site,3536,,"Deacon Brodies Tavern",55.949535,-3.192917,55.949535,-3.192949,2.0,GPS OK
+site,3537,,"Statue of Walter Francis Montagu Douglas Scott",55.949510,-3.191723,55.949510,-3.191723,0.0,GPS OK
+site,3538,,"Robert Burns House Plaque",55.949328,-3.193452,55.949400,-3.193557,10.3,Set GPS
+site,3539,,"Makars' Court",55.949697,-3.193480,55.949697,-3.193480,0.0,GPS OK
+site,3540,,"The Writers' Museum",55.949708,-3.193739,55.949691,-3.193742,1.9,GPS OK
+site,3541,,"Gladstone's Land",55.949384,-3.193652,55.949422,-3.193678,4.5,Set GPS
+site,3542,,"The Hub",55.948783,-3.195169,55.948847,-3.194909,17.7,Set GPS
+site,3543,,"Camera Obscura & World of Illusions",55.948954,-3.195671,55.948946,-3.195598,4.6,Set GPS
+site,3544,,"The Witchery by the Castle",55.948777,-3.195643,55.948807,-3.195626,3.5,GPS OK
+site,3545,,"The Scotch Whisky Experience",55.948745,-3.195898,55.948743,-3.195875,1.5,GPS OK
+site,3546,,"Tartan Weaving Mill",55.949032,-3.196180,55.948918,-3.196015,16.3,Set GPS
+site,3547,,"Cannonball House",55.948669,-3.196199,55.948692,-3.196206,2.6,GPS OK
+site,3548,,"Ramsay Garden",55.949335,-3.196322,55.949335,-3.196322,0.0,GPS OK
+site,3549,,"Castle Esplanade",55.948700,-3.197500,55.948700,-3.197500,0.0,GPS OK
+site,3550,,"Edinburgh Castle",55.948595,-3.199914,55.948595,-3.199914,0.0,GPS OK
+site,3551,,"The Witches' Well",55.948956,-3.196481,55.948882,-3.196423,9.0,GPS OK
+site,3552,,"The India Cross",55.949011,-3.196987,55.948961,-3.196917,7.1,GPS OK
+site,3553,,"Scottish Horse Memorial",55.949006,-3.197608,55.948927,-3.197592,8.9,GPS OK
+site,3554,,"The Afghan Needle",55.948925,-3.198056,55.948925,-3.198056,0.0,GPS OK
+site,3555,,"The Gatehouse",55.948567,-3.198679,55.948567,-3.198679,0.0,GPS OK
+site,3556,,"Princess Louise's Fountain Memorial",55.948456,-3.198122,55.948456,-3.198122,0.0,GPS OK
+site,3557,,"Robert the Bruce Statue",55.948540,-3.198678,55.948540,-3.198678,0.0,GPS OK
+site,3558,,"William Wallace Statue",55.948592,-3.198690,55.948592,-3.198690,0.0,GPS OK
+site,3559,,"Ensign Ewart Memorial and Grave",55.948911,-3.196842,55.948875,-3.197997,72.1,GPS OK
+site,3560,,"Johnston Terrace Wildlife Garden",55.948112,-3.196281,55.948112,-3.196281,0.0,GPS OK
+site,3561,,"The Vennel and Flodden Wall",55.946248,-3.196875,55.946210,-3.196841,4.7,GPS OK
+site,3562,,"Tanner's Close, West Port",55.946800,-3.198300,55.946800,-3.198300,0.0,GPS OK
+site,3563,,"Beehive Inn",55.947490,-3.197020,55.947417,-3.197165,12.2,GPS OK
+site,3564,,"White Hart Inn",55.947538,-3.196833,55.947505,-3.196776,5.1,GPS OK
+site,3565,,"Petit Paris",55.947551,-3.196575,55.947549,-3.196582,0.5,GPS OK
+site,3566,,"Patrick Geddes Steps",55.947632,-3.196363,55.948036,-3.196137,47.1,GPS OK
+site,3567,,"Covenanters' Memorial",55.947814,-3.194759,55.947808,-3.194777,1.3,GPS OK
+site,3568,,"W. Armstrong & Son (Armstrongs Vintage)",55.947683,-3.194448,55.947693,-3.194339,6.9,GPS OK
+site,3569,,"Portsburgh Stone",55.946583,-3.197923,55.946583,-3.197923,0.0,GPS OK
+site,3570,,"The Last Drop",55.947857,-3.195277,55.947837,-3.195347,4.9,GPS OK
+site,3571,,"Maggie Dicksons",55.947923,-3.195072,55.947919,-3.195074,0.5,GPS OK
+site,3572,,"Candlemaker Row",55.947366,-3.191947,55.947354,-3.191963,1.7,GPS OK
+site,3573,,"The Elephant House",55.947593,-3.191787,55.947570,-3.191785,2.6,GPS OK
+site,3574,,"George IV Bridge",55.947761,-3.191672,55.947759,-3.191681,0.6,GPS OK
+site,3575,,"National Library of Scotland",55.948559,-3.191982,55.948568,-3.191936,3.0,GPS OK
+site,3576,,"Edinburgh Central Library",55.948327,-3.192273,55.948322,-3.192301,1.8,GPS OK
+site,3577,,"Victoria Street",55.948666,-3.193310,55.948725,-3.193325,6.6,GPS OK
+site,3578,,"The Red Door Gallery",55.948412,-3.194558,55.948492,-3.194500,9.6,Set GPS
+site,3579,,"Victoria Terrace",55.948676,-3.194057,55.948661,-3.194043,1.9,GPS OK
+site,3580,,"Greyfriars Hall",55.948080,-3.193422,55.948000,-3.193385,9.2,Set GPS
+site,3581,,"Tomb of John Bayne of Pitcairlie",55.947297,-3.192282,55.947297,-3.192282,0.0,GPS OK
+site,3582,,"Greyfriars Kirk",55.946643,-3.192427,55.946586,-3.192207,15.1,Set GPS
+site,3583,,"Greyfriars Kirkyard",55.946643,-3.191539,55.946643,-3.191539,0.0,GPS OK
+site,3584,,"Covenanters' Prison",55.946061,-3.192441,55.946049,-3.192476,2.6,Set GPS
+site,3585,,"The Black Mausoleum",55.946217,-3.192166,55.946167,-3.192159,5.6,Set GPS
+site,3586,,"Greyfriars Bobby's Bar",55.946838,-3.191487,55.946823,-3.191508,2.1,GPS OK
+site,3587,,"Bedlam Theatre",55.946288,-3.190727,55.946288,-3.190727,0.0,GPS OK
+site,3588,,"Sandy Bell's",55.946084,-3.191280,55.946081,-3.191290,0.7,GPS OK
+site,3589,,"Bristo Port (Flodden Wall)",55.946551,-3.191016,55.946399,-3.191143,18.7,GPS OK
+site,3590,,"Teviot Row House",55.944971,-3.188886,55.944971,-3.188886,0.0,GPS OK
+site,3591,,"Reid Concert Hall",55.944923,-3.189362,55.944923,-3.189362,0.0,GPS OK
+site,3592,,"McEwan Lantern Pillar",55.945316,-3.188358,55.945338,-3.188262,6.5,GPS OK
+site,3593,,"The Next Big Thing is a Series of Little Things",55.945448,-3.188675,55.945448,-3.188675,0.0,GPS OK
+site,3594,,"Old Medical School",55.945356,-3.190298,55.945356,-3.190298,0.0,GPS OK
+site,3595,,"George Heriot's School (Main Building)",55.945185,-3.193733,55.945185,-3.193733,0.0,GPS OK
+site,3596,,"Middle Meadow Walk",55.945216,-3.191141,55.945218,-3.191212,4.4,GPS OK
+site,3597,,"Lister Housing Co-operative (Georgian Tenements)",55.945021,-3.196740,55.945086,-3.196762,7.4,GPS OK
+site,3598,,"Greyfriars Bobby Statue",55.946945,-3.191315,55.946922,-3.191304,2.7,GPS OK
+site,3599,,"Greyfriars Bobby's Grave",55.946685,-3.191666,55.946672,-3.191633,2.5,GPS OK
+site,3600,,"Thomas Riddell's Grave",55.946924,-3.193607,55.946901,-3.193654,3.9,Set GPS
+site,3601,,"Captain John Porteous's Grave",55.946708,-3.193317,55.946708,-3.193317,0.0,GPS OK
+site,3602,,"The Potter Grave (Anne and Robert Potter)",55.946900,-3.192600,55.946914,-3.192592,1.6,Set GPS
+site,3603,,"The Scrymgeour Gravestone",55.946940,-3.192630,55.946962,-3.192632,2.5,Set GPS
+site,3604,,"John Gray's Grave",55.946900,-3.192500,55.946897,-3.192483,1.1,Set GPS
+site,3605,,"John Watson's Grave",55.946900,-3.192100,55.946895,-3.192064,2.3,Set GPS
+site,3606,,"Elizabeth Moodie's Gravestone",55.946527,-3.193425,55.946536,-3.193386,2.6,Set GPS
+site,3607,,"William McGonagall's Tombstone",55.946373,-3.193558,55.946382,-3.193544,1.3,Set GPS
+site,3608,,"Adam Family Mausoleum",55.946135,-3.192841,55.946044,-3.192742,11.9,GPS OK
+site,3609,,"James Hutton's Grave",55.945946,-3.192646,55.945793,-3.192469,20.3,Set GPS
+site,3610,,"Little Free Library",55.946118,-3.190877,55.946118,-3.190877,0.0,GPS OK
+site,3611,,"Alexander and Bucephalus Statue",55.950058,-3.190256,55.950071,-3.190254,1.5,Set GPS
+site,3612,,"Hugh Miller Plaque",55.949819,-3.190326,55.949871,-3.190345,5.9,Set GPS
+site,3613,,"General Stanislaw Maczek Statue",55.950128,-3.190228,55.950149,-3.190211,2.6,Set GPS
+site,3614,,"The News Steps",55.950236,-3.192167,55.950235,-3.192167,0.1,GPS OK
+site,3615,,"The Caledonian Hotel",55.949797,-3.207336,55.949734,-3.207290,7.6,Set GPS
+site,3616,,"View Down Frederick Street to St Stephen's and the Kingdom of Fife",55.953150,-3.200548,55.953150,-3.200548,0.0,GPS OK
+site,3617,,"Dean Ramsay Memorial",55.950277,-3.205748,55.950300,-3.205651,6.6,GPS OK
+site,3618,,"Hard Rock Cafe",55.953500,-3.196260,55.953462,-3.196300,4.9,GPS OK
+site,3619,,"The Standing Order",55.952870,-3.199505,55.952917,-3.199577,6.9,GPS OK
+site,3620,,"The Alexander Graham Bell",55.951969,-3.205292,55.951871,-3.205316,11.0,GPS OK
+site,3621,,"Mather's Bar",55.950269,-3.208682,55.950226,-3.208692,4.8,GPS OK
+site,3622,,"Statue of Sir James Young Simpson",55.950444,-3.205152,55.950386,-3.205061,8.6,GPS OK
+site,3623,,"Thistle Street Bar",55.954076,-3.198895,55.954044,-3.198922,3.9,Set GPS
+site,3624,,"Fishers in the City",55.953893,-3.199535,55.953842,-3.199534,5.7,GPS OK
+site,3625,,"Cafe Marlayne",55.953756,-3.200325,55.953708,-3.200300,5.6,GPS OK
+site,3626,,"The Cambridge Bar",55.952736,-3.205949,55.952743,-3.206009,3.8,GPS OK
+site,3627,,"Old Waverley Hotel",55.952907,-3.193188,55.952841,-3.193019,12.8,GPS OK
+site,3628,,"North Bridge",55.951912,-3.188380,55.951912,-3.188380,0.0,GPS OK
+site,3629,,"Advocate's Close",55.950200,-3.191477,55.949766,-3.191228,50.7,Set GPS
+site,3630,,"Warriston's Close",55.950538,-3.191034,55.950542,-3.191001,2.1,GPS OK
+site,3631,,"The Doric Bar",55.950915,-3.190627,55.950891,-3.190621,2.7,Set GPS
+site,3632,,"Old Saint Paul's Scottish Episcopal Church",55.950827,-3.187133,55.950827,-3.187133,0.0,GPS OK
+site,3633,,"Margaret Tait Filmmaker Plaque",55.951217,-3.188566,55.951198,-3.188520,3.6,Set GPS
+site,3634,,"Sir Robert W Philip Plaque",55.949922,-3.193043,55.949910,-3.193029,1.6,Set GPS
+site,3635,,"The Scotsman Picturehouse",55.951156,-3.188504,55.951149,-3.188524,1.5,Set GPS
+site,3636,,"O'Neill's Bar",55.949627,-3.187648,55.949584,-3.187614,5.2,GPS OK
+site,3637,,"The Inn on the Mile",55.950085,-3.187298,55.950041,-3.187301,4.9,GPS OK
+site,3638,,"Landy's Fish and Chips",55.950364,-3.187345,55.950309,-3.187357,6.2,Set GPS
+site,3639,,"Bain's Retro Sweets",55.947242,-3.196153,55.947236,-3.196181,1.9,Set GPS
+site,3640,,"Hunter's Close",55.947682,-3.194577,55.947646,-3.194581,4.0,Set GPS
+site,3641,,"The Oz Bar",55.947508,-3.192091,55.947491,-3.192033,4.1,Set GPS
+site,3642,,"West Bow Well",55.947991,-3.194477,55.947988,-3.194474,0.4,GPS OK
+site,3643,,"Museum Context",55.948525,-3.194535,55.948516,-3.194455,5.1,Set GPS
+site,3644,,"The Enchanted Galaxy",55.948487,-3.194084,55.948471,-3.194077,1.8,Set GPS
+site,3645,,"Bertie's Proper Fish & Chips",55.948588,-3.193656,55.948588,-3.193656,0.0,GPS OK
+site,3646,,"Finnegan's Wake",55.948594,-3.193555,55.948562,-3.193546,3.6,Set GPS
+site,3647,,"John Kay's Shop",55.948818,-3.193120,55.948797,-3.193146,2.8,GPS OK
+site,3648,,"India Buildings",55.948556,-3.193006,55.948618,-3.192982,7.1,Set GPS
+site,3649,,"George IV Bar",55.948056,-3.191667,55.948137,-3.191638,9.2,GPS OK
+site,3650,,"Augustine United Church",55.947654,-3.191398,55.947654,-3.191398,0.0,GPS OK
+site,3651,,"Frankenstein & Bier Keller",55.947387,-3.191645,55.947387,-3.191645,0.0,GPS OK
+site,3652,,"Edinburgh Sheriff Court",55.947919,-3.190749,55.947919,-3.190749,0.0,GPS OK
+site,3653,,"Crown Office",55.947547,-3.190055,55.947547,-3.190055,0.0,GPS OK
+site,3654,,"William Chambers Monument",55.947369,-3.189786,55.947391,-3.189792,2.5,GPS OK
+site,3655,,"William Henry Playfair Monument",55.947547,-3.188902,55.947547,-3.188902,0.0,GPS OK
+site,3656,,"Hotel du Vin & Bistro",55.946037,-3.190153,55.945998,-3.190277,8.9,GPS OK
+site,3657,,"The Gilded Saloon",55.946182,-3.189173,55.946138,-3.189199,5.2,Set GPS
+site,3658,,"Doctors",55.945547,-3.190895,55.945484,-3.190918,7.2,Set GPS
+site,3659,,"The Kid's Secret Garden",55.945205,-3.191255,55.945237,-3.191262,3.6,Set GPS
+site,3660,,"Edinburgh Futures Institute",55.944629,-3.192823,55.944602,-3.192813,3.1,GPS OK
+site,3661,,"Simpson Loan",55.943456,-3.194095,55.943460,-3.194096,0.4,GPS OK
+site,3662,,"Lister Square",55.944716,-3.194522,55.944716,-3.194522,0.0,GPS OK
+site,3663,,"George Heriot's School Turrets",55.945453,-3.195694,55.945474,-3.195646,3.8,GPS OK
+site,3664,,"Ornate Iron Railings",55.945790,-3.196611,55.945790,-3.196611,0.0,GPS OK
+site,3665,,"Iron Boot Scraper",55.945606,-3.197410,55.945668,-3.197381,7.1,Set GPS
+site,3666,,"Flower-Decorated Tenement Steps",55.945506,-3.197386,55.945541,-3.197382,3.9,Set GPS
+site,3667,,"Argyle House - 60s architectural eyesore",55.945840,-3.197582,55.945816,-3.197581,2.7,Set GPS
+site,3668,,"6VT Edinburgh City Youth Cafe",55.946323,-3.197300,55.946269,-3.197336,6.4,GPS OK
+site,3669,,"Brown's Place",55.946355,-3.197133,55.946457,-3.197206,12.2,Set GPS
+site,3670,,"The Black Bull",55.947346,-3.197363,55.947340,-3.197487,7.8,GPS OK
+site,3671,,"Victoria Street's Cobbles",55.948247,-3.194585,55.948247,-3.194585,0.0,GPS OK
+site,3672,,"Museum on the Mound",55.950158,-3.193666,55.950146,-3.193496,10.7,Set GPS
+site,3673,,"Assembly Hall",55.949794,-3.195285,55.949794,-3.195285,0.0,GPS OK
+site,3674,,"Edinburgh City Relief Map",55.951424,-3.195570,55.951411,-3.195493,5.0,Set GPS
+site,3675,,"The Merchants' Hall",55.952657,-3.197171,55.952580,-3.197128,9.0,GPS OK
+site,3676,,"Former TSB Bank, Hanover Street",55.952841,-3.197395,55.952814,-3.197262,8.8,Set GPS
+site,3677,,"All Bar One, George Street",55.953773,-3.197061,55.953776,-3.197077,1.1,GPS OK
+site,3678,,"Stone Basements and Area Wells",55.945744,-3.197349,55.945744,-3.197349,0.0,GPS OK
+site,3679,,"Radisson Blu Hotel",55.950040,-3.186826,55.950090,-3.186916,7.9,GPS OK
+site,3680,,"Carrubber's Close",55.950794,-3.187148,55.950305,-3.186978,55.5,Set GPS
+site,3681,,"North Bridge Arcade",55.950676,-3.188047,55.950671,-3.188045,0.6,GPS OK
+site,3682,,"Bishop's Close",55.950388,-3.186760,55.950312,-3.186802,8.9,Set GPS
+site,3683,,"The Mitre Bar",55.950370,-3.186863,55.950345,-3.186892,3.3,Set GPS
+site,3684,,"Bailie Fyfe's Close",55.950368,-3.186176,55.950356,-3.186185,1.4,Set GPS
+site,3685,,"The Nutcracker Christmas Shop",55.950312,-3.185882,55.950270,-3.185902,4.8,GPS OK
+site,3686,,"Stevenlaw's Close",55.949956,-3.188537,55.950026,-3.188531,7.8,Set GPS
+site,3687,,"New Assembly Close",55.949935,-3.188721,55.950001,-3.188721,7.3,Set GPS
+site,3688,,"Netherbow Wellhead",55.950476,-3.185246,55.950476,-3.185246,0.0,GPS OK
+site,3689,,"Old Assembly Close",55.949579,-3.189194,55.949770,-3.189303,22.3,Set GPS
+site,3690,,"Borthwick's Close",55.949385,-3.189345,55.949736,-3.189559,41.3,Set GPS
+site,3691,,"Statue of James Braidwood",55.949508,-3.189984,55.949490,-3.189989,2.0,GPS OK
+site,3692,,"The Supreme Courts",55.949025,-3.190778,55.948940,-3.190711,10.3,GPS OK
+site,3693,,"Charles II Statue",55.949245,-3.190516,55.949230,-3.190517,1.7,GPS OK
+site,3694,,"Roxburgh's Close",55.949767,-3.191042,55.949815,-3.191030,5.4,Set GPS
+site,3695,,"Bank of Scotland",55.950203,-3.192987,55.950203,-3.192987,0.0,GPS OK
+site,3696,,"Wardrop's Court",55.949405,-3.193157,55.949461,-3.193173,6.3,Set GPS
+site,3697,,"Author's Phrases in the Flagstones",55.949713,-3.193633,55.949721,-3.193621,1.2,Set GPS
+site,3698,,"Scottish War Poets Memorial",55.949621,-3.193563,55.949591,-3.193660,6.9,GPS OK
+site,3699,,"Milne's Court",55.949174,-3.194306,55.949199,-3.194311,2.8,Set GPS
+site,3700,,"James' Court",55.949367,-3.193775,55.949336,-3.193766,3.5,Set GPS
+site,3701,,"The Jolly Judge",55.949391,-3.193993,55.949520,-3.193948,14.6,GPS OK
+site,3702,,"Susannah Alice Stephen Memorial",55.949598,-3.194125,55.949598,-3.194125,0.0,GPS OK
+site,3703,,"The Ensign Ewart",55.949205,-3.194409,55.949203,-3.194462,3.3,GPS OK
+site,3704,,"Boswell's Court",55.948840,-3.195543,55.948840,-3.195543,0.0,GPS OK
+site,3705,,"Ramsay Lane",55.948980,-3.195850,55.948986,-3.195798,3.3,GPS OK
+site,3706,,"Castle Rock Hostel",55.948253,-3.195960,55.948206,-3.195937,5.4,GPS OK
+site,3707,,"St Columba's by the Castle",55.948311,-3.195466,55.948311,-3.195466,0.0,GPS OK
+site,3708,,"Fiddler's Arms",55.946897,-3.197838,55.946896,-3.197872,2.1,GPS OK
+site,3709,,"West Port Garden",55.946728,-3.197927,55.946710,-3.197966,3.2,Set GPS
+site,3710,,"Portsburgh Square",55.946691,-3.198872,55.946691,-3.198872,0.0,GPS OK
+site,3711,,"Salvation Army Womens Hostel",55.946746,-3.197708,55.946746,-3.197708,0.0,GPS OK
+site,3712,,"Granny's Green Steps",55.947298,-3.197883,55.947314,-3.197885,1.8,GPS OK
+site,3713,,"Quaker Meeting House",55.948772,-3.193688,55.948772,-3.193688,0.0,GPS OK
+site,3714,,"The Albanach",55.950134,-3.188436,55.950156,-3.188432,2.5,GPS OK
+site,3715,,"The Advocate",55.949523,-3.187953,55.949496,-3.187898,4.6,Set GPS
+site,3716,,"Malt Shovel Inn",55.950630,-3.190715,55.950639,-3.190682,2.3,Set GPS
+site,3717,,"The Piper's Rest",55.949745,-3.188124,55.949737,-3.188071,3.4,Set GPS
+site,3718,,"The Scotsman's Lounge",55.950371,-3.188167,55.950338,-3.188165,3.7,Set GPS
+site,3719,,"Sir Chris Hoy Gold Post Box (Hanover Street)",55.952322,-3.196374,55.952304,-3.196464,6.0,Set GPS
+site,3720,,"Harvey Nichols Edinburgh",55.954802,-3.192127,55.954802,-3.192127,0.0,GPS OK
+site,3721,,"Milnes Bar",55.952970,-3.196744,55.952974,-3.196719,1.6,GPS OK
+site,3722,,"Browns Restaurant",55.952201,-3.205710,55.952252,-3.205739,6.0,GPS OK
+site,3723,,"St Andrew Square",55.954600,-3.192300,55.954571,-3.192473,11.3,GPS OK
+site,3724,,"George Street",55.954096,-3.194198,55.954094,-3.194216,1.1,Set GPS
+site,3725,,"Charlotte Square",55.952000,-3.205800,55.951783,-3.207052,81.7,Set GPS
+site,3726,,"Princes Street",55.950300,-3.206200,55.950316,-3.206209,1.9,GPS OK
+site,3727,,"Royal Mile",55.950300,-3.189000,55.949986,-3.188885,35.7,Set GPS
+site,3728,,"Grassmarket",55.946900,-3.195500,55.947497,-3.195961,72.4,Set GPS
+site,3729,,"Chambers Street",55.947800,-3.191200,55.947205,-3.190781,71.2,GPS OK
+site,3730,,"Cowgate",55.948100,-3.192800,55.948030,-3.192747,8.5,GPS OK
