@@ -42,7 +42,7 @@ export function useOsmReview() {
 
 // Loaded only when review mode is on — its own small chunk, never in the main bundle.
 const LOADERS = {
-  edinburgh: () => import('./osmReview.edinburgh.json'),
+  // edinburgh: reviewed and applied 2026-10-19 (db/content/edinburgh-tour/gps-reference/)
 }
 
 export function useOsmReviewData(tourCode, enabled) {
@@ -67,9 +67,7 @@ export const REVIEW_COLORS = {
 
 // Verdicts given in chat for pins that can't be tapped (e.g. hidden under a landmark) — copied once
 // into this device's saved corrections, exactly as if GPS OK had been tapped, so they export too.
-const PRESET_VERDICTS = [
-  { type: 'site', id: 3470, name: 'Bute House', enteredGps: '55.952504, -3.208054', confirmed: true },
-]
+const PRESET_VERDICTS = []
 const PRESET_KEY = 'tourz.osmReviewPresets'
 
 export function seedPresetVerdicts(load, save) {
