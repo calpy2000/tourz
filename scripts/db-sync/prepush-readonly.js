@@ -9,7 +9,7 @@ const { prodPool } = require('./connections');
   const tables = ['game_codes', 'games', 'teams', 'players', 'progress_events', 'narration_listens', 'location_pings', 'client_actions'];
   const snap = {};
   for (const t of tables) snap[t] = (await p.query(`SELECT * FROM ${t}`)).rows;
-  const dir = path.join(__dirname, '..', '..', 'backups', 'instance-snapshots', 'prod-instance-pre-gps-20261019');
+  const dir = path.join(__dirname, '..', '..', 'backups', 'instance-snapshots', 'prod-instance-pre-pl-gps-20261020');
   fs.mkdirSync(dir, { recursive: true });
   const file = path.join(dir, new Date().toISOString().replace(/[:.]/g, '-') + '.json');
   fs.writeFileSync(file, JSON.stringify(snap, null, 1));

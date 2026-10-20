@@ -43,6 +43,7 @@ export function useOsmReview() {
 // Loaded only when review mode is on — its own small chunk, never in the main bundle.
 const LOADERS = {
   // edinburgh: reviewed and applied 2026-10-19 (db/content/edinburgh-tour/gps-reference/)
+  // port-louis: reviewed and applied 2026-10-20 (db/content/port-louis-tour/gps-reference/)
 }
 
 export function useOsmReviewData(tourCode, enabled) {
@@ -68,17 +69,20 @@ export const REVIEW_COLORS = {
 // Verdicts given in chat for pins that can't be tapped (e.g. hidden under a landmark) — copied once
 // into this device's saved corrections, exactly as if GPS OK had been tapped, so they export too.
 const PRESET_VERDICTS = []
-const PRESET_KEY = 'tourz.osmReviewPresets'
+// Per tour: landmark keys (by sequenceOrder) would otherwise collide with Edinburgh's done list
+const PRESET_KEY = 'tourz.osmReviewPresets.port-louis'
 
 export function seedPresetVerdicts(load, save) {
   try {
     const done = new Set(JSON.parse(localStorage.getItem(PRESET_KEY) || '[]'))
     const saved = load()
     for (const v of PRESET_VERDICTS) {
-      const key = `${v.type}:${v.id ?? v.sequenceOrder}`
+      const { force, ...verdict } = v
+      // a forced position gets its own key, so a later corrected value applies once too
+      const key = `${v.type}:${v.id ?? v.sequenceOrder}${force ? `@${v.enteredGps}` : ''}`
       if (done.has(key)) continue
       const already = saved.some((c) => c.type === v.type && (v.type === 'site' ? c.id === v.id : c.sequenceOrder === v.sequenceOrder))
-      if (!already) save({ ...v, capturedAt: new Date().toISOString() })
+      if (force || !already) save({ ...verdict, capturedAt: new Date().toISOString() })
       done.add(key)
     }
     localStorage.setItem(PRESET_KEY, JSON.stringify([...done]))
