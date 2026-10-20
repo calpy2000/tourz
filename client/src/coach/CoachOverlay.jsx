@@ -198,7 +198,7 @@ export default function CoachOverlay() {
   // correct tap is let through untouched so the real page does its real thing, then the step
   // advances on the next tick once that's had a chance to happen.
   //
-  // Map markers (`AdvancedMarker`) are a real bug here, not just a hypothetical: Google's marker
+  // Map markers are a real bug here, not just a hypothetical: the original map library's marker
   // custom element registers its own `touchstart`/`mousedown`/`click` listeners directly on
   // itself (confirmed via Chrome's `getEventListeners(markerEl)`) and fires `onClick` off a
   // `gmp-click` custom event it dispatches from that internal handling — not from the `click`

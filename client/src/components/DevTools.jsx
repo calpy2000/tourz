@@ -8,7 +8,6 @@ import DevMenu from './DevMenu.jsx'
 import { useGameClock } from '../gameClock.jsx'
 import { syncNow } from '../offline/gameStore.js'
 import { isSimulatingDeadSignal, setSimulateDeadSignal } from '../net/connection.js'
-import { getMapProvider, setMapProvider } from '../map/mapProvider.js'
 import { getOsmReview, setOsmReview } from '../map/osmReview.js'
 
 // The "Dev" button + menu shared by every page that needs quick test shortcuts. `onReset` lets
@@ -94,12 +93,7 @@ export default function DevTools({ onReset }) {
       label: isSimulatingDeadSignal() ? 'Dead signal: ON (tap to end)' : 'Simulate dead signal',
       onClick: () => setSimulateDeadSignal(!isSimulatingDeadSignal()),
     },
-    // OSM is the default map; Google stays one tap away until OSM is proven on a real walk.
-    {
-      label: getMapProvider() === 'osm' ? 'Map: OSM (tap for Google)' : 'Map: Google (tap for OSM)',
-      onClick: () => setMapProvider(getMapProvider() === 'osm' ? 'google' : 'osm'),
-    },
-    // Temporary — colours pins by how they compare with OSM (map/osmReview.js). OSM map only.
+    // Temporary — colours pins by how they compare with OSM (map/osmReview.js).
     {
       label: getOsmReview() ? 'OSM review colours: ON (tap for off)' : 'OSM review colours: OFF (tap for on)',
       onClick: () => setOsmReview(!getOsmReview()),

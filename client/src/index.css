@@ -1244,7 +1244,7 @@ button.primary.quiz-submit {
   border-radius: 10px;
 }
 
-/* Full-bleed like Google Maps itself — cancels .home-body's left/right padding so the map
+/* Full-bleed like a map app — cancels .home-body's left/right padding so the map
    canvas runs to the edges of the game shell, with the filter chips floating on top of it as an
    overlay (not a separate row above it) rather than the map living inside a bordered card. */
 .map-shell {
@@ -1262,7 +1262,7 @@ button.primary.quiz-submit {
   overflow: hidden;
 }
 
-/* OSM map engine's MapLibre container — fills .map-container like Google's map does. */
+/* OSM map engine's MapLibre container — fills .map-container. */
 .osm-map {
   width: 100%;
   height: 100%;
@@ -1386,7 +1386,7 @@ button.primary.quiz-submit {
 }
 
 /* Site name, shown alongside its pin only at icon zoom (not the zoomed-out dot form) — absolutely
-   positioned off the pin's own box so it never affects the AdvancedMarker's anchor point/size.
+   positioned off the pin's own box so it never affects the marker's anchor point/size.
    pointer-events: none so it never steals the pin's own click/drag target. */
 .map-pin-label {
   position: absolute;
@@ -3554,7 +3554,7 @@ button.primary.clock-banner-btn {
 .waiting-content-card {
   text-align: center;
 }
-/* MapView: Google's map script couldn't load (no signal on a fresh open) — NearbyList.jsx covers
+/* MapView: the map couldn't load (map file not saved yet and no signal, or no WebGL) — NearbyList.jsx covers
    the map area with a scrollable, nearest-first list of found landmarks and POIs instead. Above the
    (empty) map but below the GPS banners (z 6). */
 .nearby-list {

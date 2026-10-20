@@ -336,7 +336,7 @@ const pois = [
   ...sites.map((s) => ({ key: 's' + s.id, kind: 'POI', ref: String(s.id), id: s.id, title: s.title, address: s.address, type: s.type, lat: s.lat, lng: s.lng, roadLike: s.type === 'close' || s.type === 'street' || ROADLIKE.test(s.title) })),
 ]
 const esc = (v) => { const s = v == null ? '' : String(v); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s }
-const head = ['Kind', 'ID', 'Title', 'POI type', 'Current lat (Google pin)', 'Current lng (Google pin)', 'OSM lat', 'OSM lng', 'Difference (m)', 'Direction OSM is from current pin (deg, 0=N clockwise)', 'Direction (compass)', 'Found in OSM as', 'OSM feature', 'OSM link', 'Matched by', 'Confidence', 'Notes']
+const head = ['Kind', 'ID', 'Title', 'POI type', 'Current lat (saved pin)', 'Current lng (saved pin)', 'OSM lat', 'OSM lng', 'Difference (m)', 'Direction OSM is from current pin (deg, 0=N clockwise)', 'Direction (compass)', 'Found in OSM as', 'OSM feature', 'OSM link', 'Matched by', 'Confidence', 'Notes']
 const rows = [head]
 const review = { sites: {}, landmarks: {} }
 const counts = { blue: 0, green: 0, amber: 0, red: 0 }

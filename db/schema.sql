@@ -151,8 +151,8 @@ CREATE TABLE sites (
     external_link         TEXT,                -- e.g. Wikipedia
     created_at            TIMESTAMPTZ NOT NULL DEFAULT now()
 );
--- Live/dynamic POIs (restaurants, pubs, toilets) are NOT stored here — fetched at render time
--- from Google Maps via the backend. No table needed for those.
+-- Live/dynamic POIs (restaurants, pubs, toilets) are not part of the app (an earlier live amenities
+-- layer was removed). No table needed for those.
 
 -- =========================================================================
 -- INSTANCE — dynamic, created per purchase/game

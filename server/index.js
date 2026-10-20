@@ -7,8 +7,7 @@
 
 // path: __dirname (not cwd-relative) - dotenv otherwise silently no-ops when this process is
 // started as `node server/index.js` from the project root (cwd = TOURZ root, no .env there;
-// the real one lives in server/.env), leaving GOOGLE_PLACES_API_KEY undefined and every Google
-// Places/Routes call failing with a misleading "API key not valid" error - see
+// the real one lives in server/.env), leaving its keys (e.g. the Gmail sender) undefined - see
 // [[feedback-dotenv-cwd-relative-path]].
 require('dotenv').config({ path: require('path').join(__dirname, '.env'), quiet: true });
 
@@ -1059,76 +1058,6 @@ app.get('/api/game/narration/latest', async (req, res) => {
     playerName: latest ? latest.player_name : null,
     totalScore: team.total_score,
   });
-});
-
-// GET /api/game/route — real walking-route polylines connecting solved landmarks, one leg per
-// consecutive pair, via Google's Routes API. Extends to the current landmark too once its puzzle
-// is solved (same reveal gate as currentRevealedLandmark) — the player has already physically
-// walked that leg to find it, so showing it isn't leaking anything ahead; only a genuinely
-// unsolved/unrevealed landmark's route stays hidden. Cached forever per process, keyed by the
-// team's exact (sequence, revealed) state rather than just a point count — two different states
-// can otherwise produce the same waypoint count with different actual coordinates (e.g. "2 fully
-// solved" vs "1 solved + 1 just-revealed"), which would silently serve the wrong cached route.
-const routeCache = new Map();
-
-app.get('/api/game/route', async (req, res) => {
-  const session = await resolveSession(req, res);
-  if (!session) return;
-  const { team } = session;
-
-  const { rows: [tourRow] } = await db.query(
-    `SELECT t.id FROM teams tm
-     JOIN games g ON g.id = tm.game_id
-     JOIN game_codes gc ON gc.id = g.game_code_id
-     JOIN tours t ON t.id = gc.tour_id
-     WHERE tm.id = $1`,
-    [team.id]
-  );
-
-  const { rows: solvedLandmarks } = await db.query(
-    `SELECT latitude, longitude FROM landmarks
-     WHERE tour_id = $1 AND sequence_order < $2
-     ORDER BY sequence_order`,
-    [tourRow.id, team.current_landmark_sequence]
-  );
-
-  const revealed = await currentRevealedLandmark(team, tourRow.id);
-  const routePoints = revealed ? [...solvedLandmarks, revealed] : solvedLandmarks;
-
-  if (routePoints.length < 2) return res.json({ legs: [] });
-
-  const cacheKey = `${tourRow.id}:${team.current_landmark_sequence}:${revealed ? 'revealed' : 'solved'}`;
-  if (routeCache.has(cacheKey)) return res.json({ legs: routeCache.get(cacheKey) });
-
-  const waypoints = routePoints.map((l) => ({
-    location: { latLng: { latitude: Number(l.latitude), longitude: Number(l.longitude) } },
-  }));
-
-  try {
-    const response = await fetch('https://routes.googleapis.com/directions/v2:computeRoutes', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Goog-Api-Key': process.env.GOOGLE_PLACES_API_KEY,
-        'X-Goog-FieldMask': 'routes.legs.polyline.encodedPolyline',
-      },
-      body: JSON.stringify({
-        origin: waypoints[0],
-        destination: waypoints[waypoints.length - 1],
-        intermediates: waypoints.slice(1, -1),
-        travelMode: 'WALK',
-      }),
-    });
-    const body = await response.json();
-    if (!response.ok) throw new Error(JSON.stringify(body));
-
-    const legs = (body.routes?.[0]?.legs || []).map((leg) => leg.polyline.encodedPolyline);
-    routeCache.set(cacheKey, legs);
-    res.json({ legs });
-  } catch (err) {
-    console.error('Routes API error:', err);
-    res.status(502).json({ error: 'Could not compute walking route.' });
-  }
 });
 
 // POST /api/dev/login — dev-tools-only auto-login, used to skip the registration form entirely

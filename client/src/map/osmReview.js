@@ -1,7 +1,7 @@
 import { useEffect, useState, useSyncExternalStore } from 'react'
 
 // TEMPORARY (OSM migration, phase 2→3): Dev-menu "OSM review" mode. Each POI pin is coloured by how
-// its saved (Google-placed) position compares with the same feature found in OpenStreetMap data,
+// its saved position compares with the same feature found in OpenStreetMap data,
 // and found pins are drawn at their OSM position — a preview of auto-relocating them, nothing
 // saved. Built from the matcher's CSV report (one osmReview.<tour>.json per tour):
 //   blue  — not found in OSM, pin left where it is

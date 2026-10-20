@@ -11,7 +11,7 @@
      Narration needs HTTP Range support (audio elements ask for byte ranges), done here by slicing
      the saved file.
    - API calls are never touched — the app handles offline itself (offline/gameStore.js).
-   - Anything else (Google Maps etc.) goes straight to the network as normal. */
+   - Anything else (other sites) goes straight to the network as normal. */
 
 const BUILD_ID = '__BUILD_ID__'
 const SHELL_CACHE = `tourz-shell-${BUILD_ID}`

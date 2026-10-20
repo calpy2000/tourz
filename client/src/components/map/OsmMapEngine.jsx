@@ -7,13 +7,13 @@ import { osmStyle } from '../../map/osmStyle.js'
 import { tourMapUrl, tourMapBounds } from '../../map/mapFiles.js'
 
 // Map view drawn from self-hosted OpenStreetMap data (MapLibre GL + one .pmtiles file per tour,
-// built by scripts/maps/build-map-assets.mjs). Unlike Google's map this needs no API key and works
+// built by scripts/maps/build-map-assets.mjs). It needs no API key and works
 // with no signal: the map file, fonts and icons are saved on the phone with the rest of the tour
 // (offline/contentCache.js) and served from there by the service worker.
 //
-// Same props as GoogleMapEngine. Zoom in and out of this component is in GOOGLE zoom units, so
-// MapView's thresholds, scale bar and remembered camera work unchanged for either engine:
-// MapLibre draws 512px tiles where Google draws 256px ones, so MapLibre zoom = Google zoom − 1.
+// Zoom in and out of this component is in 256-px-tile zoom units (the web-map convention MapView's
+// thresholds, scale bar and remembered camera were built in). MapLibre draws 512px tiles, so
+// MapLibre zoom = that zoom − 1.
 const ZOOM_OFFSET = 1
 const FIT_PADDING = 56
 // The tour's map file covers its landmarks + sites plus a margin; panning is kept to about that
@@ -78,9 +78,8 @@ function OsmMarker({ map, marker: m }) {
   latest.current = m
 
   useEffect(() => {
-    // Bottom-centre on the coordinate, exactly as Google's AdvancedMarker draws it — every saved
-    // position (incl. Set GPS drags) was placed by eye against Google's map with that convention,
-    // so a centre anchor showed every pin half its height lower than on Google.
+    // Bottom-centre on the coordinate — every saved position (incl. Set GPS drags) was placed by eye
+    // with that convention; a centre anchor would draw every pin half its height lower.
     const marker = new maplibregl.Marker({ element: el, anchor: 'bottom' }).setLngLat([m.lng, m.lat]).addTo(map)
     const onClick = (e) => {
       e.stopPropagation()
@@ -171,7 +170,7 @@ export default function OsmMapEngine({ tourCode, attempt, initialCenter, initial
         minZoom: MIN_ZOOM,
         maxZoom: 20,
         maxBounds: [[w - PAN_MARGIN_DEG, s - PAN_MARGIN_DEG], [e + PAN_MARGIN_DEG, n + PAN_MARGIN_DEG]],
-        // North always up and never tilted, like the Google map — MapView's fixed N/E/S/W compass
+        // North always up and never tilted — MapView's fixed N/E/S/W compass
         // relies on it.
         dragRotate: false,
         pitchWithRotate: false,

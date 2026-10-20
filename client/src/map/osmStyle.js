@@ -4,7 +4,7 @@ import { glyphsUrl, spriteUrl } from './mapFiles.js'
 // The OSM map's look, picked from the 2026-10-19 prototype: Protomaps' stock "light" style (the
 // "Clean" option) with "Defined" buildings — a solid fill plus a crisp outline, instead of the
 // stock faint grey — the stock house numbers (zoom 18+), and mapped trees as green dots. OSM's own
-// POI icons (cafés, shops…) are left out, as the Google map's were, so they don't compete with our
+// POI icons (cafés, shops…) are left out so they don't compete with our
 // own markers.
 
 const SOURCE = 'protomaps'

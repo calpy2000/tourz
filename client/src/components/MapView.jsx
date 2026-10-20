@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo, useRef, lazy, Suspense } from 'react'
 import { useNavigate } from 'react-router-dom'
-import GoogleMapEngine from './map/GoogleMapEngine.jsx'
 import { api } from '../api.js'
 import { API_BASE } from '../apiBase.js'
 import { useGeolocation } from '../useGeolocation.js'
@@ -15,11 +14,10 @@ import { useGameStore } from '../offline/gameStore.js'
 import { mapLandmarksView, landmarkDetailView } from '../offline/engine.js'
 import { useContentCache, siteDetailFromPack } from '../offline/contentCache.js'
 import { useConnection } from '../net/connection.js'
-import { useMapProvider } from '../map/mapProvider.js'
 
-// Two map engines draw the same markers: OSM (default — self-hosted OpenStreetMap, works with no
-// signal) and Google (the original, behind the Dev menu until OSM is proven; then removed). Both
-// take the same props, in Google zoom units. MapLibre is large, so the OSM engine is its own chunk.
+// The map: self-hosted OpenStreetMap drawn by MapLibre (works with no signal). Zoom numbers in this
+// file are 256-px-tile zoom levels (MapLibre's own = one less; OsmMapEngine converts). MapLibre is
+// large, so the engine is its own chunk.
 const OsmMapEngine = lazy(() => import('./map/OsmMapEngine.jsx'))
 
 // Used only if the team has no solved landmarks yet (map needs some center before the first find).
@@ -53,7 +51,7 @@ function MapCompass() {
   )
 }
 
-// Live distance scale, like Google Maps' own — that built-in control can't be moved or styled
+// Live distance scale — a map's built-in scale control can't be moved or styled
 // (it'd sit tiny beside the bottom attribution), so this recomputes one from zoom + latitude.
 // Web Mercator: metres per screen pixel = 156543.03 × cos(lat) / 2^zoom. The label snaps to a
 // round 1/2/5 × 10ⁿ distance and the bar takes whatever width that works out to, ≤ max.
@@ -108,7 +106,7 @@ function reviewNote(entry, fixed) {
 const START_LANDMARK_ZOOM = 17
 
 // Below this zoom, Interests render as small plain-color dots instead of their full star pin —
-// standard practice on zooming maps (Google's own POI layer, Airbnb, etc. all simplify markers
+// standard practice on zooming maps (big map apps' POI layers, Airbnb, etc. all simplify markers
 // below some threshold rather than letting a dense area turn into a wall of overlapping icons).
 // 17 matches START_LANDMARK_ZOOM's already-established "close, street-level" feel; not yet tuned
 // against a real dense cluster, adjust after seeing it live. Landmarks are deliberately exempt —
@@ -178,16 +176,14 @@ export default function MapView({ active = true }) {
     const sites = baseSites.map((s) => (movedSites[s.id] ? { ...s, ...movedSites[s.id] } : s))
     return { ...mapLandmarksView(game), sites }
   }, [game, pack, fallbackSites, movedSites])
-  const mapProvider = useMapProvider()
   // Dev-only OSM review colours (see map/osmReview.js) — OSM map only.
   const osmReviewOn = useOsmReview()
-  const review = useOsmReviewData(game?.tour?.tourCode, DEV_MODE && osmReviewOn && mapProvider === 'osm')
+  const review = useOsmReviewData(game?.tour?.tourCode, DEV_MODE && osmReviewOn)
   // Bumped on reconnect after a failed map load, to try loading the map again.
   const [mapAttempt, setMapAttempt] = useState(0)
-  // The map couldn't load (Google: no signal on open; OSM: map file neither saved on the phone yet
-  // nor reachable) — NearbyList stands in for it.
+  // The map couldn't load (map file neither saved on the phone yet nor reachable, or no WebGL) —
+  // NearbyList stands in for it.
   const [mapFailed, setMapFailed] = useState(false)
-  useEffect(() => { setMapFailed(false) }, [mapProvider])
   // Set by DetailPopup's "Set GPS" button (Interests/sites) — identifies the one marker currently
   // draggable on the map, compared by id (sitePopup is a separately-fetched object, never the
   // same reference as its entry in mapData.sites). Cleared on drop or Cancel.
@@ -295,15 +291,14 @@ export default function MapView({ active = true }) {
   const showDots = (zoom ?? initialZoom) < ICON_ZOOM_THRESHOLD
   const showLabels = (zoom ?? initialZoom) >= LABEL_ZOOM_THRESHOLD
 
-  // Every marker on the map, in a form either engine can draw: `content` is the pin's own markup,
-  // `layer` sets the OSM engine's default stacking (Google stacks by its own rules), and an
-  // explicit zIndex wins in both.
+  // Every marker on the map: `content` is the pin's own markup, `layer` sets its default stacking,
+  // and an explicit zIndex wins over that.
   //
   // Landmarks: zIndex explicit and deliberately huge — at least one POI (Frederick Street Castle
   // View) shares exact coordinates with a landmark by design ("same corner" — see POI.csv), and the
   // coincident site's star pin was silently winning every click on top of it — a real bug caught
-  // while testing the reveal feature. Google's own default zIndex (when unset) is computed from
-  // latitude and was already bigger than a modest explicit value like 10; this has to clear that.
+  // while testing the reveal feature (on the earlier map engine, whose default zIndex was large
+  // and latitude-derived — kept huge so landmarks always win).
   // OSM review (dev only): where each pin is drawn, its colour, and the old-position lines.
   // Set GPS fixes (saved this device, any session) win over everything and show purple.
   const reviewLines = []
@@ -457,11 +452,7 @@ export default function MapView({ active = true }) {
     <div className="map-shell">
       <div className="map-container" data-coach-id="map-navigation-area">
         <Suspense fallback={<div className="stub-view">Loading map&hellip;</div>}>
-          {mapProvider === 'google' ? (
-            <GoogleMapEngine {...engineProps} />
-          ) : (
-            <OsmMapEngine tourCode={game.tour?.tourCode} {...engineProps} />
-          )}
+          <OsmMapEngine tourCode={game.tour?.tourCode} {...engineProps} />
         </Suspense>
 
         {mapFailed ? (
@@ -490,8 +481,7 @@ export default function MapView({ active = true }) {
         )}
         {DEV_MODE && osmReviewOn && (
           <div className="osm-review-chip">
-            {mapProvider !== 'osm' ? 'OSM review is on, but this is the Google map — Dev → Map: Google (tap for OSM)'
-              : !review ? 'OSM review: no review data for this tour'
+            {!review ? 'OSM review: no review data for this tour'
               : ['blue', 'green', 'amber', 'red', 'purple'].map((k) => (
                 <span key={k}><i style={{ background: REVIEW_COLORS[k] }} />{reviewTally[k] || 0}</span>
               ))}

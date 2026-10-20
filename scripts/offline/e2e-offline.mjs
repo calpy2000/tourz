@@ -9,7 +9,7 @@
 //   3. true no-signal: both servers stopped, page reloaded — the app itself opens from the
 //      service worker, the next landmark is playable, saved photos and narration (with Range
 //      requests) are served from the phone; Map view draws the real OSM map from the phone's saved
-//      map file (and, switched to the Google map, falls back to the nearby list)
+//      map file (and, with that file gone from the phone, falls back to the nearby list)
 //   4. back in signal: servers restarted — the queue drains, the server's state matches the
 //      phone's, every action applied exactly once
 //   5. a teammate's phone (a throwaway "ZZ E2E Test Member" player) sees the captain's progress
@@ -337,10 +337,6 @@ try {
   killPort(4173)
   await waitPort(3001, false)
   await waitPort(4173, false)
-  // This machine still has internet, but a phone with no signal can't reach Google's map either —
-  // block it so MapView takes its no-map path (the nearby list) exactly as on a real phone.
-  await page.send('Network.enable', {})
-  await page.send('Network.setBlockedURLs', { urls: ['*googleapis.com*', '*gstatic.com*', '*google.com/maps*'] })
   await page.eval(`sessionStorage.removeItem('tourzSimulateDeadSignal')`)
   const offlineReloadAt = Date.now()
   await page.send('Page.reload', {})
@@ -400,7 +396,7 @@ try {
   record('no signal: OSM map tiles drawn from the phone (buildings visible)', buildingPx > 2000, `${buildingPx} building-fill pixels`)
 
   // A real tap (coordinates, not element.click()) on a POI marker that's actually on top at its
-  // own centre — the Google map once shipped markers that looked fine but swallowed taps.
+  // own centre — an earlier map once shipped markers that looked fine but swallowed taps.
   const tap = await page.eval(`(() => {
     const vw = innerWidth, vh = innerHeight
     for (const m of document.querySelectorAll('.osm-map .maplibregl-marker')) {
@@ -420,9 +416,9 @@ try {
     await page.click('back')
   }
 
-  // Switched to the Google map (Dev menu), with no signal its script can't load — the nearby list
-  // stands in, and its cards open from the phone.
-  await page.eval(`localStorage.setItem('tourz.mapProvider', 'google')`)
+  // The phone without its saved map file (e.g. opened before the background save finished), and no
+  // signal — the map can't draw, so the nearby list stands in, and its cards open from the phone.
+  await page.eval(`caches.open('tourz-content-v1').then((c) => c.keys().then((keys) => Promise.all(keys.filter((r) => { const p = new URL(r.url).pathname; return p.startsWith('/map/') && p.endsWith('.pmtiles') }).map((r) => c.delete(r)))))`)
   await page.send('Page.reload', {})
   await sleep(500)
   await page.waitFor(`[...document.querySelectorAll('button')].some((b) => b.offsetParent !== null && b.innerText.includes('MAP'))`, 15000, 'MAP switch after reload')
@@ -434,7 +430,7 @@ try {
     const items = [...document.querySelectorAll('.nearby-item')]
     return { count: items.length, first: items[0].innerText.replace(/\\n/g, ' · '), withDistance: items.filter((i) => i.querySelector('.nearby-item-distance')).length }
   })()`)
-  record('no signal, Google map: map view shows the nearby list instead of a dead map', nearby.count >= pack.sites.length,
+  record('no signal, no saved map file: map view shows the nearby list instead of a dead map', nearby.count >= pack.sites.length,
     `${nearby.count} entries, ${nearby.withDistance} with distances; nearest: ${nearby.first}`)
   await page.screenshot('3b-nearby-list')
   await page.eval(`[...document.querySelectorAll('.nearby-item')].find((b) => !b.innerText.includes('Landmark')).click()`)

@@ -1,10 +1,8 @@
 import { API_BASE } from '../apiBase.js'
 import { isStartLandmark, landmarkDisplayNumber } from '../landmarkNumber.js'
 
-// Shown in place of the map when the map can't load. With the OSM map (default) that's only when
-// its map file isn't saved on the phone yet and there's no signal (or the phone has no WebGL); with
-// the Google map (Dev menu) it's any time the app is opened with no signal, since Google's map
-// can't be saved for offline use. Every card it opens is already on the phone (landmarks from the
+// Shown in place of the map when the map can't load — only when its map file isn't saved on the
+// phone yet and there's no signal, or the phone has no WebGL. Every card it opens is already on the phone (landmarks from the
 // game state, POIs from the tour pack), so without this list they'd be saved but unreachable
 // (found on the 2026-10-19 airplane-mode phone test). Sorted nearest first from the live GPS
 // position — GPS works with no signal — or, before a fix arrives, landmarks in tour order then
