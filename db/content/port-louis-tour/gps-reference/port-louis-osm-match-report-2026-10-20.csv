@@ -1,0 +1,157 @@
+﻿Kind,ID,Title,POI type,Current lat (Google pin),Current lng (Google pin),OSM lat,OSM lng,Difference (m),"Direction OSM is from current pin (deg, 0=N clockwise)",Direction (compass),Found in OSM as,OSM feature,OSM link,Matched by,Confidence,Notes
+Landmark,L1,Blue Penny Museum,landmark,-20.160928,57.497513,-20.160906,57.497501,3,334,NNW,Blue Penny Museum,node/380468499 tourism=museum,https://www.openstreetmap.org/node/380468499,"same Wikipedia article ""blue penny museum""",High,OSM point
+Landmark,L2,Port Louis Casino,landmark,-20.161473,57.498995,?,?,?,?,?,?,,,,,"Possibly ""Le Casino"" (node/821712183, 6 m) — name too different to be sure, not used"
+Landmark,L3,SAJ Statue,landmark,-20.160684,57.50096,?,?,?,?,?,?,,,,,Not in OSM by name
+Landmark,L4,Aapravasi Ghat World Heritage Site,landmark,-20.158554,57.502951,-20.158554,57.502951,0,,,Aapravasi Ghat,way/543108960 historic=building,https://www.openstreetmap.org/way/543108960,"name contains ""Aapravasi Ghat""",Medium,pin is already inside this OSM outline
+Landmark,L5,Jummah Masjid,landmark,-20.159722,57.505,-20.159722,57.505000,0,,,Jummah Mosque,way/495476854 amenity=place_of_worship,https://www.openstreetmap.org/way/495476854,"same Wikipedia article ""jummah mosque (mauritius)"" (name only partly matches)",Medium,pin is already inside this OSM outline
+Landmark,L6,Manga Street Murals,landmark,-20.158731,57.506135,?,?,?,?,?,?,,,,,Not in OSM by name
+Landmark,L7,China Town South Gate,landmark,-20.159562,57.505643,-20.159471,57.505425,25,294,WNW,china town gate,node/12199284058 tourism=information,https://www.openstreetmap.org/node/12199284058,"name contains ""china town gate""",Medium,"OSM point — LARGE difference, worth a look"
+Landmark,L8,Central Market Port Louis,landmark,-20.160692,57.502951,-20.160692,57.502951,0,,,Central Market,way/159257749 tourism=attraction,https://www.openstreetmap.org/way/159257749,"name contains ""Central Market""",Medium,pin is already inside this OSM outline
+Landmark,L9,Statue of William Newton,landmark,-20.162442,57.50261,?,?,?,?,?,?,,,,,Nearest name/wiki match is 234 m away (William Newton node/9280578359) — too far to trust
+Landmark,L10,Mairie de Port Louis,landmark,-20.164286,57.504723,?,?,?,?,?,?,,,,,Nearest name/wiki match is 286 m away (Port Louis node/243819778) — too far to trust
+Landmark,L11,Statue de Saint Louis,landmark,-20.165064,57.505932,?,?,?,?,?,?,,,,,Not in OSM by name
+Landmark,L12,Photographic Museum Of Mauritius,landmark,-20.164162,57.50356,?,?,?,?,?,?,,,,,Not in OSM by name
+Landmark,L13,Natural History Museum,landmark,-20.163234,57.502374,-20.163234,57.502374,0,,,Natural History Museum,relation/14750287 tourism=museum,https://www.openstreetmap.org/relation/14750287,"same name ""Natural History Museum""",High,pin is already inside this OSM outline
+Landmark,L14,Bust of Queen Victoria,landmark,-20.163491,57.497195,?,?,?,?,?,?,,,,,"Possibly ""Victoria Urban Terminal"" (relation/16719910, 0 m) — name too different to be sure, not used"
+Landmark,L15,Caudan Arts Centre,landmark,-20.161975,57.498368,-20.161975,57.498368,0,,,Centre d'Arts Caudan,way/741886865 amenity=arts_centre,https://www.openstreetmap.org/way/741886865,"same name ""Centre d'Arts Caudan""",High,pin is already inside this OSM outline
+POI,5390,Jummah Masjid,religious_building,-20.159722,57.505,-20.159722,57.505000,0,,,Jummah Mosque,way/495476854 amenity=place_of_worship,https://www.openstreetmap.org/way/495476854,"same Wikipedia article ""jummah mosque (mauritius)"" (name only partly matches)",Medium,pin is already inside this OSM outline
+POI,5391,Government House,building,-20.16304,57.50357,-20.162711,57.503020,68,302,WNW,Maison du Gouvernement,node/4875713722 addr:city=Port-Louis,https://www.openstreetmap.org/node/4875713722,"same name ""Government House""",High,"OSM point — LARGE difference, worth a look"
+POI,5392,Place d'Armes,history,-20.161704,57.502115,-20.161704,57.502115,0,,,Place d'Armes,way/1004939122 place=square,https://www.openstreetmap.org/way/1004939122,"same name ""Place d'Armes""",High,pin is already inside this OSM outline
+POI,5393,Central Market Port Louis,history,-20.160692,57.502951,-20.160692,57.502951,0,,,Central Market,way/159257749 tourism=attraction,https://www.openstreetmap.org/way/159257749,"name contains ""Central Market""",Medium,pin is already inside this OSM outline
+POI,5394,Champ de Mars,history,-20.169221,57.510183,-20.169221,57.510183,0,,,Champ de Mars Racecourse,way/33362287 leisure=sports_centre,https://www.openstreetmap.org/way/33362287,"same Wikipedia article ""champ de mars racecourse""",High,pin is already inside this OSM outline
+POI,5395,Citadelle (Fort Adelaide),building,-20.163715,57.510277,-20.163715,57.510277,0,,,Fort Adelaide,way/33142632 historic=castle,https://www.openstreetmap.org/way/33142632,"name contains ""Fort Adelaide""",Medium,pin is already inside this OSM outline
+POI,5396,Cannon Stand,history,-20.163395,57.509765,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5397,Blue Penny Museum,museum,-20.160928,57.497513,-20.160906,57.497501,3,334,NNW,Blue Penny Museum,node/380468499 tourism=museum,https://www.openstreetmap.org/node/380468499,"same Wikipedia article ""blue penny museum""",High,OSM point
+POI,5398,Aapravasi Ghat World Heritage Site,history,-20.158554,57.502951,-20.158554,57.502951,0,,,Aapravasi Ghat,way/543108960 historic=building,https://www.openstreetmap.org/way/543108960,"name contains ""Aapravasi Ghat""",Medium,pin is already inside this OSM outline
+POI,5399,Sir Sewoosagur Ramgoolam Statue,statue,-20.16074,57.500884,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5400,Port Louis Fire Station,building,-20.164693,57.504012,?,?,?,?,?,?,,,,,Nearest name/wiki match is 279 m away (Port Louis node/243819778) — too far to trust
+POI,5401,Café du Vieux Conseil,building,-20.164149,57.503968,-20.164206,57.503753,23,254,WSW,Café du Vieux Conseil,node/4875657928 amenity=cafe,https://www.openstreetmap.org/node/4875657928,"same name ""Café du Vieux Conseil""",High,"OSM point — LARGE difference, worth a look"
+POI,5402,Port Louis Theatre,building,-20.163572,57.504385,-20.163582,57.504378,1,215,SW,Théatre de Port Louis,node/1402034693 amenity=theatre,https://www.openstreetmap.org/node/1402034693,"same name ""Théatre de Port Louis""",High,OSM point
+POI,5403,Aurelie Perrine Passenger Terminal,building,-20.155356,57.498243,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5404,Eastern Roche Bois Cemetery,history,-20.147674,57.501625,-20.147674,57.501625,0,,,Roche Bois Public Cemetery,way/374745749 landuse=cemetery,https://www.openstreetmap.org/way/374745749,"name contains ""Eastern Cemetery""",Medium,pin is already inside this OSM outline
+POI,5405,Fort George,history,-20.147252,57.491346,?,?,?,?,?,?,,,,,Nearest name/wiki match is 140 m away (Fort George Power Station way/967641824) — too far to trust
+POI,5406,Christian Decotter Cruise Terminal,building,-20.156448,57.492132,-20.156510,57.492047,11,232,SW,Terminal de croisière Christian Decotter,node/6988326485 name=Terminal de croisière Christian Decotter,https://www.openstreetmap.org/node/6988326485,"same name ""Christian Decotter Cruise Terminal""",High,OSM point
+POI,5407,Pere Laval Church & Museum,religious_building,-20.148117,57.529199,?,?,?,?,?,?,,,,,"Possibly ""Père Laval Catholic Church"" (way/1005872445, 0 m) — name too different to be sure, not used"
+POI,5408,Plateau,viewpoint,-20.155602,57.522359,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5409,Viewpoint of Port-Louis,viewpoint,-20.1783,57.501014,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5410,Rajiv Gandhi Science Center,museum,-20.173252,57.48455,-20.173252,57.484550,0,,,Rajiv Gandhi Science Centre,way/737290700 building=yes,https://www.openstreetmap.org/way/737290700,"same name ""Rajiv Gandhi Science Centre""",High,pin is already inside this OSM outline
+POI,5411,La Tour Koenig,history,-20.179915,57.469797,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5412,Martello Tower,history,-20.16781,57.471924,-20.167810,57.471924,0,,,Tower of Pointe aux Sables,way/1211615201 historic=martello_tower,https://www.openstreetmap.org/way/1211615201,"same name ""Martello Tower""",High,pin is already inside this OSM outline
+POI,5413,Memoire Des Naufrages Du Stargate,history,-20.153942,57.487571,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5414,Les Salines Garden,quirky,-20.160551,57.489448,-20.160551,57.489448,0,,,Les Salines Garden,way/1159844599 leisure=park,https://www.openstreetmap.org/way/1159844599,"same name ""Les Salines Garden""",High,pin is already inside this OSM outline
+POI,5415,Tortoise Park,quirky,-20.159279,57.487826,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5416,Lenin Statue Bust,statue,-20.159401,57.489098,-20.159404,57.489113,2,101,E,Lenin Statue,node/13906596747 historic=memorial,https://www.openstreetmap.org/node/13906596747,"same name ""Lenin Statue""",High,OSM point
+POI,5417,Cimetiere de l'Ouest,history,-20.159901,57.486413,?,?,?,?,?,?,,,,,"Possibly ""Saint Georges Cemetery"" (way/373182159, 0 m) — name too different to be sure, not used"
+POI,5418,1892 Hurricane Memorial,history,-20.158752,57.487172,-20.158823,57.487211,9,153,SSE,1892 Hurricane Memorial,node/13906596783 historic=memorial,https://www.openstreetmap.org/node/13906596783,"same name ""1892 Hurricane Memorial""",High,OSM point
+POI,5419,Marina,building,-20.16011,57.496938,-20.160110,57.496783,16,270,W,La Marina,node/3075511129 leisure=marina,https://www.openstreetmap.org/node/3075511129,"same name ""La Marina""",High,OSM point
+POI,5420,Le Suffren Hotel & Marina,building,-20.160376,57.495435,-20.160376,57.495435,0,,,Le Suffren Hotel & Marina,way/158643290 tourism=hotel,https://www.openstreetmap.org/way/158643290,"same name ""Le Suffren Hotel & Marina""",High,pin is already inside this OSM outline
+POI,5421,Meat Market,quirky,-20.160285,57.502319,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5422,Fish Market,quirky,-20.160071,57.502539,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5423,Rabita Hall,building,-20.166794,57.506206,-20.166794,57.506206,0,,,Rabita Hall,way/737240213 amenity=events_venue,https://www.openstreetmap.org/way/737240213,"same name ""Rabita Hall""",High,pin is already inside this OSM outline
+POI,5424,Tombeau Malartic,history,-20.170586,57.511553,?,?,?,?,?,?,,,,,Nearest name/wiki match is 211 m away (TOMBEAU MALARTIC node/9589931095) — too far to trust
+POI,5425,Port Louis Gymkhana,building,-20.171542,57.510032,-20.171542,57.510032,0,,,Port Louis Gymkhana Hall,way/737218369 amenity=events_venue,https://www.openstreetmap.org/way/737218369,"name contains ""Port Louis Gymkhana Hall""",Medium,pin is already inside this OSM outline
+POI,5426,Tien Tan Chinese Pagoda,building,-20.176171,57.507139,-20.176171,57.507139,0,,,Tien Tan Pagoda,way/158576004 amenity=place_of_worship,https://www.openstreetmap.org/way/158576004,"name contains ""Tien Tan Pagoda""",Medium,pin is already inside this OSM outline
+POI,5427,La Butte Glissement de terrain,history,-20.16766,57.492421,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5428,Manga Street Murals,quirky,-20.158731,57.506135,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5429,Square Khadafi,history,-20.158913,57.511426,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5430,Old Ghoon Mazaar,religious_building,-20.159457,57.514343,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5431,Islamic Cultural Centre,building,-20.163485,57.512726,-20.163652,57.512616,22,212,SSW,Islamic Cultural Centre,way/495753580 amenity=community_centre,https://www.openstreetmap.org/way/495753580,"same name ""Islamic Cultural Centre""",High,"moved just inside the nearest edge of this OSM outline — LARGE difference, worth a look"
+POI,5432,FORENA (Fondation Ressources et Nature) - Endemic tree plantation,quirky,-20.163037,57.509456,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5433,Statue de Saint Louis,statue,-20.165082,57.505948,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5434,Photographic Museum Of Mauritius,museum,-20.164162,57.50356,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5435,National Assembly of the Republic of Mauritius,building,-20.163009,57.503374,-20.162994,57.503269,11,278,W,Assemblée Nationale,node/4875713821 addr:city=Port-Louis,https://www.openstreetmap.org/node/4875713821,"name contains ""National Assembly""",Medium,OSM point
+POI,5436,Natural History Museum,museum,-20.163234,57.502374,-20.163234,57.502374,0,,,Natural History Museum,relation/14750287 tourism=museum,https://www.openstreetmap.org/relation/14750287,"same name ""Natural History Museum""",High,pin is already inside this OSM outline
+POI,5437,Église Adventiste Du Septième Jour Port-Louis,religious_building,-20.165906,57.501663,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5438,La Galerie du Génie,building,-20.164012,57.499574,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5439,The Bank of Mauritius Museum,museum,-20.161969,57.503455,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5440,Queen Victoria Statue,statue,-20.162489,57.502831,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5441,Statue of William Newton,statue,-20.162439,57.502603,?,?,?,?,?,?,,,,,Nearest name/wiki match is 234 m away (William Newton node/9280578359) — too far to trust
+POI,5442,Statue of Sir John Pope Hennessy,statue,-20.162326,57.502743,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5443,China Town South Gate,quirky,-20.159562,57.505643,-20.159471,57.505425,25,294,WNW,china town gate,node/12199284058 tourism=information,https://www.openstreetmap.org/node/12199284058,"name contains ""china town gate""",Medium,"OSM point — LARGE difference, worth a look"
+POI,5444,Intercontinental Slavery Museum,museum,-20.15903,57.502183,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5445,Mauritius Postal Museum,museum,-20.159975,57.501669,-20.159975,57.501669,0,,,Postal Museum,way/306395387 tourism=museum,https://www.openstreetmap.org/way/306395387,"same name ""Postal Museum""",High,pin is already inside this OSM outline
+POI,5446,Alte Windmühle (Windmill Museum),museum,-20.159459,57.50114,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5447,SBM Fountain,quirky,-20.160396,57.500595,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5448,SAJ Statue,statue,-20.160684,57.50096,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5449,Bust of Queen Victoria,statue,-20.163491,57.497195,?,?,?,?,?,?,,,,,"Possibly ""Victoria Urban Terminal"" (relation/16719910, 0 m) — name too different to be sure, not used"
+POI,5450,Victoria Metro Station,building,-20.162623,57.498048,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5451,Caudan Arts Centre,building,-20.161975,57.498368,-20.161975,57.498368,0,,,Centre d'Arts Caudan,way/741886865 amenity=arts_centre,https://www.openstreetmap.org/way/741886865,"same name ""Centre d'Arts Caudan""",High,pin is already inside this OSM outline
+POI,5452,Port Louis Casino,building,-20.161473,57.498995,?,?,?,?,?,?,,,,,"Possibly ""Le Casino"" (node/821712183, 6 m) — name too different to be sure, not used"
+POI,5453,Craft Market,quirky,-20.161428,57.498675,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5454,Umbrella Square,quirky,-20.161156,57.498405,-20.161156,57.498405,0,,,Umbrella Square,way/1160816108 highway=pedestrian,https://www.openstreetmap.org/way/1160816108,"same name ""Umbrella Square""",High,pin is already inside this OSM outline
+POI,5455,Caudan Waterfront,quirky,-20.161,57.4985,-20.160955,57.498542,7,41,NE,Caudan Waterfront,node/2675749581 place=quarter,https://www.openstreetmap.org/node/2675749581,"same name ""Caudan Waterfront""",High,OSM point
+POI,5456,Swing Bridge,quirky,-20.15978,57.496008,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5457,Statue of Maurice Curé,statue,-20.161791,57.502186,?,?,?,?,?,?,,,,,"Possibly ""Ile Maurice"" (relation/1569926, 0 m) — name too different to be sure, not used"
+POI,5458,H.M Borstal,history,-20.177762,57.470891,?,?,?,?,?,?,,,,,"Possibly ""Ruine H...borstal"" (node/11385061574, 17 m) — name too different to be sure, not used"
+POI,5459,Musée La Bonté Innée,history,-20.166947,57.503574,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5460,Jardins de la Compagnie (Company Garden),park,-20.163782,57.50209,-20.163782,57.502090,0,,,Les Jardins De La Compagnie,way/495831119 leisure=park,https://www.openstreetmap.org/way/495831119,"same name ""Les Jardins De La Compagnie""",High,pin is already inside this OSM outline
+POI,5461,Statue of Remy Ollier,statue,-20.163295,57.501698,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5462,Statue of Leoville L'Homme,statue,-20.163956,57.502232,-20.163946,57.502202,3,289,WNW,Léoville L'Homme,node/4875728023 historic=memorial,https://www.openstreetmap.org/node/4875728023,"same name ""Léoville L'Homme""",High,OSM point
+POI,5463,Statue of Manilal Doctor,statue,-20.164087,57.502452,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5464,Bust of Charles-Edouard Brown-Sequard,statue,-20.164244,57.502517,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5465,Statue of Adrien d'Epinay,statue,-20.16369,57.50198,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5466,Statue of Ti Frere (Alphonse Ravaton),statue,-20.164101,57.502562,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5467,Bust of Raoul Rivet,statue,-20.163361,57.501579,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5468,Monument to Soeur Marie Barthelemy,monument,-20.164447,57.502824,-20.164433,57.502754,7,282,WNW,Marie Barthelemy,node/4875728325 historic=memorial,https://www.openstreetmap.org/node/4875728325,"name contains ""Marie Barthelemy""",Medium,OSM point
+POI,5469,Al-Idrissi Memorial,monument,-20.164586,57.502954,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5470,Slavery Abolition Monument,monument,-20.164254,57.502292,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5471,King Edward VII Statue,statue,-20.169221,57.510231,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5472,Kwan Tee Pagoda,religious_building,-20.161721,57.491987,-20.161686,57.492020,5,42,NE,Kwan Tee Pagoda,way/158967792 amenity=place_of_worship,https://www.openstreetmap.org/way/158967792,"same name ""Kwan Tee Pagoda""",High,moved just inside the nearest edge of this OSM outline
+POI,5473,Kailassam Temple,religious_building,-20.149008,57.519576,-20.148965,57.519449,14,290,WNW,Kailassam Temple,node/12064214069 amenity=place_of_worship,https://www.openstreetmap.org/node/12064214069,"same name ""Kailassam Temple""",High,OSM point
+POI,5474,St James Cathedral,religious_building,-20.167424,57.505692,-20.167424,57.505692,0,,,St. James Cathedral,way/158584762 amenity=place_of_worship,https://www.openstreetmap.org/way/158584762,"same name ""St. James Cathedral""",High,pin is already inside this OSM outline
+POI,5475,Didus Art Gallery,gallery,-20.160946,57.497961,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5476,House of Digital Art,gallery,-20.163995,57.499632,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5477,Line Barracks,history,-20.164433,57.499895,?,?,?,?,?,?,,,,,Nearest name/wiki match is 87 m away (Line Barracks way/472059207) — too far to trust
+POI,5478,Trou Fanfaron,history,-20.156389,57.491944,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5479,Bourbon Street Food & Flower Stalls,quirky,-20.161169,57.503376,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5480,Jim Boulettes,quirky,-20.163612,57.50584,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5481,Cafe L'Amicale,quirky,-20.158814,57.505782,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5482,Lambic Beer Bar,quirky,-20.165237,57.499809,?,?,?,?,?,?,,,,,"Possibly ""Lambic"" (node/2169023647, 12 m) — name too different to be sure, not used"
+POI,5483,Namaste Restaurant,quirky,-20.161,57.498662,-20.160878,57.498600,15,334,NNW,Namaste Restaurant,node/9429268498 amenity=restaurant,https://www.openstreetmap.org/node/9429268498,"same name ""Namaste Restaurant""",High,OSM point
+POI,5484,Caudan Centre,building,-20.160863,57.498089,?,?,?,?,?,?,,,,,Nearest name/wiki match is 99 m away (Centre d'Arts Caudan way/741886865) — too far to trust
+POI,5485,Labourdonnais Waterfront Hotel,building,-20.160415,57.497813,-20.160323,57.497644,20,300,WNW,Labourdonnais Waterfront Hotel,node/821712205 tourism=hotel,https://www.openstreetmap.org/node/821712205,"same name ""Labourdonnais Waterfront Hotel""",High,OSM point
+POI,5486,Nicolas Baudin bust,monument,-20.160863,57.497721,-20.160814,57.497731,6,11,N,Nicolas Baudin,node/7259887016 artwork_type=bust,https://www.openstreetmap.org/node/7259887016,"same name ""Nicolas Baudin""",High,OSM point
+POI,5487,"""Non finn perdi tou"" Monument",monument,-20.160959,57.497696,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5488,Monument to the Peopling of Mauritius,monument,-20.161045,57.497668,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5489,The Millennium Lovers Sculpture,monument,-20.16113,57.498264,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5490,Port Louis Waterfront,quirky,-20.160916,57.500701,?,?,?,?,?,?,,,,,Nearest name/wiki match is 278 m away (Port Louis node/243819778) — too far to trust
+POI,5491,Professor Basdeo Bissoondoyal Statue,statue,-20.160861,57.500793,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5492,The Waterfront Cannons,monument,-20.160488,57.500726,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5493,Monument to the Victims of Poverty,monument,-20.160567,57.500928,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5494,The Granary,building,-20.158884,57.501359,-20.159431,57.501418,61,174,S,The Granary,node/11037644969 tourism=information,https://www.openstreetmap.org/node/11037644969,"same name ""The Granary""",High,"OSM point — LARGE difference, worth a look"
+POI,5495,China Town North Gate,quirky,-20.158064,57.507202,?,?,?,?,?,?,,,,,Nearest name/wiki match is 243 m away (china town gate node/12199284058) — too far to trust
+POI,5496,Hardware Row,recurring_feature,-20.15823,57.507048,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5497,Emmanuel Anquetil Building,building,-20.164176,57.505294,-20.164176,57.505294,0,,,Emmanuel Anquetil Building,way/495650769 building=yes,https://www.openstreetmap.org/way/495650769,"same name ""Emmanuel Anquetil Building""",High,pin is already inside this OSM outline
+POI,5498,Emmanuel Anquetil Monument,monument,-20.164089,57.505092,-20.164089,57.505092,0,,,Emmanuel Anquetil Building,way/495650769 building=yes,https://www.openstreetmap.org/way/495650769,"same name ""Emmanuel Anquetil Building""",High,pin is already inside this OSM outline
+POI,5499,Mairie de Port Louis,building,-20.164286,57.504723,?,?,?,?,?,?,,,,,Nearest name/wiki match is 286 m away (Port Louis node/243819778) — too far to trust
+POI,5500,Anjalay Coopen Statue,statue,-20.164819,57.505547,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5501,Old Supreme Court Building,building,-20.165267,57.505068,?,?,?,?,?,?,,,,,Nearest name/wiki match is 88 m away (Supreme Court of Mauritius way/495649882) — too far to trust
+POI,5502,Saint Louis Cathedral,religious_building,-20.16447,57.506528,-20.164470,57.506528,0,,,St Louis Cathedral,way/158575993 amenity=place_of_worship,https://www.openstreetmap.org/way/158575993,"same Wikipedia article ""st. louis cathedral, port-louis""",High,pin is already inside this OSM outline
+POI,5503,Obelisk Water Fountain,monument,-20.165122,57.505898,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5504,L'Eveche de Port Louis,religious_building,-20.164156,57.506932,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5505,La Cure de la Cathedrale St Louis,religious_building,-20.164082,57.506019,?,?,?,?,?,?,,,,,Nearest name/wiki match is 56 m away (St Louis Cathedral way/158575993) — too far to trust
+POI,5506,Odysseo Oceanarium,museum,-20.159337,57.495166,?,?,?,?,?,?,,,,,"Possibly ""Odysseo"" (way/1160821248, 9 m) — name too different to be sure, not used"
+POI,5507,Statue of Mahé de La Bourdonnais,statue,-20.161342,57.501498,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5508,Statue of Sookdeo Bissoondoyal,statue,-20.161531,57.501634,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5509,Maison Traditionnelle Mauricienne – Rue St. Georges,recurring_feature,-20.16677,57.501524,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5510,Maison Poncini – Bâtiment Bourgeois (Bourgeois Townhouse),recurring_feature,-20.163875,57.504306,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5511,6 St. Georges Street – Case Créole (Creole Cottage),recurring_feature,-20.16679,57.501541,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5512,Wah Luen Hong – La Boutique Chinoise (Chinese Shophouse),recurring_feature,-20.159337,57.505883,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5513,The Banyan Trees of the Jardin de la Compagnie,recurring_feature,-20.163907,57.50207,-20.163907,57.502070,0,,,Les Jardins De La Compagnie,way/495831119 leisure=park,https://www.openstreetmap.org/way/495831119,"name contains ""Les Jardins De La Compagnie""",Medium,pin is already inside this OSM outline
+POI,5514,Chagos Monument,monument,-20.1519,57.4983,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5515,Cafe Shanghai,quirky,-20.161613,57.505822,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5516,Dholl Puri Palace,quirky,-20.16351,57.504743,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5517,Monument to Child Victims of Violence,monument,-20.164136,57.502322,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5518,Allée des Voyageurs (Travellers' Lane),monument,-20.164768,57.503002,-20.164632,57.503023,15,8,N,Allée des Voyageurs,way/69021023 highway=footway,https://www.openstreetmap.org/way/69021023,"same name ""Allée des Voyageurs""",High,nearest point on this OSM line
+POI,5519,Statue of Sir Satcam Boolell,statue,-20.161942,57.502362,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5520,Bust of Renganaden Seeneevassen,statue,-20.161553,57.501963,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5521,Bust of Emmanuel Anquetil,statue,-20.161367,57.501779,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5522,Sir Abdool Razack Mohamed Memorial Arch,monument,-20.162088,57.502253,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5523,Bust of Sir Veerasamy Ringadoo,statue,-20.161901,57.502042,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5524,Monument to Fishermen Lost at Sea,monument,-20.158384,57.50363,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5525,Royal Road Townhouse – Lambrequins (Creole Lace Trim),recurring_feature,-20.159926,57.505355,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5526,Royal Road Car Park – Demolition-Plot Car Parks,recurring_feature,-20.160153,57.504839,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5527,Statue of Sir William Stevenson,statue,-20.16268,57.50309,?,?,?,?,?,?,,,,,Not in OSM by name
+POI,5528,Prime Minister's Office (Treasury Building),building,-20.16287,57.50283,-20.162494,57.503219,58,44,NE,Prime Minister's Office,node/7523175054 government=administrative,https://www.openstreetmap.org/node/7523175054,"same name ""Prime Minister's Office""",High,"OSM point — LARGE difference, worth a look"
+POI,5529,Renganaden Seeneevassen Building,building,-20.16467,57.50466,?,?,?,?,?,?,,,,,"Possibly ""Renganaden Seeneevasen Shopping Centre"" (way/495627632, 0 m) — name too different to be sure, not used"
+POI,5530,Pont Lakorité Love Locks,monument,-20.16143,57.49774,?,?,?,?,?,?,,,,,Not in OSM by name

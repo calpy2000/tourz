@@ -1,0 +1,157 @@
+type,db_id,sequence_order,title,google_latitude,google_longitude,osm_latitude,osm_longitude,moved_m,review_action
+landmark,202,5,"Jummah Masjid",-20.159722,57.505000,-20.159768,57.505071,9.0,Set GPS
+landmark,200,7,"China Town South Gate",-20.159562,57.505643,-20.159604,57.505629,4.9,Set GPS
+landmark,204,9,"Statue of William Newton",-20.162442,57.502610,-20.162440,57.502605,0.6,Set GPS
+landmark,201,6,"Manga Street Murals",-20.158731,57.506135,-20.158782,57.506077,8.3,Set GPS
+landmark,209,14,"Bust of Queen Victoria",-20.163491,57.497195,-20.163150,57.498510,142.6,Set GPS
+landmark,197,2,"Port Louis Casino",-20.161473,57.498995,-20.161422,57.499020,6.2,Set GPS
+landmark,205,10,"Mairie de Port Louis",-20.164286,57.504723,-20.164274,57.504594,13.5,Set GPS
+landmark,208,13,"Natural History Museum",-20.163234,57.502374,-20.163312,57.502432,10.6,Set GPS
+landmark,210,15,"Caudan Arts Centre",-20.161975,57.498368,-20.161975,57.498368,0.0,GPS OK
+landmark,206,11,"Statue de Saint Louis",-20.165064,57.505932,-20.165100,57.505869,7.7,Set GPS
+landmark,196,1,"Blue Penny Museum",-20.160928,57.497513,-20.160973,57.497469,6.8,Set GPS
+landmark,199,4,"Aapravasi Ghat World Heritage Site",-20.158554,57.502951,-20.158639,57.502985,10.1,Set GPS
+landmark,207,12,"Photographic Museum Of Mauritius",-20.164162,57.503560,-20.164196,57.503575,4.1,Set GPS
+landmark,203,8,"Central Market Port Louis",-20.160692,57.502951,-20.160722,57.502833,12.8,Set GPS
+landmark,198,3,"SAJ Statue",-20.160684,57.500960,-20.160692,57.500955,1.0,Set GPS
+site,5470,,"Slavery Abolition Monument",-20.164254,57.502292,-20.164210,57.502326,6.1,Set GPS
+site,5527,,"Statue of Sir William Stevenson",-20.162680,57.503090,-20.162685,57.502979,11.6,Set GPS
+site,5464,,"Bust of Charles-Edouard Brown-Sequard",-20.164244,57.502517,-20.164226,57.502530,2.4,Set GPS
+site,5513,,"The Banyan Trees of the Jardin de la Compagnie",-20.163907,57.502070,-20.163985,57.502056,8.8,Set GPS
+site,5461,,"Statue of Remy Ollier",-20.163295,57.501698,-20.163289,57.501705,1.0,Set GPS
+site,5516,,"Dholl Puri Palace",-20.163510,57.504743,-20.163468,57.504767,5.3,Set GPS
+site,5515,,"Cafe Shanghai",-20.161613,57.505822,-20.161613,57.505822,0.0,GPS OK
+site,5514,,"Chagos Monument",-20.151900,57.498300,-20.151900,57.498300,0.0,GPS OK
+site,5511,,"6 St. Georges Street – Case Créole (Creole Cottage)",-20.166790,57.501541,-20.166790,57.501541,0.0,GPS OK
+site,5509,,"Maison Traditionnelle Mauricienne – Rue St. Georges",-20.166770,57.501524,-20.166770,57.501524,0.0,GPS OK
+site,5510,,"Maison Poncini – Bâtiment Bourgeois (Bourgeois Townhouse)",-20.163875,57.504306,-20.163911,57.504160,15.8,Set GPS
+site,5506,,"Odysseo Oceanarium",-20.159337,57.495166,-20.159337,57.495166,0.0,GPS OK
+site,5504,,"L'Eveche de Port Louis",-20.164156,57.506932,-20.164156,57.506932,0.0,GPS OK
+site,5502,,"Saint Louis Cathedral",-20.164470,57.506528,-20.164470,57.506528,0.0,GPS OK
+site,5501,,"Old Supreme Court Building",-20.165267,57.505068,-20.165171,57.505109,11.5,Set GPS
+site,5500,,"Anjalay Coopen Statue",-20.164819,57.505547,-20.164867,57.505574,6.0,Set GPS
+site,5498,,"Emmanuel Anquetil Monument",-20.164089,57.505092,-20.164102,57.505062,3.5,Set GPS
+site,5497,,"Emmanuel Anquetil Building",-20.164176,57.505294,-20.164200,57.504964,34.6,Set GPS
+site,5496,,"Hardware Row",-20.158230,57.507048,-20.158230,57.507048,0.0,GPS OK
+site,5495,,"China Town North Gate",-20.158064,57.507202,-20.158064,57.507202,0.0,GPS OK
+site,5494,,"The Granary",-20.158884,57.501359,-20.158944,57.501334,7.2,Set GPS
+site,5493,,"Monument to the Victims of Poverty",-20.160567,57.500928,-20.160567,57.500928,0.0,GPS OK
+site,5492,,"The Waterfront Cannons",-20.160488,57.500726,-20.160532,57.500637,10.5,Set GPS
+site,5490,,"Port Louis Waterfront",-20.160916,57.500701,-20.160916,57.500701,0.0,GPS OK
+site,5489,,"The Millennium Lovers Sculpture",-20.161130,57.498264,-20.161116,57.498192,7.7,Set GPS
+site,5487,,"""Non finn perdi tou"" Monument",-20.160959,57.497696,-20.161016,57.497633,9.1,Set GPS
+site,5486,,"Nicolas Baudin bust",-20.160863,57.497721,-20.160856,57.497744,2.5,Set GPS
+site,5485,,"Labourdonnais Waterfront Hotel",-20.160415,57.497813,-20.160323,57.497644,20.4,GPS OK
+site,5484,,"Caudan Centre",-20.160863,57.498089,-20.160863,57.498089,0.0,GPS OK
+site,5483,,"Namaste Restaurant",-20.161000,57.498662,-20.160878,57.498600,15.0,GPS OK
+site,5482,,"Lambic Beer Bar",-20.165237,57.499809,-20.165237,57.499809,0.0,GPS OK
+site,5481,,"Cafe L'Amicale",-20.158814,57.505782,-20.158814,57.505782,0.0,GPS OK
+site,5480,,"Jim Boulettes",-20.163612,57.505840,-20.163612,57.505840,0.0,GPS OK
+site,5477,,"Line Barracks",-20.164433,57.499895,-20.164433,57.499895,0.0,GPS OK
+site,5476,,"House of Digital Art",-20.163995,57.499632,-20.163995,57.499632,0.0,GPS OK
+site,5475,,"Didus Art Gallery",-20.160946,57.497961,-20.160946,57.497961,0.0,GPS OK
+site,5474,,"St James Cathedral",-20.167424,57.505692,-20.167663,57.505767,27.7,Set GPS
+site,5473,,"Kailassam Temple",-20.149008,57.519576,-20.148965,57.519449,14.1,GPS OK
+site,5472,,"Kwan Tee Pagoda",-20.161721,57.491987,-20.161686,57.492020,5.2,GPS OK
+site,5503,,"Obelisk Water Fountain",-20.165122,57.505898,-20.165140,57.505817,8.7,Set GPS
+site,5468,,"Monument to Soeur Marie Barthelemy",-20.164447,57.502824,-20.164446,57.502809,1.6,Set GPS
+site,5466,,"Statue of Ti Frere (Alphonse Ravaton)",-20.164101,57.502562,-20.164085,57.502517,5.0,Set GPS
+site,5467,,"Bust of Raoul Rivet",-20.163361,57.501579,-20.163361,57.501579,0.0,GPS OK
+site,5471,,"King Edward VII Statue",-20.169221,57.510231,-20.169280,57.510091,16.0,Set GPS
+site,5465,,"Statue of Adrien d'Epinay",-20.163690,57.501980,-20.163659,57.501961,4.0,Set GPS
+site,5460,,"Jardins de la Compagnie (Company Garden)",-20.163782,57.502090,-20.163782,57.502090,0.0,GPS OK
+site,5459,,"Musée La Bonté Innée",-20.166947,57.503574,-20.166947,57.503574,0.0,GPS OK
+site,5458,,"H.M Borstal",-20.177762,57.470891,-20.177762,57.470891,0.0,GPS OK
+site,5457,,"Statue of Maurice Curé",-20.161791,57.502186,-20.161847,57.502245,8.8,Set GPS
+site,5456,,"Swing Bridge",-20.159780,57.496008,-20.159780,57.496008,0.0,GPS OK
+site,5453,,"Craft Market",-20.161428,57.498675,-20.161428,57.498675,0.0,GPS OK
+site,5449,,"Bust of Queen Victoria",-20.163491,57.497195,-20.163150,57.498510,142.6,Set GPS
+site,5455,,"Caudan Waterfront",-20.161000,57.498500,-20.160955,57.498542,6.7,GPS OK
+site,5452,,"Port Louis Casino",-20.161473,57.498995,-20.161407,57.499020,7.8,Set GPS
+site,5451,,"Caudan Arts Centre",-20.161975,57.498368,-20.161975,57.498368,0.0,GPS OK
+site,5450,,"Victoria Metro Station",-20.162623,57.498048,-20.162623,57.498048,0.0,GPS OK
+site,5444,,"Intercontinental Slavery Museum",-20.159030,57.502183,-20.159030,57.502183,0.0,GPS OK
+site,5448,,"SAJ Statue",-20.160684,57.500960,-20.160684,57.500960,0.0,GPS OK
+site,5447,,"SBM Fountain",-20.160396,57.500595,-20.160396,57.500595,0.0,GPS OK
+site,5446,,"Alte Windmühle (Windmill Museum)",-20.159459,57.501140,-20.159521,57.501055,11.2,Set GPS
+site,5445,,"Mauritius Postal Museum",-20.159975,57.501669,-20.159975,57.501669,0.0,GPS OK
+site,5442,,"Statue of Sir John Pope Hennessy",-20.162326,57.502743,-20.162294,57.502757,3.9,Set GPS
+site,5441,,"Statue of William Newton",-20.162439,57.502603,-20.162439,57.502603,0.0,GPS OK
+site,5437,,"Église Adventiste Du Septième Jour Port-Louis",-20.165906,57.501663,-20.165906,57.501663,0.0,GPS OK
+site,5440,,"Queen Victoria Statue",-20.162489,57.502831,-20.162504,57.502827,1.7,Set GPS
+site,5439,,"The Bank of Mauritius Museum",-20.161969,57.503455,-20.161969,57.503455,0.0,GPS OK
+site,5436,,"Natural History Museum",-20.163234,57.502374,-20.163286,57.502430,8.2,Set GPS
+site,5435,,"National Assembly of the Republic of Mauritius",-20.163009,57.503374,-20.162994,57.503269,11.1,GPS OK
+site,5433,,"Statue de Saint Louis",-20.165082,57.505948,-20.165093,57.505872,8.0,Set GPS
+site,5434,,"Photographic Museum Of Mauritius",-20.164162,57.503560,-20.164192,57.503576,3.7,Set GPS
+site,5432,,"FORENA (Fondation Ressources et Nature) - Endemic tree plantation",-20.163037,57.509456,-20.163037,57.509456,0.0,GPS OK
+site,5431,,"Islamic Cultural Centre",-20.163485,57.512726,-20.163652,57.512616,21.9,GPS OK
+site,5429,,"Square Khadafi",-20.158913,57.511426,-20.158913,57.511426,0.0,GPS OK
+site,5427,,"La Butte Glissement de terrain",-20.167660,57.492421,-20.167660,57.492421,0.0,GPS OK
+site,5424,,"Tombeau Malartic",-20.170586,57.511553,-20.170632,57.511532,5.6,Set GPS
+site,5423,,"Rabita Hall",-20.166794,57.506206,-20.166794,57.506206,0.0,GPS OK
+site,5422,,"Fish Market",-20.160071,57.502539,-20.160071,57.502539,0.0,GPS OK
+site,5421,,"Meat Market",-20.160285,57.502319,-20.160285,57.502319,0.0,GPS OK
+site,5420,,"Le Suffren Hotel & Marina",-20.160376,57.495435,-20.160376,57.495435,0.0,GPS OK
+site,5419,,"Marina",-20.160110,57.496938,-20.160110,57.496783,16.2,GPS OK
+site,5418,,"1892 Hurricane Memorial",-20.158752,57.487172,-20.158823,57.487211,8.9,GPS OK
+site,5417,,"Cimetiere de l'Ouest",-20.159901,57.486413,-20.159901,57.486413,0.0,GPS OK
+site,5416,,"Lenin Statue Bust",-20.159401,57.489098,-20.159404,57.489113,1.6,GPS OK
+site,5415,,"Tortoise Park",-20.159279,57.487826,-20.159279,57.487826,0.0,GPS OK
+site,5414,,"Les Salines Garden",-20.160551,57.489448,-20.160551,57.489448,0.0,GPS OK
+site,5413,,"Memoire Des Naufrages Du Stargate",-20.153942,57.487571,-20.153942,57.487571,0.0,GPS OK
+site,5412,,"Martello Tower",-20.167810,57.471924,-20.167810,57.471924,0.0,GPS OK
+site,5411,,"La Tour Koenig",-20.179915,57.469797,-20.179915,57.469797,0.0,GPS OK
+site,5410,,"Rajiv Gandhi Science Center",-20.173252,57.484550,-20.173252,57.484550,0.0,GPS OK
+site,5409,,"Viewpoint of Port-Louis",-20.178300,57.501014,-20.178300,57.501014,0.0,GPS OK
+site,5408,,"Plateau",-20.155602,57.522359,-20.155602,57.522359,0.0,GPS OK
+site,5407,,"Pere Laval Church & Museum",-20.148117,57.529199,-20.148117,57.529199,0.0,GPS OK
+site,5406,,"Christian Decotter Cruise Terminal",-20.156448,57.492132,-20.156510,57.492047,11.2,GPS OK
+site,5405,,"Fort George",-20.147252,57.491346,-20.147252,57.491346,0.0,GPS OK
+site,5404,,"Eastern Roche Bois Cemetery",-20.147674,57.501625,-20.147674,57.501625,0.0,GPS OK
+site,5403,,"Aurelie Perrine Passenger Terminal",-20.155356,57.498243,-20.155356,57.498243,0.0,GPS OK
+site,5402,,"Port Louis Theatre",-20.163572,57.504385,-20.163635,57.504313,10.3,Set GPS
+site,5401,,"Café du Vieux Conseil",-20.164149,57.503968,-20.164123,57.503869,10.7,Set GPS
+site,5399,,"Sir Sewoosagur Ramgoolam Statue",-20.160740,57.500884,-20.160740,57.500884,0.0,GPS OK
+site,5398,,"Aapravasi Ghat World Heritage Site",-20.158554,57.502951,-20.158620,57.502990,8.4,Set GPS
+site,5397,,"Blue Penny Museum",-20.160928,57.497513,-20.160963,57.497468,6.1,Set GPS
+site,5396,,"Cannon Stand",-20.163395,57.509765,-20.163395,57.509765,0.0,GPS OK
+site,5395,,"Citadelle (Fort Adelaide)",-20.163715,57.510277,-20.163715,57.510277,0.0,GPS OK
+site,5479,,"Bourbon Street Food & Flower Stalls",-20.161169,57.503376,-20.161169,57.503376,0.0,GPS OK
+site,5394,,"Champ de Mars",-20.169221,57.510183,-20.169187,57.510251,8.1,Set GPS
+site,5393,,"Central Market Port Louis",-20.160692,57.502951,-20.160709,57.502837,12.1,Set GPS
+site,5391,,"Government House",-20.163040,57.503570,-20.162795,57.503150,51.7,Set GPS
+site,5392,,"Place d'Armes",-20.161704,57.502115,-20.161704,57.502115,0.0,GPS OK
+site,5512,,"Wah Luen Hong – La Boutique Chinoise (Chinese Shophouse)",-20.159337,57.505883,-20.159260,57.506012,16.0,Set GPS
+site,5526,,"Royal Road Car Park – Demolition-Plot Car Parks",-20.160153,57.504839,-20.160153,57.504839,0.0,GPS OK
+site,5505,,"La Cure de la Cathedrale St Louis",-20.164082,57.506019,-20.164082,57.506019,0.0,GPS OK
+site,5525,,"Royal Road Townhouse – Lambrequins (Creole Lace Trim)",-20.159926,57.505355,-20.159955,57.505310,5.7,Set GPS
+site,5499,,"Mairie de Port Louis",-20.164286,57.504723,-20.164263,57.504591,14.0,Set GPS
+site,5428,,"Manga Street Murals",-20.158731,57.506135,-20.158772,57.506070,8.2,Set GPS
+site,5443,,"China Town South Gate",-20.159562,57.505643,-20.159589,57.505634,3.1,Set GPS
+site,5390,,"Jummah Masjid",-20.159722,57.505000,-20.159753,57.505075,8.6,Set GPS
+site,5478,,"Trou Fanfaron",-20.156389,57.491944,-20.156389,57.491944,0.0,GPS OK
+site,5524,,"Monument to Fishermen Lost at Sea",-20.158384,57.503630,-20.158384,57.503630,0.0,GPS OK
+site,5488,,"Monument to the Peopling of Mauritius",-20.161045,57.497668,-20.161137,57.497591,13.0,Set GPS
+site,5430,,"Old Ghoon Mazaar",-20.159457,57.514343,-20.159457,57.514343,0.0,GPS OK
+site,5454,,"Umbrella Square",-20.161156,57.498405,-20.161151,57.498324,8.5,Set GPS
+site,5508,,"Statue of Sookdeo Bissoondoyal",-20.161531,57.501634,-20.161551,57.501572,6.9,Set GPS
+site,5491,,"Professor Basdeo Bissoondoyal Statue",-20.160861,57.500793,-20.160861,57.500793,0.0,GPS OK
+site,5523,,"Bust of Sir Veerasamy Ringadoo",-20.161901,57.502042,-20.161986,57.502090,10.7,Set GPS
+site,5522,,"Sir Abdool Razack Mohamed Memorial Arch",-20.162088,57.502253,-20.162142,57.502264,6.1,Set GPS
+site,5438,,"La Galerie du Génie",-20.164012,57.499574,-20.164012,57.499574,0.0,GPS OK
+site,5521,,"Bust of Emmanuel Anquetil",-20.161367,57.501779,-20.161371,57.501752,2.9,Set GPS
+site,5426,,"Tien Tan Chinese Pagoda",-20.176171,57.507139,-20.176171,57.507139,0.0,GPS OK
+site,5520,,"Bust of Renganaden Seeneevassen",-20.161553,57.501963,-20.161581,57.501947,3.5,Set GPS
+site,5425,,"Port Louis Gymkhana",-20.171542,57.510032,-20.171542,57.510032,0.0,GPS OK
+site,5519,,"Statue of Sir Satcam Boolell",-20.161942,57.502362,-20.161915,57.502337,4.0,Set GPS
+site,5507,,"Statue of Mahé de La Bourdonnais",-20.161342,57.501498,-20.161328,57.501541,4.8,Set GPS
+site,5530,,"Pont Lakorité Love Locks",-20.161430,57.497740,-20.161364,57.497784,8.7,Set GPS
+site,5518,,"Allée des Voyageurs (Travellers' Lane)",-20.164768,57.503002,-20.164661,57.502907,15.5,Set GPS
+site,5400,,"Port Louis Fire Station",-20.164693,57.504012,-20.164693,57.504012,0.0,GPS OK
+site,5529,,"Renganaden Seeneevassen Building",-20.164670,57.504660,-20.164670,57.504660,0.0,GPS OK
+site,5517,,"Monument to Child Victims of Violence",-20.164136,57.502322,-20.164130,57.502311,1.3,Set GPS
+site,5528,,"Prime Minister's Office (Treasury Building)",-20.162870,57.502830,-20.162842,57.502671,16.9,Set GPS
+site,5469,,"Al-Idrissi Memorial",-20.164586,57.502954,-20.164586,57.502954,0.0,GPS OK
+site,5463,,"Statue of Manilal Doctor",-20.164087,57.502452,-20.164055,57.502422,4.7,Set GPS
+site,5462,,"Statue of Leoville L'Homme",-20.163956,57.502232,-20.163977,57.502206,3.6,Set GPS

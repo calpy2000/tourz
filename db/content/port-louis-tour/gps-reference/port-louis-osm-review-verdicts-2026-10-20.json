@@ -1,0 +1,1249 @@
+{
+  "capturedFrom": "Chrome localStorage tourz.gpsCorrections (localhost:5183), 2026-10-20",
+  "corrections": [
+    {
+      "type": "landmark",
+      "sequenceOrder": 1,
+      "name": "Blue Penny Museum",
+      "enteredGps": "-20.160973263164095, 57.49746855800265",
+      "capturedAt": "2026-10-20T10:49:48.507Z"
+    },
+    {
+      "type": "site",
+      "id": 5419,
+      "name": "Marina",
+      "enteredGps": "-20.16011, 57.496783",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T10:49:57.608Z"
+    },
+    {
+      "type": "site",
+      "id": 5485,
+      "name": "Labourdonnais Waterfront Hotel",
+      "enteredGps": "-20.160323, 57.497644",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T10:50:11.431Z"
+    },
+    {
+      "type": "site",
+      "id": 5488,
+      "name": "Monument to the Peopling of Mauritius",
+      "enteredGps": "-20.161137363879618, 57.49759136272445",
+      "capturedAt": "2026-10-20T10:50:54.555Z"
+    },
+    {
+      "type": "site",
+      "id": 5487,
+      "name": "\"Non finn perdi tou\" Monument",
+      "enteredGps": "-20.161016009416272, 57.49763260517966",
+      "capturedAt": "2026-10-20T10:51:18.315Z"
+    },
+    {
+      "type": "site",
+      "id": 5397,
+      "name": "Blue Penny Museum",
+      "enteredGps": "-20.160963002618743, 57.49746758407926",
+      "capturedAt": "2026-10-20T10:51:36.451Z"
+    },
+    {
+      "type": "site",
+      "id": 5486,
+      "name": "Nicolas Baudin bust",
+      "enteredGps": "-20.160856436770004, 57.49774390455187",
+      "capturedAt": "2026-10-20T10:51:48.000Z"
+    },
+    {
+      "type": "site",
+      "id": 5475,
+      "name": "Didus Art Gallery",
+      "enteredGps": "-20.160946, 57.497961",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T10:51:56.952Z"
+    },
+    {
+      "type": "site",
+      "id": 5484,
+      "name": "Caudan Centre",
+      "enteredGps": "-20.160863, 57.498089",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T10:52:02.105Z"
+    },
+    {
+      "type": "site",
+      "id": 5489,
+      "name": "The Millennium Lovers Sculpture",
+      "enteredGps": "-20.161116321470004, 57.49819216433846",
+      "capturedAt": "2026-10-20T10:52:19.633Z"
+    },
+    {
+      "type": "site",
+      "id": 5454,
+      "name": "Umbrella Square",
+      "enteredGps": "-20.161150667190114, 57.498324056205206",
+      "capturedAt": "2026-10-20T10:52:32.632Z"
+    },
+    {
+      "type": "site",
+      "id": 5483,
+      "name": "Namaste Restaurant",
+      "enteredGps": "-20.160878, 57.4986",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T10:52:46.189Z"
+    },
+    {
+      "type": "site",
+      "id": 5455,
+      "name": "Caudan Waterfront",
+      "enteredGps": "-20.160955, 57.498542",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T10:52:54.847Z"
+    },
+    {
+      "type": "site",
+      "id": 5453,
+      "name": "Craft Market",
+      "enteredGps": "-20.161428, 57.498675",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T10:53:09.794Z"
+    },
+    {
+      "type": "landmark",
+      "sequenceOrder": 2,
+      "name": "Port Louis Casino",
+      "enteredGps": "-20.161421764857025, 57.49901961843398",
+      "capturedAt": "2026-10-20T10:53:35.784Z"
+    },
+    {
+      "type": "site",
+      "id": 5452,
+      "name": "Port Louis Casino",
+      "enteredGps": "-20.161406781055078, 57.49901961846737",
+      "capturedAt": "2026-10-20T10:53:42.196Z"
+    },
+    {
+      "type": "site",
+      "id": 5447,
+      "name": "SBM Fountain",
+      "enteredGps": "-20.160396, 57.500595",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T10:53:58.103Z"
+    },
+    {
+      "type": "site",
+      "id": 5492,
+      "name": "The Waterfront Cannons",
+      "enteredGps": "-20.160531785418613, 57.50063699806449",
+      "capturedAt": "2026-10-20T10:54:07.703Z"
+    },
+    {
+      "type": "site",
+      "id": 5490,
+      "name": "Port Louis Waterfront",
+      "enteredGps": "-20.160916, 57.500701",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T10:54:26.001Z"
+    },
+    {
+      "type": "landmark",
+      "sequenceOrder": 3,
+      "name": "SAJ Statue",
+      "enteredGps": "-20.1607969149281, 57.50102094339766",
+      "capturedAt": "2026-10-20T10:54:38.487Z"
+    },
+    {
+      "type": "site",
+      "id": 5448,
+      "name": "SAJ Statue",
+      "enteredGps": "-20.160684, 57.50096",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T10:54:41.417Z"
+    },
+    {
+      "type": "site",
+      "id": 5493,
+      "name": "Monument to the Victims of Poverty",
+      "enteredGps": "-20.160567, 57.500928",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T10:54:46.835Z"
+    },
+    {
+      "type": "site",
+      "id": 5399,
+      "name": "Sir Sewoosagur Ramgoolam Statue",
+      "enteredGps": "-20.16074, 57.500884",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T10:54:51.492Z"
+    },
+    {
+      "type": "landmark",
+      "sequenceOrder": 3,
+      "name": "SAJ Statue",
+      "enteredGps": "-20.160758236104385, 57.500889278467525",
+      "capturedAt": "2026-10-20T10:54:57.853Z"
+    },
+    {
+      "type": "site",
+      "id": 5491,
+      "name": "Professor Basdeo Bissoondoyal Statue",
+      "enteredGps": "-20.160861, 57.500793",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T10:55:03.377Z"
+    },
+    {
+      "type": "site",
+      "id": 5494,
+      "name": "The Granary",
+      "enteredGps": "-20.158943720033506, 57.501334394068266",
+      "capturedAt": "2026-10-20T10:55:23.131Z"
+    },
+    {
+      "type": "site",
+      "id": 5446,
+      "name": "Alte Windmühle (Windmill Museum)",
+      "enteredGps": "-20.159521454831676, 57.50105525137678",
+      "capturedAt": "2026-10-20T10:55:39.010Z"
+    },
+    {
+      "type": "site",
+      "id": 5445,
+      "name": "Mauritius Postal Museum",
+      "enteredGps": "-20.159975, 57.501669",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T10:55:45.811Z"
+    },
+    {
+      "type": "site",
+      "id": 5444,
+      "name": "Intercontinental Slavery Museum",
+      "enteredGps": "-20.15903, 57.502183",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T10:55:57.910Z"
+    },
+    {
+      "type": "landmark",
+      "sequenceOrder": 4,
+      "name": "Aapravasi Ghat World Heritage Site",
+      "enteredGps": "-20.158639460482505, 57.502984683280516",
+      "capturedAt": "2026-10-20T10:56:13.984Z"
+    },
+    {
+      "type": "site",
+      "id": 5398,
+      "name": "Aapravasi Ghat World Heritage Site",
+      "enteredGps": "-20.15861969449726, 57.502989947235676",
+      "capturedAt": "2026-10-20T10:56:22.533Z"
+    },
+    {
+      "type": "site",
+      "id": 5524,
+      "name": "Monument to Fishermen Lost at Sea",
+      "enteredGps": "-20.158384, 57.50363",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T10:56:29.840Z"
+    },
+    {
+      "type": "site",
+      "id": 5526,
+      "name": "Royal Road Car Park – Demolition-Plot Car Parks",
+      "enteredGps": "-20.160153, 57.504839",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T10:56:56.625Z"
+    },
+    {
+      "type": "landmark",
+      "sequenceOrder": 5,
+      "name": "Jummah Masjid",
+      "enteredGps": "-20.159767938861577, 57.50507060861074",
+      "capturedAt": "2026-10-20T10:57:07.395Z"
+    },
+    {
+      "type": "site",
+      "id": 5390,
+      "name": "Jummah Masjid",
+      "enteredGps": "-20.159753261135975, 57.5050750759128",
+      "capturedAt": "2026-10-20T10:57:14.628Z"
+    },
+    {
+      "type": "site",
+      "id": 5525,
+      "name": "Royal Road Townhouse – Lambrequins (Creole Lace Trim)",
+      "enteredGps": "-20.159954554933734, 57.50530987788855",
+      "capturedAt": "2026-10-20T10:57:32.569Z"
+    },
+    {
+      "type": "landmark",
+      "sequenceOrder": 7,
+      "name": "China Town South Gate",
+      "enteredGps": "-20.159603632443535, 57.50562920148923",
+      "capturedAt": "2026-10-20T10:57:48.722Z"
+    },
+    {
+      "type": "site",
+      "id": 5443,
+      "name": "China Town South Gate",
+      "enteredGps": "-20.159588954732058, 57.50563366879123",
+      "capturedAt": "2026-10-20T10:57:57.826Z"
+    },
+    {
+      "type": "site",
+      "id": 5512,
+      "name": "Wah Luen Hong – La Boutique Chinoise (Chinese Shophouse)",
+      "enteredGps": "-20.15925958671326, 57.506011782222316",
+      "capturedAt": "2026-10-20T10:58:15.829Z"
+    },
+    {
+      "type": "landmark",
+      "sequenceOrder": 6,
+      "name": "Manga Street Murals",
+      "enteredGps": "-20.158782433843157, 57.506076915638346",
+      "capturedAt": "2026-10-20T10:58:31.175Z"
+    },
+    {
+      "type": "site",
+      "id": 5428,
+      "name": "Manga Street Murals",
+      "enteredGps": "-20.158771949696273, 57.50607021466834",
+      "capturedAt": "2026-10-20T10:58:36.971Z"
+    },
+    {
+      "type": "site",
+      "id": 5481,
+      "name": "Cafe L'Amicale",
+      "enteredGps": "-20.158814, 57.505782",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T10:58:40.176Z"
+    },
+    {
+      "type": "site",
+      "id": 5496,
+      "name": "Hardware Row",
+      "enteredGps": "-20.15823, 57.507048",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T10:58:49.140Z"
+    },
+    {
+      "type": "site",
+      "id": 5495,
+      "name": "China Town North Gate",
+      "enteredGps": "-20.158064, 57.507202",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T10:58:53.792Z"
+    },
+    {
+      "type": "site",
+      "id": 5479,
+      "name": "Bourbon Street Food & Flower Stalls",
+      "enteredGps": "-20.161169, 57.503376",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T10:59:15.893Z"
+    },
+    {
+      "type": "site",
+      "id": 5421,
+      "name": "Meat Market",
+      "enteredGps": "-20.160285, 57.502319",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T10:59:33.606Z"
+    },
+    {
+      "type": "site",
+      "id": 5422,
+      "name": "Fish Market",
+      "enteredGps": "-20.160071, 57.502539",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T10:59:36.558Z"
+    },
+    {
+      "type": "landmark",
+      "sequenceOrder": 8,
+      "name": "Central Market Port Louis",
+      "enteredGps": "-20.160722002169834, 57.50283255466343",
+      "capturedAt": "2026-10-20T10:59:47.368Z"
+    },
+    {
+      "type": "site",
+      "id": 5393,
+      "name": "Central Market Port Louis",
+      "enteredGps": "-20.16070942131239, 57.502837021998204",
+      "capturedAt": "2026-10-20T10:59:54.475Z"
+    },
+    {
+      "type": "site",
+      "id": 5439,
+      "name": "The Bank of Mauritius Museum",
+      "enteredGps": "-20.161969, 57.503455",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:00:02.909Z"
+    },
+    {
+      "type": "site",
+      "id": 5507,
+      "name": "Statue of Mahé de La Bourdonnais",
+      "enteredGps": "-20.161327666810507, 57.50154092377841",
+      "capturedAt": "2026-10-20T11:02:18.404Z"
+    },
+    {
+      "type": "site",
+      "id": 5521,
+      "name": "Bust of Emmanuel Anquetil",
+      "enteredGps": "-20.161370575792986, 57.501752313202815",
+      "capturedAt": "2026-10-20T11:02:24.288Z"
+    },
+    {
+      "type": "site",
+      "id": 5508,
+      "name": "Statue of Sookdeo Bissoondoyal",
+      "enteredGps": "-20.161551191477656, 57.50157223525349",
+      "capturedAt": "2026-10-20T11:02:30.383Z"
+    },
+    {
+      "type": "site",
+      "id": 5520,
+      "name": "Bust of Renganaden Seeneevassen",
+      "enteredGps": "-20.1615810472218, 57.50194733187254",
+      "capturedAt": "2026-10-20T11:02:38.289Z"
+    },
+    {
+      "type": "site",
+      "id": 5392,
+      "name": "Place d'Armes",
+      "enteredGps": "-20.161704, 57.502115",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:06:54.209Z"
+    },
+    {
+      "type": "landmark",
+      "sequenceOrder": 9,
+      "name": "Statue of William Newton",
+      "enteredGps": "-20.162405253066737, 57.502665274747216",
+      "capturedAt": "2026-10-20T11:07:20.596Z"
+    },
+    {
+      "type": "site",
+      "id": 5441,
+      "name": "Statue of William Newton",
+      "enteredGps": "-20.162439, 57.502603",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:07:23.717Z"
+    },
+    {
+      "type": "landmark",
+      "sequenceOrder": 9,
+      "name": "Statue of William Newton",
+      "enteredGps": "-20.162440339145363, 57.50260501864935",
+      "capturedAt": "2026-10-20T11:07:29.315Z"
+    },
+    {
+      "type": "site",
+      "id": 5442,
+      "name": "Statue of Sir John Pope Hennessy",
+      "enteredGps": "-20.16229439401289, 57.502757088851126",
+      "capturedAt": "2026-10-20T11:07:36.648Z"
+    },
+    {
+      "type": "site",
+      "id": 5440,
+      "name": "Queen Victoria Statue",
+      "enteredGps": "-20.162503984720274, 57.50282740406692",
+      "capturedAt": "2026-10-20T11:07:43.528Z"
+    },
+    {
+      "type": "site",
+      "id": 5522,
+      "name": "Sir Abdool Razack Mohamed Memorial Arch",
+      "enteredGps": "-20.16214247760209, 57.50226409339908",
+      "capturedAt": "2026-10-20T11:07:53.890Z"
+    },
+    {
+      "type": "site",
+      "id": 5519,
+      "name": "Statue of Sir Satcam Boolell",
+      "enteredGps": "-20.161915151713117, 57.50233693057277",
+      "capturedAt": "2026-10-20T11:08:04.108Z"
+    },
+    {
+      "type": "site",
+      "id": 5523,
+      "name": "Bust of Sir Veerasamy Ringadoo",
+      "enteredGps": "-20.161985601738337, 57.50208964390899",
+      "capturedAt": "2026-10-20T11:08:19.312Z"
+    },
+    {
+      "type": "site",
+      "id": 5457,
+      "name": "Statue of Maurice Curé",
+      "enteredGps": "-20.161846691945726, 57.50224511647755",
+      "capturedAt": "2026-10-20T11:08:33.459Z"
+    },
+    {
+      "type": "site",
+      "id": 5527,
+      "name": "Statue of Sir William Stevenson",
+      "enteredGps": "-20.16268511205965, 57.50297897091721",
+      "capturedAt": "2026-10-20T11:09:33.400Z"
+    },
+    {
+      "type": "site",
+      "id": 5528,
+      "name": "Prime Minister's Office (Treasury Building)",
+      "enteredGps": "-20.16284240138431, 57.50267132775605",
+      "capturedAt": "2026-10-20T11:09:58.424Z"
+    },
+    {
+      "type": "site",
+      "id": 5391,
+      "name": "Government House",
+      "enteredGps": "-20.162794944669542, 57.50314955561339",
+      "capturedAt": "2026-10-20T11:10:13.412Z"
+    },
+    {
+      "type": "site",
+      "id": 5435,
+      "name": "National Assembly of the Republic of Mauritius",
+      "enteredGps": "-20.162994, 57.503269",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:10:19.852Z"
+    },
+    {
+      "type": "site",
+      "id": 5402,
+      "name": "Port Louis Theatre",
+      "enteredGps": "-20.16363481248662, 57.5043129986129",
+      "capturedAt": "2026-10-20T11:10:35.362Z"
+    },
+    {
+      "type": "site",
+      "id": 5510,
+      "name": "Maison Poncini – Bâtiment Bourgeois (Bourgeois Townhouse)",
+      "enteredGps": "-20.163910832890124, 57.504160334530525",
+      "capturedAt": "2026-10-20T11:11:34.341Z"
+    },
+    {
+      "type": "landmark",
+      "sequenceOrder": 10,
+      "name": "Mairie de Port Louis",
+      "enteredGps": "-20.164273528094284, 57.50459438082919",
+      "capturedAt": "2026-10-20T11:11:48.143Z"
+    },
+    {
+      "type": "site",
+      "id": 5499,
+      "name": "Mairie de Port Louis",
+      "enteredGps": "-20.164262960033966, 57.50459116427379",
+      "capturedAt": "2026-10-20T11:11:56.593Z"
+    },
+    {
+      "type": "site",
+      "id": 5498,
+      "name": "Emmanuel Anquetil Monument",
+      "enteredGps": "-20.164102446640882, 57.50506200835707",
+      "capturedAt": "2026-10-20T11:12:12.329Z"
+    },
+    {
+      "type": "site",
+      "id": 5497,
+      "name": "Emmanuel Anquetil Building",
+      "enteredGps": "-20.164199974515356, 57.50496358073099",
+      "capturedAt": "2026-10-20T11:12:17.646Z"
+    },
+    {
+      "type": "site",
+      "id": 5500,
+      "name": "Anjalay Coopen Statue",
+      "enteredGps": "-20.164866725529322, 57.50557408913582",
+      "capturedAt": "2026-10-20T11:12:29.416Z"
+    },
+    {
+      "type": "landmark",
+      "sequenceOrder": 11,
+      "name": "Statue de Saint Louis",
+      "enteredGps": "-20.16510018075101, 57.50586893724048",
+      "capturedAt": "2026-10-20T11:13:01.787Z"
+    },
+    {
+      "type": "site",
+      "id": 5433,
+      "name": "Statue de Saint Louis",
+      "enteredGps": "-20.165093387745657, 57.50587194941019",
+      "capturedAt": "2026-10-20T11:13:11.617Z"
+    },
+    {
+      "type": "site",
+      "id": 5503,
+      "name": "Obelisk Water Fountain",
+      "enteredGps": "-20.165140007705247, 57.50581710571453",
+      "capturedAt": "2026-10-20T11:13:16.811Z"
+    },
+    {
+      "type": "site",
+      "id": 5502,
+      "name": "Saint Louis Cathedral",
+      "enteredGps": "-20.16447, 57.506528",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:13:25.923Z"
+    },
+    {
+      "type": "site",
+      "id": 5504,
+      "name": "L'Eveche de Port Louis",
+      "enteredGps": "-20.164156, 57.506932",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:13:36.359Z"
+    },
+    {
+      "type": "site",
+      "id": 5505,
+      "name": "La Cure de la Cathedrale St Louis",
+      "enteredGps": "-20.164082, 57.506019",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:13:43.531Z"
+    },
+    {
+      "type": "site",
+      "id": 5480,
+      "name": "Jim Boulettes",
+      "enteredGps": "-20.163612, 57.50584",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:19:16.820Z"
+    },
+    {
+      "type": "site",
+      "id": 5529,
+      "name": "Renganaden Seeneevassen Building",
+      "enteredGps": "-20.16467, 57.50466",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:19:28.736Z"
+    },
+    {
+      "type": "site",
+      "id": 5501,
+      "name": "Old Supreme Court Building",
+      "enteredGps": "-20.165171120757932, 57.505109033981",
+      "capturedAt": "2026-10-20T11:19:41.945Z"
+    },
+    {
+      "type": "site",
+      "id": 5459,
+      "name": "Musée La Bonté Innée",
+      "enteredGps": "-20.166947, 57.503574",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:19:56.971Z"
+    },
+    {
+      "type": "site",
+      "id": 5511,
+      "name": "6 St. Georges Street – Case Créole (Creole Cottage)",
+      "enteredGps": "-20.16679, 57.501541",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:20:08.502Z"
+    },
+    {
+      "type": "site",
+      "id": 5509,
+      "name": "Maison Traditionnelle Mauricienne – Rue St. Georges",
+      "enteredGps": "-20.16677, 57.501524",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:20:19.693Z"
+    },
+    {
+      "type": "site",
+      "id": 5437,
+      "name": "Église Adventiste Du Septième Jour Port-Louis",
+      "enteredGps": "-20.165906, 57.501663",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:20:31.557Z"
+    },
+    {
+      "type": "landmark",
+      "sequenceOrder": 13,
+      "name": "Natural History Museum",
+      "enteredGps": "-20.16331224907239, 57.50243185508367",
+      "capturedAt": "2026-10-20T11:20:54.308Z"
+    },
+    {
+      "type": "site",
+      "id": 5436,
+      "name": "Natural History Museum",
+      "enteredGps": "-20.163286478363403, 57.50243014210264",
+      "capturedAt": "2026-10-20T11:21:07.134Z"
+    },
+    {
+      "type": "site",
+      "id": 5461,
+      "name": "Statue of Remy Ollier",
+      "enteredGps": "-20.1632894184783, 57.50170494112021",
+      "capturedAt": "2026-10-20T11:21:33.623Z"
+    },
+    {
+      "type": "site",
+      "id": 5467,
+      "name": "Bust of Raoul Rivet",
+      "enteredGps": "-20.163361, 57.501579",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:21:41.177Z"
+    },
+    {
+      "type": "site",
+      "id": 5465,
+      "name": "Statue of Adrien d'Epinay",
+      "enteredGps": "-20.163659076099293, 57.50196108582372",
+      "capturedAt": "2026-10-20T11:22:16.962Z"
+    },
+    {
+      "type": "site",
+      "id": 5513,
+      "name": "The Banyan Trees of the Jardin de la Compagnie",
+      "enteredGps": "-20.163984729486884, 57.50205622452188",
+      "capturedAt": "2026-10-20T11:22:28.109Z"
+    },
+    {
+      "type": "site",
+      "id": 5462,
+      "name": "Statue of Leoville L'Homme",
+      "enteredGps": "-20.16397659217587, 57.50220639354103",
+      "capturedAt": "2026-10-20T11:22:38.098Z"
+    },
+    {
+      "type": "site",
+      "id": 5463,
+      "name": "Statue of Manilal Doctor",
+      "enteredGps": "-20.164054847685705, 57.5024215121602",
+      "capturedAt": "2026-10-20T11:22:50.004Z"
+    },
+    {
+      "type": "site",
+      "id": 5466,
+      "name": "Statue of Ti Frere (Alphonse Ravaton)",
+      "enteredGps": "-20.1640846438533, 57.50251716835166",
+      "capturedAt": "2026-10-20T11:22:58.834Z"
+    },
+    {
+      "type": "site",
+      "id": 5470,
+      "name": "Slavery Abolition Monument",
+      "enteredGps": "-20.164210063035227, 57.50232637347074",
+      "capturedAt": "2026-10-20T11:23:07.823Z"
+    },
+    {
+      "type": "site",
+      "id": 5517,
+      "name": "Monument to Child Victims of Violence",
+      "enteredGps": "-20.16412994536411, 57.5023111064138",
+      "capturedAt": "2026-10-20T11:23:14.032Z"
+    },
+    {
+      "type": "site",
+      "id": 5464,
+      "name": "Bust of Charles-Edouard Brown-Sequard",
+      "enteredGps": "-20.164226023961604, 57.50253006081928",
+      "capturedAt": "2026-10-20T11:23:53.842Z"
+    },
+    {
+      "type": "site",
+      "id": 5518,
+      "name": "Allée des Voyageurs (Travellers' Lane)",
+      "enteredGps": "-20.16466110386186, 57.50290699287788",
+      "capturedAt": "2026-10-20T11:24:15.895Z"
+    },
+    {
+      "type": "site",
+      "id": 5468,
+      "name": "Monument to Soeur Marie Barthelemy",
+      "enteredGps": "-20.164445729973764, 57.50280930970263",
+      "capturedAt": "2026-10-20T11:24:27.024Z"
+    },
+    {
+      "type": "site",
+      "id": 5469,
+      "name": "Al-Idrissi Memorial",
+      "enteredGps": "-20.164586, 57.502954",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:24:30.415Z"
+    },
+    {
+      "type": "landmark",
+      "sequenceOrder": 12,
+      "name": "Photographic Museum Of Mauritius",
+      "enteredGps": "-20.164196124503974, 57.5035751932225",
+      "capturedAt": "2026-10-20T11:24:49.691Z"
+    },
+    {
+      "type": "site",
+      "id": 5434,
+      "name": "Photographic Museum Of Mauritius",
+      "enteredGps": "-20.16419177138704, 57.50357635255878",
+      "capturedAt": "2026-10-20T11:24:53.981Z"
+    },
+    {
+      "type": "site",
+      "id": 5401,
+      "name": "Café du Vieux Conseil",
+      "enteredGps": "-20.164123166576616, 57.503869153170086",
+      "capturedAt": "2026-10-20T11:25:05.985Z"
+    },
+    {
+      "type": "site",
+      "id": 5516,
+      "name": "Dholl Puri Palace",
+      "enteredGps": "-20.163467500509853, 57.50476663216281",
+      "capturedAt": "2026-10-20T11:25:22.297Z"
+    },
+    {
+      "type": "site",
+      "id": 5400,
+      "name": "Port Louis Fire Station",
+      "enteredGps": "-20.164693, 57.504012",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:25:35.304Z"
+    },
+    {
+      "type": "site",
+      "id": 5515,
+      "name": "Cafe Shanghai",
+      "enteredGps": "-20.161613, 57.505822",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:25:52.198Z"
+    },
+    {
+      "type": "site",
+      "id": 5429,
+      "name": "Square Khadafi",
+      "enteredGps": "-20.158913, 57.511426",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:26:06.739Z"
+    },
+    {
+      "type": "site",
+      "id": 5407,
+      "name": "Pere Laval Church & Museum",
+      "enteredGps": "-20.148117, 57.529199",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:26:28.180Z"
+    },
+    {
+      "type": "site",
+      "id": 5408,
+      "name": "Plateau",
+      "enteredGps": "-20.155602, 57.522359",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:26:34.441Z"
+    },
+    {
+      "type": "site",
+      "id": 5473,
+      "name": "Kailassam Temple",
+      "enteredGps": "-20.148965, 57.519449",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:26:47.821Z"
+    },
+    {
+      "type": "site",
+      "id": 5430,
+      "name": "Old Ghoon Mazaar",
+      "enteredGps": "-20.159457, 57.514343",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:27:05.424Z"
+    },
+    {
+      "type": "site",
+      "id": 5431,
+      "name": "Islamic Cultural Centre",
+      "enteredGps": "-20.163652, 57.512616",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:27:25.589Z"
+    },
+    {
+      "type": "site",
+      "id": 5395,
+      "name": "Citadelle (Fort Adelaide)",
+      "enteredGps": "-20.163715, 57.510277",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:27:38.458Z"
+    },
+    {
+      "type": "site",
+      "id": 5396,
+      "name": "Cannon Stand",
+      "enteredGps": "-20.163395, 57.509765",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:27:42.496Z"
+    },
+    {
+      "type": "site",
+      "id": 5432,
+      "name": "FORENA (Fondation Ressources et Nature) - Endemic tree plantation",
+      "enteredGps": "-20.163037, 57.509456",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:27:52.812Z"
+    },
+    {
+      "type": "site",
+      "id": 5423,
+      "name": "Rabita Hall",
+      "enteredGps": "-20.166794, 57.506206",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:28:10.225Z"
+    },
+    {
+      "type": "site",
+      "id": 5474,
+      "name": "St James Cathedral",
+      "enteredGps": "-20.167662775509598, 57.50576723884387",
+      "capturedAt": "2026-10-20T11:28:16.313Z"
+    },
+    {
+      "type": "site",
+      "id": 5471,
+      "name": "King Edward VII Statue",
+      "enteredGps": "-20.169280002454954, 57.51009074256933",
+      "capturedAt": "2026-10-20T11:28:47.622Z"
+    },
+    {
+      "type": "site",
+      "id": 5394,
+      "name": "Champ de Mars",
+      "enteredGps": "-20.16918699274656, 57.51025065626246",
+      "capturedAt": "2026-10-20T11:29:02.692Z"
+    },
+    {
+      "type": "site",
+      "id": 5424,
+      "name": "Tombeau Malartic",
+      "enteredGps": "-20.170631644178414, 57.5115324125303",
+      "capturedAt": "2026-10-20T11:29:20.075Z"
+    },
+    {
+      "type": "site",
+      "id": 5425,
+      "name": "Port Louis Gymkhana",
+      "enteredGps": "-20.171542, 57.510032",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:29:33.082Z"
+    },
+    {
+      "type": "site",
+      "id": 5482,
+      "name": "Lambic Beer Bar",
+      "enteredGps": "-20.165237, 57.499809",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:30:11.694Z"
+    },
+    {
+      "type": "site",
+      "id": 5477,
+      "name": "Line Barracks",
+      "enteredGps": "-20.164433, 57.499895",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:30:24.823Z"
+    },
+    {
+      "type": "site",
+      "id": 5476,
+      "name": "House of Digital Art",
+      "enteredGps": "-20.163995, 57.499632",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:30:40.021Z"
+    },
+    {
+      "type": "site",
+      "id": 5438,
+      "name": "La Galerie du Génie",
+      "enteredGps": "-20.164012, 57.499574",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:30:43.982Z"
+    },
+    {
+      "type": "landmark",
+      "sequenceOrder": 14,
+      "name": "Bust of Queen Victoria",
+      "enteredGps": "-20.163487861887162, 57.49722057992827",
+      "capturedAt": "2026-10-20T11:31:06.813Z"
+    },
+    {
+      "type": "site",
+      "id": 5449,
+      "name": "Bust of Queen Victoria",
+      "enteredGps": "-20.16347779644306, 57.497222111720475",
+      "capturedAt": "2026-10-20T11:31:13.468Z"
+    },
+    {
+      "type": "landmark",
+      "sequenceOrder": 14,
+      "name": "Bust of Queen Victoria",
+      "enteredGps": "-20.163185707922338, 57.49850531807695",
+      "capturedAt": "2026-10-20T11:39:18.644Z"
+    },
+    {
+      "type": "site",
+      "id": 5449,
+      "name": "Bust of Queen Victoria",
+      "enteredGps": "-20.1631461870914, 57.4985100379576",
+      "capturedAt": "2026-10-20T11:39:32.196Z"
+    },
+    {
+      "type": "site",
+      "id": 5450,
+      "name": "Victoria Metro Station",
+      "enteredGps": "-20.162623, 57.498048",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:39:36.304Z"
+    },
+    {
+      "type": "site",
+      "id": 5506,
+      "name": "Odysseo Oceanarium",
+      "enteredGps": "-20.159337, 57.495166",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:41:12.835Z"
+    },
+    {
+      "type": "landmark",
+      "sequenceOrder": 15,
+      "name": "Caudan Arts Centre",
+      "enteredGps": "-20.161975, 57.498368",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:41:17.711Z"
+    },
+    {
+      "type": "site",
+      "id": 5451,
+      "name": "Caudan Arts Centre",
+      "enteredGps": "-20.161975, 57.498368",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:41:17.711Z"
+    },
+    {
+      "type": "site",
+      "id": 5456,
+      "name": "Swing Bridge",
+      "enteredGps": "-20.15978, 57.496008",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:41:18.225Z"
+    },
+    {
+      "type": "site",
+      "id": 5420,
+      "name": "Le Suffren Hotel & Marina",
+      "enteredGps": "-20.160376, 57.495435",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:41:21.778Z"
+    },
+    {
+      "type": "site",
+      "id": 5530,
+      "name": "Pont Lakorité Love Locks",
+      "enteredGps": "-20.16136385174866, 57.497784176597634",
+      "capturedAt": "2026-10-20T11:41:41.045Z"
+    },
+    {
+      "type": "site",
+      "id": 5478,
+      "name": "Trou Fanfaron",
+      "enteredGps": "-20.156389, 57.491944",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:41:59.970Z"
+    },
+    {
+      "type": "site",
+      "id": 5406,
+      "name": "Christian Decotter Cruise Terminal",
+      "enteredGps": "-20.15651, 57.492047",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:42:03.883Z"
+    },
+    {
+      "type": "site",
+      "id": 5472,
+      "name": "Kwan Tee Pagoda",
+      "enteredGps": "-20.161686, 57.49202",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:42:17.602Z"
+    },
+    {
+      "type": "site",
+      "id": 5414,
+      "name": "Les Salines Garden",
+      "enteredGps": "-20.160551, 57.489448",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:42:29.551Z"
+    },
+    {
+      "type": "site",
+      "id": 5416,
+      "name": "Lenin Statue Bust",
+      "enteredGps": "-20.159404, 57.489113",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:42:38.576Z"
+    },
+    {
+      "type": "site",
+      "id": 5415,
+      "name": "Tortoise Park",
+      "enteredGps": "-20.159279, 57.487826",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:42:51.674Z"
+    },
+    {
+      "type": "site",
+      "id": 5418,
+      "name": "1892 Hurricane Memorial",
+      "enteredGps": "-20.158823, 57.487211",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:42:56.433Z"
+    },
+    {
+      "type": "site",
+      "id": 5417,
+      "name": "Cimetiere de l'Ouest",
+      "enteredGps": "-20.159901, 57.486413",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:43:06.139Z"
+    },
+    {
+      "type": "site",
+      "id": 5413,
+      "name": "Memoire Des Naufrages Du Stargate",
+      "enteredGps": "-20.153942, 57.487571",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:43:24.637Z"
+    },
+    {
+      "type": "site",
+      "id": 5405,
+      "name": "Fort George",
+      "enteredGps": "-20.147252, 57.491346",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:43:38.252Z"
+    },
+    {
+      "type": "site",
+      "id": 5427,
+      "name": "La Butte Glissement de terrain",
+      "enteredGps": "-20.16766, 57.492421",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:43:52.950Z"
+    },
+    {
+      "type": "site",
+      "id": 5410,
+      "name": "Rajiv Gandhi Science Center",
+      "enteredGps": "-20.173252, 57.48455",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:44:05.630Z"
+    },
+    {
+      "type": "site",
+      "id": 5409,
+      "name": "Viewpoint of Port-Louis",
+      "enteredGps": "-20.1783, 57.501014",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:44:27.358Z"
+    },
+    {
+      "type": "site",
+      "id": 5426,
+      "name": "Tien Tan Chinese Pagoda",
+      "enteredGps": "-20.176171, 57.507139",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:44:37.384Z"
+    },
+    {
+      "type": "site",
+      "id": 5403,
+      "name": "Aurelie Perrine Passenger Terminal",
+      "enteredGps": "-20.155356, 57.498243",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:44:55.268Z"
+    },
+    {
+      "type": "site",
+      "id": 5514,
+      "name": "Chagos Monument",
+      "enteredGps": "-20.1519, 57.4983",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:45:03.830Z"
+    },
+    {
+      "type": "site",
+      "id": 5404,
+      "name": "Eastern Roche Bois Cemetery",
+      "enteredGps": "-20.147674, 57.501625",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:45:15.917Z"
+    },
+    {
+      "type": "site",
+      "id": 5412,
+      "name": "Martello Tower",
+      "enteredGps": "-20.16781, 57.471924",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:48:18.776Z"
+    },
+    {
+      "type": "site",
+      "id": 5458,
+      "name": "H.M Borstal",
+      "enteredGps": "-20.177762, 57.470891",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:48:29.259Z"
+    },
+    {
+      "type": "site",
+      "id": 5411,
+      "name": "La Tour Koenig",
+      "enteredGps": "-20.179915, 57.469797",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:48:36.988Z"
+    },
+    {
+      "type": "site",
+      "id": 5460,
+      "name": "Jardins de la Compagnie (Company Garden)",
+      "enteredGps": "-20.163782, 57.50209",
+      "confirmed": true,
+      "capturedAt": "2026-10-20T11:49:09.887Z"
+    },
+    {
+      "type": "landmark",
+      "sequenceOrder": 3,
+      "name": "SAJ Statue",
+      "enteredGps": "-20.160691554552642, 57.500955154134715",
+      "capturedAt": "2026-10-20T11:58:28.885Z"
+    },
+    {
+      "type": "landmark",
+      "sequenceOrder": 14,
+      "name": "Bust of Queen Victoria",
+      "enteredGps": "-20.163089495058433, 57.498469945715485",
+      "capturedAt": "2026-10-20T12:02:20.612Z"
+    },
+    {
+      "type": "site",
+      "id": 5449,
+      "name": "Bust of Queen Victoria",
+      "enteredGps": "-20.163089495058433, 57.498469945715485",
+      "capturedAt": "2026-10-20T12:02:20.613Z"
+    },
+    {
+      "type": "landmark",
+      "sequenceOrder": 14,
+      "name": "Bust of Queen Victoria",
+      "enteredGps": "-20.16315065177504, 57.49850861930051",
+      "capturedAt": "2026-10-20T12:03:09.275Z"
+    },
+    {
+      "type": "landmark",
+      "sequenceOrder": 14,
+      "name": "Bust of Queen Victoria",
+      "enteredGps": "-20.1631456810194, 57.4985072086981",
+      "capturedAt": "2026-10-20T12:10:09.482Z"
+    },
+    {
+      "type": "landmark",
+      "sequenceOrder": 14,
+      "name": "Bust of Queen Victoria",
+      "enteredGps": "-20.163149562676736, 57.498510142370776",
+      "capturedAt": "2026-10-20T12:10:26.078Z"
+    }
+  ]
+}
