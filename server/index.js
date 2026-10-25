@@ -31,10 +31,14 @@ app.use('/content-audio', express.static(path.join(__dirname, 'content-audio')))
 // after 15 minutes idle, which otherwise cold-starts (30-60s+) on a real player's next request.
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 
-const mailTransporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_APP_PASSWORD },
-});
+// MAIL_TRANSPORT=json (set only by scripts/regression's own isolated server) builds every email in
+// full but never sends it — so the certificate and problem-report flows can be tested end to end.
+const mailTransporter = process.env.MAIL_TRANSPORT === 'json'
+  ? nodemailer.createTransport({ jsonTransport: true })
+  : nodemailer.createTransport({
+    service: 'gmail',
+    auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_APP_PASSWORD },
+  });
 
 const db = process.env.DATABASE_URL
   ? new Client({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } })
@@ -675,7 +679,7 @@ app.get('/api/game/current', async (req, res) => {
       hintsRemaining: hintRows.length - hintsRevealed.length,
       revealed: Boolean(clueRevealed),
       reveal: clueRevealed
-        ? { title: landmark.title, address: landmark.address, latitude: landmark.latitude, longitude: landmark.longitude }
+        ? { title: landmark.title, address: landmark.address, latitude: Number(landmark.latitude), longitude: Number(landmark.longitude) }
         : null,
     },
     puzzle: {
@@ -1345,7 +1349,7 @@ async function actReveal(session, body, at) {
   if (!events.some((e) => e.event_type === 'clue_reveal_used')) {
     await addProgressEvent(team, landmark, player, 'clue_reveal_used', 0, null, at);
   }
-  return okResult({ title: landmark.title, address: landmark.address, latitude: landmark.latitude, longitude: landmark.longitude });
+  return okResult({ title: landmark.title, address: landmark.address, latitude: Number(landmark.latitude), longitude: Number(landmark.longitude) });
 }
 
 // Single-shot: one submission ends this stage regardless of whether it's right or wrong —

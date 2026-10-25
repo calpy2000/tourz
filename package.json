@@ -3,7 +3,9 @@
   "private": true,
   "version": "0.0.1",
   "scripts": {
-    "seed": "node db/seed.js"
+    "seed": "node db/seed.js",
+    "test": "node scripts/regression/run-all.mjs",
+    "test:quick": "node scripts/regression/run-all.mjs --quick"
   },
   "dependencies": {
     "csv-parse": "^7.0.2",

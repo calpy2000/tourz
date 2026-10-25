@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import maplibregl from 'maplibre-gl'
+import * as maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
+// MapLibre 6 runs tile drawing in a separate worker file it looks for next to its own code — which,
+// once Vite bundles everything into assets/, isn't there. Point it at the worker Vite emits.
+import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'
 import { PMTiles, Protocol } from 'pmtiles'
 import { osmStyle } from '../../map/osmStyle.js'
 import { tourMapUrl, tourMapBounds } from '../../map/mapFiles.js'
@@ -56,6 +59,8 @@ class WholeFileSource {
     return { data: buf.slice(offset, offset + length) }
   }
 }
+
+maplibregl.setWorkerUrl(maplibreWorkerUrl)
 
 const protocol = new Protocol()
 maplibregl.addProtocol('pmtiles', protocol.tile)
