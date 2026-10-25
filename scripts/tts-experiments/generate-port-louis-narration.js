@@ -1,5 +1,6 @@
-// Generates narration MP3s for every Port Louis landmark and site using the voice/tier decided
-// in google-tts-test.js (Chirp3-HD, en-GB-Chirp3-HD-Kore). Output goes to server/content-audio/.
+// Generates narration MP3s for every landmark and site of a tour (Port Louis by default, or
+// --tour edinburgh) using the voice/tier decided in google-tts-test.js (Chirp3-HD,
+// en-GB-Chirp3-HD-Kore). Output goes to server/content-audio/.
 //
 // HARD RULE: run this after ANY change to a site's or landmark's narrated text (about_*_text,
 // interesting_fact) - it regenerates exactly the MP3s whose text changed, and nothing else.
@@ -7,6 +8,7 @@
 // whose hash no longer matches the current DB text is stale and gets regenerated (the old file
 // is kept in output/replaced/). It also sets audio_path for any row that's missing it.
 //
+//   Add --tour edinburgh to any of these to work on Edinburgh instead of Port Louis.
 //   node scripts/tts-experiments/generate-port-louis-narration.js            regenerate stale/missing
 //   node scripts/tts-experiments/generate-port-louis-narration.js --check    report only, exit 1 if any
 //   node scripts/tts-experiments/generate-port-louis-narration.js --baseline record current text as
@@ -27,7 +29,14 @@ function readApiKey() {
 const API_KEY = readApiKey();
 const VOICE_NAME = 'en-GB-Chirp3-HD-Kore';
 const LANGUAGE_CODE = 'en-GB';
-const TOUR_ID = 17; // Port Louis Heritage Walk
+const TOURS = {
+  'port-louis': 17, // Port Louis Heritage Walk
+  edinburgh: 16,
+};
+const tourArgIndex = process.argv.indexOf('--tour');
+const TOUR_CODE = tourArgIndex === -1 ? 'port-louis' : process.argv[tourArgIndex + 1];
+if (!(TOUR_CODE in TOURS)) throw new Error(`Unknown --tour ${TOUR_CODE}; expected one of ${Object.keys(TOURS).join(', ')}`);
+const TOUR_ID = TOURS[TOUR_CODE];
 const OUT_DIR = path.join(__dirname, '..', '..', 'server', 'content-audio');
 const MANIFEST_PATH = path.join(__dirname, 'narration-manifest.json');
 const REPLACED_DIR = path.join(__dirname, 'output', 'replaced');
@@ -87,11 +96,11 @@ async function synthesize(text) {
   const items = [];
   for (const l of landmarks.rows) {
     const text = [l.about_landmark_text, l.about_subject_text, l.interesting_fact].filter(Boolean).join(' ');
-    items.push({ table: 'landmarks', id: l.id, audioPath: l.audio_path, filename: `port-louis-landmark-${l.id}.mp3`, title: l.title, text });
+    items.push({ table: 'landmarks', id: l.id, audioPath: l.audio_path, filename: `${TOUR_CODE}-landmark-${l.id}.mp3`, title: l.title, text });
   }
   for (const s of sites.rows) {
     const text = [s.about_site_text, s.interesting_fact].filter(Boolean).join(' ');
-    items.push({ table: 'sites', id: s.id, audioPath: s.audio_path, filename: `port-louis-site-${s.id}.mp3`, title: s.title, text });
+    items.push({ table: 'sites', id: s.id, audioPath: s.audio_path, filename: `${TOUR_CODE}-site-${s.id}.mp3`, title: s.title, text });
   }
 
   const manifest = loadManifest();
