@@ -1,7 +1,7 @@
 // TOURZ full regression test — run any time, on this PC, against the LOCAL app and database.
 //
-//   node scripts/regression/run-all.mjs                 everything (~10–15 min)
-//   node scripts/regression/run-all.mjs --quick         skip the slow browser phases (ui + offline)
+//   node scripts/regression/run-all.mjs                 everything (~3 min)
+//   node scripts/regression/run-all.mjs --quick         skip the browser phases (ui + offline), ~30s
 //   node scripts/regression/run-all.mjs --only=api,ui   just those phases
 //   node scripts/regression/run-all.mjs --skip=offline  everything but those
 //
