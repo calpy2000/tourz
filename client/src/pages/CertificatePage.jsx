@@ -88,7 +88,8 @@ export default function CertificatePage() {
   // points at it any more) — hence the confirmation before doing it.
   function handleStartAnotherTour() {
     clearSession()
-    navigate('/', { replace: true })
+    // Dev mode's auto-login would otherwise re-attach to this same finished DEV-LOCAL game.
+    navigate('/', { replace: true, state: DEV_MODE ? { freshDev: true } : undefined })
   }
 
   if (!data) return <LoadingScreen />

@@ -81,7 +81,7 @@ export const api = {
   getState: (version) => get(`${BASE}/state${version ? `?v=${encodeURIComponent(version)}` : ''}`),
   sync: (actions) => post(`${BASE}/sync`, { actions }, SYNC_TIMEOUT_MS),
   getTourPack: () => get(`${BASE}/tour-pack`),
-  devLogin: () => post(`${API_BASE}/api/dev/login`),
+  devLogin: (fresh = false) => post(`${API_BASE}/api/dev/login`, fresh ? { fresh: true } : undefined),
   devReset: () => post(`${API_BASE}/api/dev/reset`),
   devComplete: (count) => post(`${API_BASE}/api/dev/complete/${count}`),
   devClock: (action, minutes) => post(`${API_BASE}/api/dev/clock`, { action, minutes }),

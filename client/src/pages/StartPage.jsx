@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Navigate, useNavigate } from 'react-router-dom'
+import { Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { api } from '../api.js'
 import { getSession, saveSession } from '../localSession.js'
 import { DEV_MODE } from '../devMode.js'
@@ -86,6 +86,8 @@ export default function StartPage() {
   // every mount (not once-only) so flipping dev mode on for a device that already holds a normal
   // registered session still switches over to the dev identity instead of resuming the old one.
   const [devSessionReady, setDevSessionReady] = useState(false)
+  // Set by the certificate page's "Start another tour" — wipes the dev game's progress on login.
+  const freshDev = Boolean(useLocation().state?.freshDev)
   // DEV_MODE-only readout of what this effect is doing — see LoadingScreen's debugInfo comment.
   // Added after a real report of this screen hanging forever with nothing visible anywhere: the
   // devLogin() call below had no .catch(), so a failed/errored request just silently left
@@ -99,7 +101,7 @@ export default function StartPage() {
       return
     }
     setDevDebug('calling POST /api/dev/login…')
-    api.devLogin()
+    api.devLogin(freshDev)
       .then((result) => {
         if (result.error) {
           setDevDebug(`/api/dev/login returned an error: ${result.error}`)

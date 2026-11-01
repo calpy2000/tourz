@@ -1,20 +1,27 @@
 // Repoints the local DEV-LOCAL game code at a different tour, so the app's dev-mode auto-login
 // (POST /api/dev/login in server/index.js) lands on that tour on the next local load.
-// Usage: node scripts/dev/set-local-tour.js <tourCode>   e.g. edinburgh | port-louis
+// Usage: node scripts/dev/set-local-tour.js <tourCode> [--prod]   e.g. edinburgh | port-louis
+// --prod repoints the live DEV-LOCAL code instead (dev-mode auto-login on the live site).
 //
 // Switching tours clears any existing DEV-LOCAL game/team/players first — a team's progress
 // (current_landmark_sequence, progress_events) is only meaningful against the tour it was
 // created under, so it can't just carry over to a different tour's landmarks.
 const { Client } = require('pg');
+const { prodDatabaseUrl } = require('../db-sync/connections.js');
 
 async function main() {
-  const tourCode = process.argv[2];
+  const args = process.argv.slice(2);
+  const prod = args.includes('--prod');
+  const tourCode = args.find((a) => !a.startsWith('--'));
   if (!tourCode) {
-    console.error('Usage: node scripts/dev/set-local-tour.js <tourCode>');
+    console.error('Usage: node scripts/dev/set-local-tour.js <tourCode> [--prod]');
     process.exit(1);
   }
 
-  const client = new Client({ host: 'localhost', port: 5432, user: 'postgres', database: 'tourz' });
+  const client = prod
+    ? new Client({ connectionString: prodDatabaseUrl(), ssl: { rejectUnauthorized: false } })
+    : new Client({ host: 'localhost', port: 5432, user: 'postgres', database: 'tourz' });
+  console.log(`Target: ${prod ? 'PROD' : 'local'} database.`);
   await client.connect();
 
   try {

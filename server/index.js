@@ -1114,6 +1114,14 @@ app.post('/api/dev/login', async (req, res) => {
     }
   }
 
+  // "Start another tour" from the certificate page in dev mode: same wipe as /api/dev/reset.
+  if (req.body?.fresh) {
+    await db.query('DELETE FROM progress_events WHERE team_id = $1', [team.id]);
+    await db.query('UPDATE teams SET total_score = 0, current_landmark_sequence = $2 WHERE id = $1',
+      [team.id, await firstPlayableSequence(gameCode.tour_id)]);
+    await resetGameClock(team);
+  }
+
   const { rows: [freshTeam] } = await db.query('SELECT * FROM teams WHERE id = $1', [team.id]);
   const { rows: [freshPlayer] } = await db.query('SELECT * FROM players WHERE id = $1', [player.id]);
   res.json(await registrationStatus(freshPlayer, freshTeam));

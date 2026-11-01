@@ -6,6 +6,7 @@
 // Usage:
 //   node delete-game-data.js                 delete game data for EVERY game code
 //   node delete-game-data.js TEST T1         delete game data only for these codes
+//   node delete-game-data.js --tour edinburgh   delete game data for every code on that tour
 //
 // Requires PROD_DATABASE_URL in this directory's own .env (gitignored, see
 // reference_render_production_db memory for where that connection string comes from).
@@ -49,13 +50,24 @@ async function deleteGameDataForCode(client, gameCode) {
 }
 
 async function main() {
-  const codesArg = process.argv.slice(2);
+  const args = process.argv.slice(2);
+  const tourIdx = args.indexOf('--tour');
+  const tourCode = tourIdx >= 0 ? args[tourIdx + 1] : null;
+  if (tourIdx >= 0 && !tourCode) throw new Error('--tour needs a tour_code, e.g. --tour edinburgh');
+  const codesArg = tourIdx >= 0 ? [] : args;
   const pool = new Pool({ connectionString: DATABASE_URL, ssl: { rejectUnauthorized: false } });
   const client = await pool.connect();
 
   try {
     let gameCodes;
-    if (codesArg.length === 0) {
+    if (tourCode) {
+      ({ rows: gameCodes } = await client.query(
+        'SELECT gc.* FROM game_codes gc JOIN tours t ON t.id = gc.tour_id WHERE t.tour_code = $1 ORDER BY gc.id',
+        [tourCode]
+      ));
+      if (gameCodes.length === 0) throw new Error(`No game codes found for tour '${tourCode}'`);
+      console.log(`Deleting live game data for all ${gameCodes.length} '${tourCode}' game codes.`);
+    } else if (codesArg.length === 0) {
       ({ rows: gameCodes } = await client.query('SELECT * FROM game_codes ORDER BY id'));
       console.log(`No codes given — deleting live game data for ALL ${gameCodes.length} game codes.`);
     } else {
